@@ -1,0 +1,17 @@
+.picker-dialog-bg {
+  z-index: 1400 !important;
+}
+
+.picker-dialog {
+  z-index: 1500 !important;
+}
+
+@media only screen and (max-width: 800px) {
+  .picker-dialog {
+    top: 0 !important;
+    height: 100%;
+  }
+  .picker-dialog-content {
+    height: 100% !important;
+  }
+}

@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+    <property name="now" value="sysdate" dbms="oracle"/>
+    <property name="now" value="getDate()" dbms="mssql"/>
+    <property name="now" value="now()" dbms="mysql"/>
+    <property name="now" value="now()" dbms="postgresql"/>
+    <include file="dbchangelog.core.xml"/>
+    <changeSet id="1" author="tomasek">
+        <createTable tableName="vzb_user">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_user_pkey" nullable="false"/>
+            </column>
+            <column name="email" type="nvarchar(255)">
+                <constraints unique="true"/>
+            </column>
+            <column name="password" type="nvarchar(255)"/>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="allowed" type="boolean"/>
+        </createTable>
+
+        <createTable tableName="vzb_card">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="pid" type="bigint"/>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="note" type="nvarchar(2000)"/>
+        </createTable>
+        <addUniqueConstraint constraintName="vzb_pid_of_user_uniqueness" tableName="vzb_card"
+                             columnNames="pid,owner_id"/>
+
+        <createTable tableName="vzb_card_content">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_content_pkey" nullable="false"/>
+            </column>
+            <column name="origin_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_content_origin_fk"
+                             referencedTableName="vzb_card_content" referencedColumnNames="id"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_content_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="last_version" type="boolean"/>
+        </createTable>
+
+        <createTable tableName="vzb_category">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_category_pkey" nullable="false"/>
+            </column>
+            <column name="name" type="nvarchar(255)"/>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_category_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="parent_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_category_parent_fk"
+                             referencedTableName="vzb_category" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="ordinal_number" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint constraintName="vzb_category_of_user_uniqueness" tableName="vzb_category"
+                             columnNames="name,parent_id,owner_id"/>
+
+        <createTable tableName="vzb_label">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_label_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_label_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="name" type="nvarchar(255)"/>
+            <column name="color" type="varchar(255)"/>
+        </createTable>
+        <addUniqueConstraint constraintName="vzb_label_of_user_uniqueness" tableName="vzb_label"
+                             columnNames="name,owner_id"/>
+
+        <createTable tableName="vzb_attribute">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_attribute_pkey" nullable="false"/>
+            </column>
+            <column name="card_content_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_atr_card_content_fk"
+                             referencedTableName="vzb_card_content" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+            <column name="ordinal_number" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="json_value" type="text"/>
+        </createTable>
+
+        <!--jointables-->
+        <createTable tableName="vzb_card_category">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_category_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_category_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="category_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_category_category_fk"
+                             referencedTableName="vzb_category" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+        <createTable tableName="vzb_card_label">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_label_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_label_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="label_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_label_label_fk"
+                             referencedTableName="vzb_label" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+        <createTable tableName="vzb_card_linked_card">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_linked_card_pkey" nullable="false"/>
+            </column>
+            <column name="linking_card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_linking_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="linked_card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_linked_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+        <!--/jointables-->
+        <!--templates-->
+        <createTable tableName="vzb_card_template">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_template_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_template_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="name" type="nvarchar(255)"/>
+        </createTable>
+        <createTable tableName="vzb_attribute_template">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_attribute_template_pkey" nullable="false"/>
+            </column>
+            <column name="card_template_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_atr_template_card_template_fk"
+                             referencedTableName="vzb_card_template" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+            <column name="type" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ordinal_number" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="vzb_external_file">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_external_file_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_external_file_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ordinal_number" type="int"/>
+            <column name="provider_type" type="varchar(32)"/>
+            <column name="link" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_id" type="nvarchar(255)"/>
+            <column name="type" type="nvarchar(255)"/>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+        </createTable>
+
+        <createTable tableName="vzb_password_token">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_token_pkey" nullable="false"/>
+            </column>
+            <column name="expiration_time" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="utilized" type="boolean"/>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="id"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="vzb_local_attachment_file">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_local_attachment_file_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_local_attachment_file_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="type" type="nvarchar(255)"/>
+            <column name="ordinal_number" type="int"/>
+            <column name="content_type" type="varchar(255)"/>
+            <column name="size" type="bigint"/>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="2" author="radvan">
+        <!-- MARC RECORD (name, leader) -->
+        <createTable tableName="vzb_marc_record">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_marc_record_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_record_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="leader" type="varchar(24)"/>
+        </createTable>
+
+        <!-- Required constraint because of index on combination name,owner-->
+        <addUniqueConstraint constraintName="vzb_record_of_user_uniqueness" tableName="vzb_marc_record"
+                             columnNames="name,owner_id"/>
+
+
+        <!-- MARC DATAFIELD (tag, ind1, ind2) -->
+        <createTable tableName="vzb_marc_datafield">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_marc_datafield_pkey" nullable="false"/>
+            </column>
+            <column name="indicator1" type="char"/>
+            <column name="indicator2" type="char"/>
+            <column name="tag" type="varchar(3)"/>
+            <column name="record_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_datafield_record_fk"
+                             referencedTableName="vzb_marc_record" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+
+        <!-- MARC SUBFIELD (code, data) -->
+        <createTable tableName="vzb_marc_subfield">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_marc_subfield_pkey" nullable="false"/>
+            </column>
+            <column name="code" type="char"/>
+            <column name="data" type="nvarchar(2000)"/>
+            <column name="datafield_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_subfield_datafield_fk"
+                             referencedTableName="vzb_marc_datafield" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+
+        <!-- TEMPLATE (name, stringTemplate) -->
+        <createTable tableName="vzb_reference_template">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_reference_template_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_template_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pattern" type="nvarchar(500)"/>
+        </createTable>
+
+        <!-- Required constraint because of index on combination name,owner-->
+        <addUniqueConstraint constraintName="vzb_template_of_user_uniqueness" tableName="vzb_reference_template"
+                             columnNames="name,owner_id"/>
+
+
+        <!-- TEMPLATE CUSTOM FIELD (tag, code) -->
+        <createTable tableName="vzb_reference_custom_field">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_reference_custom_field_pkey" nullable="false"/>
+            </column>
+            <column name="tag" type="varchar(3)"/>
+            <column name="code" type="char"/>
+
+            <column name="template_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_custom_field_template_fk"
+                             referencedTableName="vzb_reference_template" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+        </createTable>
+
+        <!-- CUSTOMIZATION ENUM TABLE-->
+        <createTable tableName="vzb_reference_customization">
+            <column name="custom_field_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_customization_custom_field_fk"
+                             referencedTableName="vzb_reference_custom_field" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+            <column name="customization" type="varchar(32)"/>
+        </createTable>
+
+        <!-- CARD-RECORD JOIN TABLE -->
+        <createTable tableName="vzb_card_record">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_record_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_record_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="record_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_record_record_fk"
+                             referencedTableName="vzb_marc_record" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="3" author="radvan">
+        <addColumn tableName="vzb_reference_template">
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,1 @@
+Virtuální znalostní databáze (VZB)

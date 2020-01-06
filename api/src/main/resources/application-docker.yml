@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://10.3.240.9:5496/vzb
+  liquibase:
+    url: jdbc:postgresql://10.3.240.9:5496/vzb
+solr:
+  endpoint: http://127.0.0.1:8983/solr
+vzb:
+  index:
+    endpoint: http://127.0.0.1:8983/solr
