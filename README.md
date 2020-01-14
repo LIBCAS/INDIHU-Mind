@@ -1,4 +1,4 @@
-# INDIHU-Mind - Virtuální znalostní báze
+# INDIHU-Mind - virtuální znalostní báze
 
 Shromažďování informací, podkladů, nejrůznějších materiálů a spojování informací v nové myšlenky či články je podstatou vědecké práce. Existují nástroje, které řeší jednotlivé části tohoto souhrnného problému – např. shromažďování cizích zdrojů, práce s citacemi. INDIHU Mind, představuje komplexní řešení, které je dostatečně otevřené pro nejrůznější způsoby použití a zároveň dobře strukturované, pro potřeby třídění a vyhledávání. 
 
