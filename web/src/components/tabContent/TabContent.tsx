@@ -23,9 +23,8 @@ interface TabContentProps {
   setActiveTab: Function;
 }
 
-export const TabContentView: React.FC<
-  TabContentProps & RouteComponentProps
-> = ({ activeTab, setActiveTab, history }) => {
+export const TabContentView: React.FC<TabContentProps &
+  RouteComponentProps> = ({ activeTab, setActiveTab, history }) => {
   const classesText = useTextStyles();
   const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
@@ -74,14 +73,18 @@ export const TabContentView: React.FC<
           flex: "1",
           maxHeight: transition ? "57vh" : "70vh",
           transition: ".3s ease max-height",
-          overflow: "auto",
+          overflow: "hidden",
           display:
             activeTab === "category" || activeTab === undefined
               ? "block"
               : "none"
         }}
       >
-        <Categories activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Categories
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          transition={transition}
+        />
       </div>
       <div
         style={{
@@ -103,8 +106,7 @@ export const TabContentView: React.FC<
               classesText.textGreyLight,
               classesText.textUppercase,
               classesText.cursor,
-              classesText.small,
-              classesSpacing.mt2
+              classesText.small
             )}
             onClick={() => setShowCards(prev => !prev)}
           >

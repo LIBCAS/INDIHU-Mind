@@ -1,13 +1,16 @@
 package cz.cas.lib.vzb;
 
+import cz.cas.lib.vzb.card.IndexedCard;
 import cz.cas.lib.vzb.card.attribute.AttributeTemplate;
 import cz.cas.lib.vzb.card.attribute.AttributeTemplateStore;
 import cz.cas.lib.vzb.card.attribute.AttributeType;
 import cz.cas.lib.vzb.card.template.CardTemplate;
 import cz.cas.lib.vzb.card.template.CardTemplateStore;
+import cz.cas.lib.vzb.init.builders.UserBuilder;
 import cz.cas.lib.vzb.security.user.Roles;
 import cz.cas.lib.vzb.security.user.User;
 import cz.cas.lib.vzb.security.user.UserService;
+import cz.cas.lib.vzb.security.user.UserStore;
 import helper.ApiTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,16 +18,17 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import javax.inject.Inject;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 import static core.util.Utils.asSet;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,183 +36,193 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 public class CardTemplateApiTest extends ApiTest {
 
+    private static final String CARD_TEMPLATE_API_URL = "/api/card/template/";
+
     @Inject private AttributeTemplateStore attributeTemplateStore;
     @Inject private CardTemplateStore cardTemplateStore;
     @Inject private UserService userService;
+    @Inject private UserStore userStore;
 
-    private User user = User.builder().password("password").email("mail").allowed(false).build();
+    @Override
+    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
+        return Collections.singleton(IndexedCard.class);
+    }
+
+
+    private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(false).build();
 
     @Before
     public void before() {
-        user.setId("user");
         transactionTemplate.execute((t) -> userService.create(user));
     }
 
     @Test
     public void createUpdate() throws Exception {
-        CardTemplate c = new CardTemplate();
-        c.setName("custom template");
+        CardTemplate cardTemplate = new CardTemplate();
+        cardTemplate.setName("custom template");
 
         AttributeTemplate at1 = new AttributeTemplate(0, "test", null, AttributeType.DOUBLE);
         AttributeTemplate at2 = new AttributeTemplate(1, "other", null, AttributeType.DATETIME);
-        c.addAttribute(at1);
-        c.addAttribute(at2);
-        String cardJson = objectMapper.writeValueAsString(c);
+        cardTemplate.addAttribute(at1);
+        cardTemplate.addAttribute(at2);
+
+        String cardJson = objectMapper.writeValueAsString(cardTemplate);
         securedMvc().perform(
-                put("/api/card/template/" + c.getId())
+                put(CARD_TEMPLATE_API_URL + cardTemplate.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(cardJson)
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.attributeTemplates", hasSize(2)));
+
         Collection<AttributeTemplate> attributes = attributeTemplateStore.findAll();
-        assertThat(attributes, hasSize(2));
-        assertThat(attributes, containsInAnyOrder(at1, at2));
-        assertThat(attributes.iterator().next().getCardTemplate().getOwner(), is(user));
+        assertThat(attributes).hasSize(2);
+        assertThat(attributes).containsExactlyInAnyOrder(at1, at2);
+        assertThat(attributes).extracting("cardTemplate.owner").contains(user);
 
         AttributeTemplate at3 = new AttributeTemplate(0, "replacement", null, AttributeType.INTEGER);
-        c.addAttribute(at3);
-        c.removeAttribute(at1);
-        cardJson = objectMapper.writeValueAsString(c);
+        cardTemplate.addAttribute(at3);
+        cardTemplate.removeAttribute(at1);
+        cardJson = objectMapper.writeValueAsString(cardTemplate);
         securedMvc().perform(
-                put("/api/card/template/" + c.getId())
+                put(CARD_TEMPLATE_API_URL + cardTemplate.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(cardJson)
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
         attributes = attributeTemplateStore.findAll();
-        assertThat(attributes, hasSize(2));
-        assertThat(attributes, containsInAnyOrder(at2, at3));
+        assertThat(attributes).hasSize(2);
+        assertThat(attributes).containsExactlyInAnyOrder(at2, at3);
 
         securedMvc().perform(
-                put("/api/card/template/" + c.getId())
+                put(CARD_TEMPLATE_API_URL + cardTemplate.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(cardJson)
-                        .with(mockedUser("otherUser", Roles.USER))
-        )
-                .andExpect(status().isForbidden())
-        ;
+                        .with(mockedUser("otherUser", Roles.USER)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
     public void retrieve() throws Exception {
-        CardTemplate c1 = new CardTemplate();
-        c1.setName("custom template");
-        c1.setOwner(user);
-        CardTemplate c2 = new CardTemplate();
-        c2.setName("default template");
-        CardTemplate c3 = new CardTemplate();
-        c3.setName("template of other user");
         User otherUser = new User();
-        c3.setOwner(otherUser);
-        AttributeTemplate at1 = new AttributeTemplate(0, "own", c1, AttributeType.DOUBLE);
-        AttributeTemplate at3 = new AttributeTemplate(1, "own", c1, AttributeType.STRING);
-        AttributeTemplate at2 = new AttributeTemplate(0, "test", c2, AttributeType.STRING);
+
+        CardTemplate userCardTemp = new CardTemplate();
+        userCardTemp.setName("custom template");
+        userCardTemp.setOwner(user);
+        CardTemplate defaultCardTemp = new CardTemplate();
+        defaultCardTemp.setName("default template");
+        CardTemplate otherUserCardTemp = new CardTemplate();
+        otherUserCardTemp.setName("template of other user");
+        otherUserCardTemp.setOwner(otherUser);
+
+        AttributeTemplate at1 = new AttributeTemplate(0, "own", userCardTemp, AttributeType.DOUBLE);
+        AttributeTemplate at3 = new AttributeTemplate(1, "own", userCardTemp, AttributeType.STRING);
+        AttributeTemplate at2 = new AttributeTemplate(0, "test", defaultCardTemp, AttributeType.STRING);
         transactionTemplate.execute((t) -> {
-            userService.save(otherUser);
-            cardTemplateStore.save(asSet(c1, c2, c3));
+            userStore.save(otherUser);
+            cardTemplateStore.save(asSet(userCardTemp, defaultCardTemp, otherUserCardTemp));
             attributeTemplateStore.save(asSet(at1, at2, at3));
             return null;
         });
 
         securedMvc().perform(
-                get("/api/card/template/own").with(mockedUser(user.getId(), Roles.USER)))
+                get(CARD_TEMPLATE_API_URL + "own")
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(c1.getId())))
+                .andExpect(jsonPath("$[0].id", is(userCardTemp.getId())))
                 .andExpect(jsonPath("$[0].attributeTemplates", hasSize(2)))
                 .andExpect(jsonPath("$[0].attributeTemplates[0].id", is(at1.getId())))
-                .andExpect(jsonPath("$[0].attributeTemplates[1].id", is(at3.getId())))
-        ;
+                .andExpect(jsonPath("$[0].attributeTemplates[1].id", is(at3.getId())));
         at1.setOrdinalNumber(2);
         transactionTemplate.execute(t -> attributeTemplateStore.save(at1));
 
         securedMvc().perform(
-                get("/api/card/template/own").with(mockedUser(user.getId(), Roles.USER)))
+                get(CARD_TEMPLATE_API_URL + "own")
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(c1.getId())))
+                .andExpect(jsonPath("$[0].id", is(userCardTemp.getId())))
                 .andExpect(jsonPath("$[0].attributeTemplates", hasSize(2)))
                 .andExpect(jsonPath("$[0].attributeTemplates[0].id", is(at3.getId())))
-                .andExpect(jsonPath("$[0].attributeTemplates[1].id", is(at1.getId())))
-        ;
+                .andExpect(jsonPath("$[0].attributeTemplates[1].id", is(at1.getId())));
 
         securedMvc().perform(
-                get("/api/card/template/common").with(mockedUser(user.getId(), Roles.USER)))
+                get(CARD_TEMPLATE_API_URL + "common")
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(c2.getId())))
+                .andExpect(jsonPath("$[0].id", is(defaultCardTemp.getId())))
                 .andExpect(jsonPath("$[0].attributeTemplates", hasSize(1)))
-                .andExpect(jsonPath("$[0].attributeTemplates[0].id", is(at2.getId())))
-        ;
+                .andExpect(jsonPath("$[0].attributeTemplates[0].id", is(at2.getId())));
 
         securedMvc().perform(
-                get("/api/card/template/all").with(mockedUser(user.getId(), Roles.USER)))
+                get(CARD_TEMPLATE_API_URL + "/all")
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$", hasSize(2)))
-        ;
+                .andExpect(jsonPath("$", hasSize(2)));
 
         securedMvc().perform(
-                get("/api/card/template/{1}", c1.getId()).with(mockedUser(user.getId(), Roles.USER)))
+                get(CARD_TEMPLATE_API_URL + userCardTemp.getId())
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.id", is(c1.getId())))
-                .andExpect(jsonPath("$.attributeTemplates", hasSize(2)))
-        ;
+                .andExpect(jsonPath("$.id", is(userCardTemp.getId())))
+                .andExpect(jsonPath("$.attributeTemplates", hasSize(2)));
 
         securedMvc().perform(
-                get("/api/card/template/{1}", c2.getId()).with(mockedUser(user.getId(), Roles.USER)))
+                get(CARD_TEMPLATE_API_URL + defaultCardTemp.getId())
+                        .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.id", is(c2.getId())))
-                .andExpect(jsonPath("$.attributeTemplates", hasSize(1)))
-        ;
+                .andExpect(jsonPath("$.id", is(defaultCardTemp.getId())))
+                .andExpect(jsonPath("$.attributeTemplates", hasSize(1)));
 
         securedMvc().perform(
-                get("/api/card/template/{1}", c3.getId()).with(mockedUser(otherUser.getId(), Roles.USER)))
+                get(CARD_TEMPLATE_API_URL + otherUserCardTemp.getId())
+                        .with(mockedUser(otherUser.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.id", is(c3.getId())))
-                .andExpect(jsonPath("$.attributeTemplates", hasSize(0)))
-        ;
+                .andExpect(jsonPath("$.id", is(otherUserCardTemp.getId())))
+                .andExpect(jsonPath("$.attributeTemplates", hasSize(0)));
     }
 
     @Test
-    public void delete() throws Exception {
-        CardTemplate c1 = new CardTemplate();
-        c1.setName("custom template");
-        c1.setOwner(user);
-        CardTemplate c2 = new CardTemplate();
-        c2.setName("default template");
-        CardTemplate c3 = new CardTemplate();
-        c3.setName("template of other user");
+    public void deleteTemplates() throws Exception {
         User otherUser = new User();
-        c3.setOwner(otherUser);
+
+        CardTemplate userCardTemp = new CardTemplate();
+        userCardTemp.setName("custom template");
+        userCardTemp.setOwner(user);
+        CardTemplate defaultCardTemp = new CardTemplate();
+        defaultCardTemp.setName("default template");
+        CardTemplate otherUserCardTemp = new CardTemplate();
+        otherUserCardTemp.setName("template of other user");
+        otherUserCardTemp.setOwner(otherUser);
+
         transactionTemplate.execute((t) -> {
-            userService.save(otherUser);
-            cardTemplateStore.save(asSet(c1, c2, c3));
-            AttributeTemplate at1 = new AttributeTemplate(0, "test", c1, AttributeType.DOUBLE);
-            AttributeTemplate at2 = new AttributeTemplate(0, "test", c2, AttributeType.STRING);
+            userStore.save(otherUser);
+            cardTemplateStore.save(asSet(userCardTemp, defaultCardTemp, otherUserCardTemp));
+            AttributeTemplate at1 = new AttributeTemplate(0, "test", userCardTemp, AttributeType.DOUBLE);
+            AttributeTemplate at2 = new AttributeTemplate(0, "test", defaultCardTemp, AttributeType.STRING);
             attributeTemplateStore.save(asSet(at1, at2));
             return null;
         });
 
+        securedMvc().perform(
+                delete(CARD_TEMPLATE_API_URL + userCardTemp.getId())
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().is2xxSuccessful());
 
         securedMvc().perform(
-                MockMvcRequestBuilders.delete("/api/card/template/{1}", c1.getId()).with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().is2xxSuccessful())
-        ;
+                delete(CARD_TEMPLATE_API_URL + defaultCardTemp.getId())
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isForbidden());
 
         securedMvc().perform(
-                MockMvcRequestBuilders.delete("/api/card/template/{1}", c2.getId()).with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().isForbidden())
-        ;
+                delete(CARD_TEMPLATE_API_URL + otherUserCardTemp.getId())
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isForbidden());
 
-        securedMvc().perform(
-                MockMvcRequestBuilders.delete("/api/card/template/{1}", c3.getId()).with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().isForbidden())
-        ;
-        assertThat(cardTemplateStore.countAll(), is(2L));
-        assertThat(attributeTemplateStore.countAll(), is(2L));
+        assertThat(cardTemplateStore.countAll()).isEqualTo(2L);
+        assertThat(attributeTemplateStore.countAll()).isEqualTo(2L);
     }
 
 }

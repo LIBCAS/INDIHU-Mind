@@ -4,13 +4,14 @@ import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
-import Paper from "@material-ui/core/Paper";
+import MuiPaper from "@material-ui/core/Paper";
 import { get } from "lodash";
 import moment from "moment";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 import classNames from "classnames";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
-
+import MuiChip from "@material-ui/core/Chip";
+import MuiFiberManualRecordIcon from "@material-ui/icons/FiberManualRecord";
 import { CardProps } from "../../types/card";
 import { ConditionalWrapper } from "../conditionalWrapper/ConditionalWrapper";
 
@@ -23,6 +24,8 @@ import { TableProps, OrderProps, DataProps } from "./_types";
 import { changeData, changeFilter } from "./_utils";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles } from "./_tableStyles";
+import { Label } from "../card/Label";
+import { PrintTable } from "../print/PrintTable";
 
 const TableView: React.FC<TableProps & RouteComponentProps> = ({
   baseUrl,
@@ -131,13 +134,16 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
     checkboxRows.length === data.items.length && data.items.length !== 0;
   return (
     <>
-      <TableGroupEdit
-        checkboxRows={checkboxRows}
-        selectedRow={selectedRow}
-        loadData={loadData}
-        setCheckboxRows={setCheckboxRows}
-      />
-      <Paper className={classes.root}>
+      <div className={classes.toolbar}>
+        <TableGroupEdit
+          checkboxRows={checkboxRows}
+          selectedRow={selectedRow}
+          loadData={loadData}
+          setCheckboxRows={setCheckboxRows}
+        />
+        <PrintTable items={checkboxRows} columns={columns} />
+      </div>
+      <MuiPaper className={classes.root}>
         <Loader loading={loading} local className={classes.loader} />
         <div className={classes.tableWrapper}>
           <MaterialTable className={classes.table} aria-labelledby="tableTitle">
@@ -186,33 +192,38 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
                             align="left"
                             className={classes.tableCell}
                           >
-                            <ConditionalWrapper
-                              condition={column.path === "name"}
-                              wrap={(children: any) => (
-                                <div
-                                  className={classNames(
-                                    classesLayout.flex,
-                                    classesLayout.alignCenter
-                                  )}
-                                >
-                                  {children}
-                                </div>
-                              )}
-                            >
-                              {column.format
-                                ? column.format(row)
-                                : get(row, column.path, "?")}
-                              {column.path === "name" && (
-                                <TableActions
-                                  row={row}
-                                  setMenuOpen={setMenuOpen}
-                                  afterEdit={afterEdit}
-                                  selectRow={selectRow}
-                                  handleDelete={handleDelete}
-                                  history={history}
-                                />
-                              )}
-                            </ConditionalWrapper>
+                            {(column.path === "labels" &&
+                              row.labels.map((label: any) => (
+                                <Label label={label} key={label.id} />
+                              ))) || (
+                              <ConditionalWrapper
+                                condition={column.path === "name"}
+                                wrap={(children: any) => (
+                                  <div
+                                    className={classNames(
+                                      classesLayout.flex,
+                                      classesLayout.alignCenter
+                                    )}
+                                  >
+                                    {children}
+                                  </div>
+                                )}
+                              >
+                                {column.format
+                                  ? column.format(row)
+                                  : get(row, column.path, "?")}
+                                {column.path === "name" && (
+                                  <TableActions
+                                    row={row}
+                                    setMenuOpen={setMenuOpen}
+                                    afterEdit={afterEdit}
+                                    selectRow={selectRow}
+                                    handleDelete={handleDelete}
+                                    history={history}
+                                  />
+                                )}
+                              </ConditionalWrapper>
+                            )}
                           </TableCell>
                         )
                       )
@@ -280,7 +291,7 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
             actions: classes.paginationActions
           }}
         />
-      </Paper>
+      </MuiPaper>
       <Menu
         selectedRow={selectedRow}
         showModal={menuOpen}

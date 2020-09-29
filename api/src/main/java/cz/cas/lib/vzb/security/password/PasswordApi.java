@@ -1,47 +1,56 @@
 package cz.cas.lib.vzb.security.password;
 
-import core.store.Transactional;
 import cz.cas.lib.vzb.security.user.UserService;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
+import java.util.Collection;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+
+@RolesAllowed({})
 @RequestMapping("/api/password")
 @RestController
 public class PasswordApi {
 
     private UserService userService;
 
-    @Transactional
-    @ApiOperation(value = "Send link for password-reset page to given mail, link is {serverURL}/resetPassword?token={token.id}")
-    @RequestMapping(method = RequestMethod.POST, path = "/forgotten/token/{email}")
-    public String sendPasswordResetToken(
-            @ApiParam(value = "Email to which should be token sent", required = true) @PathVariable String email) {
-        return userService.sendResetLinkToEmail(email);
+    @ApiOperation(value = "Send email with token for setting a new password.", notes = "Sent URL in email is: <b>{serverURL}/reset-password?token={token.id}</b>")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 404, message = "Email not found")
+    })
+    @PutMapping(value = "/reset")
+    public void resetPassword(@RequestParam("email") String email) {
+        userService.resetPassword(email);
     }
 
-    @Transactional
-    @ApiOperation(value = "Validate time on token and update password for user")
+    @ApiOperation(value = "Set new password if token is valid")
     @ApiResponses(value = {
-            @ApiResponse(code = 403, message = "Token has been already used / Token is expired"),
-            @ApiResponse(code = 404, message = "Token with given ID was not found"),
-            @ApiResponse(code = 200, message = "Token has been correctly used and password was changed")
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 403, message = "Token expired or already used"),
+            @ApiResponse(code = 404, message = "Token not found")
     })
-    @RequestMapping(method = RequestMethod.POST, path = "/forgotten/new/{tokenId}")
-    public void updatePassword(
-            @ApiParam(value = "ID of sent token", required = true) @PathVariable
-                    String tokenId,
-            @ApiParam(value = "New password that should be assigned to owner of token", required = true) @RequestParam
-                    String password) {
-        userService.validateTokenSetNewPassword(tokenId, password);
+    @PutMapping(value = "/new/{tokenId}")
+    public void setNewPassword(@PathVariable("tokenId") String tokenId,
+                               @RequestParam("newPassword") String newPassword) {
+        userService.setNewPassword(tokenId, newPassword);
     }
+
+    @ApiOperation(value = "Get all tokens in DB", notes = "<b>For debug purposes</b>")
+    @GetMapping(produces = APPLICATION_JSON_VALUE)
+    public Collection<PasswordToken> listAllTokens() {
+        return userService.findAllTokens();
+    }
+
 
     @Inject
     public void setUserService(UserService userService) {
         this.userService = userService;
     }
+
 }

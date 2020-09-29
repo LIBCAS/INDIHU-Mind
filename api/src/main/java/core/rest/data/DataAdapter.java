@@ -12,7 +12,6 @@ public interface DataAdapter<T extends DomainObject> {
 
     T find(String id);
 
-
     Result<T> findAll(Params params);
 
     T save(T entity);

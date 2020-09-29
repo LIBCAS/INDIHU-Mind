@@ -21,11 +21,12 @@ public class IndexQueryUtils {
 
     public static final DefaultQueryParser queryParser = new DefaultQueryParser(new SimpleSolrMappingContext());
     public static final String TYPE_FIELD = "index_type";
+
     /**
-     * <p>map containing index type as key and field map as value</p>
-     * <p>field map contains field name as key and its config as value</p>
-     * <p>every {@link IndexedStore} must have unique value of {@link IndexedStore#getIndexType()}, the same applies for every custom index
-     * store and its index types, e.g. {@link CardStore#getIndexType()}</p>
+     * Map containing index type as key and field map as value.
+     * Field map contains field name as key and its config as value.
+     * Every {@link IndexedStore} must have unique value of {@link IndexedStore#getIndexType()},
+     * the same applies for every custom index store and its index types, e.g. {@link CardStore#getIndexType()}.
      */
     public static Map<String, Map<String, IndexField>> INDEXED_FIELDS_MAP = new HashMap<>();
 
@@ -39,13 +40,11 @@ public class IndexQueryUtils {
 
     /**
      * Builds an IN query.
-     * <p>
-     * <p>
-     * Tests if the attribute of an instance is found in provided {@link Set} of values.
-     * </p>
      *
-     * @param indexedField   field to check
-     * @param values {@link Set} of valid values
+     * Tests if the attribute of an instance is found in provided {@link Set} of values.
+     *
+     * @param indexedField field to check
+     * @param values       {@link Set} of valid values
      * @return Solr query builder
      */
     public static Criteria inQuery(IndexField indexedField, Set<?> values) {
@@ -58,13 +57,11 @@ public class IndexQueryUtils {
 
     /**
      * Builds a NOT IN query.
-     * <p>
-     * <p>
-     * Tests if the attribute of an instance is not found in provided {@link Set} of values.
-     * </p>
      *
-     * @param indexedField   field to check
-     * @param values {@link Set} of invalid values
+     * Tests if the attribute of an instance is not found in provided {@link Set} of values.
+     *
+     * @param indexedField field to check
+     * @param values       {@link Set} of invalid values
      * @return Solr query builder
      */
     public static Criteria notInQuery(IndexField indexedField, Set<?> values) {
@@ -79,11 +76,11 @@ public class IndexQueryUtils {
 
     /**
      * Builds a string prefix query.
-     * <p>
+     *
      * Tests if the attribute of an instance starts with the specified value.
-     * </p>
-     * @param indexedField   field to check
-     * @param value Value to test against
+     *
+     * @param indexedField field to check
+     * @param value        Value to test against
      * @return Solr query builder
      */
     public static Criteria prefixQuery(IndexField indexedField, String value) {
@@ -94,11 +91,11 @@ public class IndexQueryUtils {
 
     /**
      * Builds a string suffix query.
-     * <p>
+     *
      * Tests if the attribute of an instance ends with the specified value.
-     * </p>
-     * @param indexedField   field to check
-     * @param value Value to test against
+     *
+     * @param indexedField field to check
+     * @param value        Value to test against
      * @return Solr query builder
      */
     public static Criteria suffixQuery(IndexField indexedField, String value) {
@@ -109,17 +106,17 @@ public class IndexQueryUtils {
 
     /**
      * Builds a string contains query.
-     * <p>
+     *
      * Tests if the attribute of an instance contains the specified value.
-     * </p>
-     * @param indexedField   field to check
-     * @param value Value to test against
+     *
+     * @param indexedField field to check
+     * @param value        Value to test against
      * @return Solr query builder
      */
     public static Criteria containsQuery(IndexField indexedField, String value) {
         String fieldName = indexedField.getFieldName();
         switch (indexedField.getFieldType()) {
-            case IndexFieldType.FOLDING:
+            case IndexFieldType.KEYWORD:
             case IndexFieldType.STRING:
                 return new SimpleStringCriteria(fieldName + ":*" + value.replace(" ", "\\ ") + "*");
             case IndexFieldType.TEXT:
@@ -265,11 +262,10 @@ public class IndexQueryUtils {
     }
 
     /**
-     * @param childIndexType type of the children collection, i.e. value identical to result of calling {@link IndexedDomainObject#getType()} on the
-     *                       child object
+     * @param childIndexType type of the children collection, i.e. value identical to result of calling {@link
+     *                       IndexedDomainObject#getType()} on the child object
      * @param filters        filters applied to the the child collection
      * @param indexType      type of the parent object
-     * @return
      */
     public static Criteria nestedQuery(String childIndexType, List<Filter> filters, String indexType) {
         Criteria parentCriteria = Criteria.where(IndexQueryUtils.TYPE_FIELD).is(indexType);
@@ -277,10 +273,10 @@ public class IndexQueryUtils {
         if (childIndexedFields == null)
             throw new UnsupportedSearchParameterException("unknown child index type: " + childIndexType);
         Criteria childrenCriteria = andQuery(filters, indexType, childIndexedFields).and(Criteria.where(IndexQueryUtils.TYPE_FIELD).is(childIndexType));
-            return new NestedCriteria(parentCriteria, childrenCriteria);
+        return new NestedCriteria(parentCriteria, childrenCriteria);
     }
 
-    public static void initializeQuery(SimpleQuery query, Params params, Map<String, IndexField> indexedFields) {
+    public static void initSortingAndPaging(SimpleQuery query, Params params, Map<String, IndexField> indexedFields) {
         if (params.getSorting() != null && !params.getSorting().isEmpty()) {
             Sort s = Sort.unsorted();
             for (int i = 0; i < params.getSorting().size(); i++) {

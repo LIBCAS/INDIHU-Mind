@@ -2,7 +2,11 @@ package core.exception;
 
 
 import core.domain.DomainObject;
+import core.rest.config.ResourceExceptionHandler;
 
+/**
+ * @see ResourceExceptionHandler#badArgument(BadArgument)
+ */
 public class BadArgument extends GeneralException {
     private Object argument;
 

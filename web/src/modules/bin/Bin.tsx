@@ -36,8 +36,9 @@ export const Bin: React.FC<RouteComponentProps> = () => {
     controller = new AbortController();
     setLoading(true);
     api()
-      .get(`card/deleted?page=0&pageSize=30`, {
-        signal: controller.signal
+      .post(`card/deleted`, {
+        signal: controller.signal,
+        json: { page: 0, pageSize: 30 }
       })
       .json()
       .then((res: any) => {
@@ -51,7 +52,7 @@ export const Bin: React.FC<RouteComponentProps> = () => {
   }, []);
 
   const onRestore = (card: any) => {
-    api().post(`card/set_softdelete`, {
+    api().post(`card/set-softdelete`, {
       json: {
         ids: [card.id],
         value: false
@@ -82,9 +83,9 @@ export const Bin: React.FC<RouteComponentProps> = () => {
   const onRemoveAll = () => {
     setLoading(true);
     api()
-      .delete(`card/soft_deleted`)
+      .delete(`card/soft-deleted`)
       .json<number>()
-      .then(res => {
+      .then((res: any) => {
         setLoading(false);
         setCards([]);
         dispatch({
@@ -115,24 +116,20 @@ export const Bin: React.FC<RouteComponentProps> = () => {
         >
           <Typography
             display="inline"
-            className={classNames(
-              classesSpacing.mb2,
-              classesSpacing.mt2,
-              classesSpacing.mrAuto
-            )}
+            className={classNames(classesSpacing.mb2, classesSpacing.mt2)}
             variant="h5"
           >
-            Koš
+            <p className={classNames(classesSpacing.mr2)}>Koš</p>
           </Typography>
           <Popconfirm
             confirmText="Vysypat koš?"
             acceptText="Ano"
             onConfirmClick={() => onRemoveAll()}
-            Button={() => (
-              <Button color="secondary" variant="outlined">
+            Button={
+              <Button color="secondary" variant="contained">
                 Vysypat koš
               </Button>
-            )}
+            }
           />
         </div>
         <div style={{ position: "relative" }}>
@@ -153,6 +150,7 @@ export const Bin: React.FC<RouteComponentProps> = () => {
                 onRestore={onRestore}
                 onRemove={onRemove}
                 onRemoveText="Vysypat kartu z koše"
+                topMargin={0}
               />
             </Grid>
           ))}

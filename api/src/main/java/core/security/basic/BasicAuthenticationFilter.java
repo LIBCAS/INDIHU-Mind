@@ -10,13 +10,13 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.codec.Base64;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Base64;
 
 @Changed("filter reflects authentication exceptions and translates them to error response codes")
 @Slf4j
@@ -99,21 +99,21 @@ public class BasicAuthenticationFilter
     private String[] extractAndDecodeHeader(String header, HttpServletRequest request)
             throws IOException {
 
-        byte[] base64Token = header.substring(6).getBytes("UTF-8");
+        byte[] base64Token = header.substring(6).getBytes(StandardCharsets.UTF_8);
         byte[] decoded;
         try {
-            decoded = Base64.decode(base64Token);
+            decoded = Base64.getDecoder().decode(base64Token);
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("Failed to decode basic authentication token");
         }
 
         String token = new String(decoded, getCredentialsCharset(request));
 
-        int delim = token.indexOf(":");
+        int delimiter = token.indexOf(":");
 
-        if (delim == -1) {
+        if (delimiter == -1) {
             throw new BadRequestException("Invalid basic authentication token");
         }
-        return new String[]{token.substring(0, delim), token.substring(delim + 1)};
+        return new String[]{token.substring(0, delimiter), token.substring(delimiter + 1)};
     }
 }

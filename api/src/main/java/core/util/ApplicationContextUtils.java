@@ -10,10 +10,8 @@ public class ApplicationContextUtils implements ApplicationContextAware {
     private static ApplicationContext ctx;
 
     @Override
-    public void setApplicationContext(ApplicationContext appContext)
-            throws BeansException {
+    public void setApplicationContext(ApplicationContext appContext) throws BeansException {
         ctx = appContext;
-
     }
 
     public static ApplicationContext getApplicationContext() {

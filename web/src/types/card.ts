@@ -23,7 +23,7 @@ export interface CardProps {
   attributes: AttributeProps[];
   linkedCards: LinkedCardProps[];
   linkingCards: LinkedCardProps[];
-  files: FileProps[];
+  documents: FileProps[];
   records: RecordProps[];
   [key: string]:
     | number
@@ -46,7 +46,7 @@ export interface CardContentProps {
   attributes: AttributeProps[];
   // linkedCards: LinkedCardProps[];
   // linkingCards: LinkedCardProps[];
-  // files: FileProps[];
+  // documents: FileProps[];
   lastVersion: boolean;
   [key: string]:
     | CardProps

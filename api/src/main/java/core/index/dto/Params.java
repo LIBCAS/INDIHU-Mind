@@ -62,8 +62,9 @@ public class Params {
 
     /**
      * Number of requested instances.
-     * <p>
-     * If null specified then paging is disabled and all items are returned.
+     * 
+     * @implNote Disabled pagination is not supported; use very big number to query everything.
+     *           Be wary that is it not best practice.
      */
     protected Integer pageSize = 10;
 

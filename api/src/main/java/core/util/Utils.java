@@ -265,6 +265,7 @@ public class Utils {
     }
 
     public static boolean isUUID(String id) {
+        if (id == null) return false;
         try {
             UUID.fromString(id);
             return true;

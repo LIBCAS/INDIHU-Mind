@@ -16,11 +16,11 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 @SolrDocument(collection = "uas")
 public class IndexedNotification extends IndexedDatedObject {
 
-    @Indexed(type = IndexFieldType.FOLDING)
+    @Indexed(type = IndexFieldType.KEYWORD)
     @Field
     protected String title;
 
-    @Indexed(type = IndexFieldType.FOLDING)
+    @Indexed(type = IndexFieldType.KEYWORD)
     @Field
     protected String authorName;
 
@@ -28,7 +28,7 @@ public class IndexedNotification extends IndexedDatedObject {
     @Field
     protected String authorId;
 
-    @Indexed(type = IndexFieldType.FOLDING)
+    @Indexed(type = IndexFieldType.KEYWORD)
     @Field
     protected String recipientName;
 

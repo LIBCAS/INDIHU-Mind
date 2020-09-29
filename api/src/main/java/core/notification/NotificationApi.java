@@ -10,6 +10,7 @@ import cz.cas.lib.vzb.security.user.Roles;
 import io.swagger.annotations.*;
 import lombok.Getter;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -19,6 +20,7 @@ import java.util.List;
  * Api for creating and retrieving notifications.
  */
 @RestController
+@ApiIgnore("Not used in the project")
 @Api(value = "notifications", description = "Api for creating and retrieving notifications")
 @RequestMapping("/api/notifications")
 @Changed("multi notifications not supported")

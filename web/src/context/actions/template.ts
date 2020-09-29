@@ -11,7 +11,7 @@ export const templateGet = (dispatch: any) => {
   api()
     .get("card/template/all")
     .json()
-    .then(res => {
+    .then((res: any) => {
       dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: -1 });
       dispatch({ type: TEMPLATE_GET, payload: res });
     })

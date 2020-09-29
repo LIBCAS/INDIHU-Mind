@@ -1,11 +1,12 @@
 import React, { useState, useRef } from "react";
-import Add from "@material-ui/icons/Add";
 import { CardContentProps } from "../../../types/card";
-import { ButtonGrey } from "../../../components/control/ButtonGrey";
+import MuiTooltip from "@material-ui/core/Tooltip";
+import MuiIconButton from "@material-ui/core/IconButton";
+import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
 
 import { CardDetailContentAddRecordForm } from "./CardDetailContentAddRecordForm";
 
-// import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
 
 interface CardDetailContentAddRecordProps {
   card: CardContentProps;
@@ -15,33 +16,44 @@ interface CardDetailContentAddRecordProps {
   >;
 }
 
-export const CardDetailContentAddRecord: React.FC<
-  CardDetailContentAddRecordProps
-> = ({ card, cardContent, setCardContent }) => {
-  // const classesSpacing = useSpacingStyles();
+export const CardDetailContentAddRecord: React.FC<CardDetailContentAddRecordProps> = ({
+  card,
+  cardContent,
+  setCardContent
+}) => {
+  const classesSpacing = useSpacingStyles();
+
   const [openForm, setOpenForm] = useState(false);
+
   const anchorEl = useRef(null);
+
+  const handleAddCitation = () => {
+    setOpenForm(true);
+  };
+
   return (
-    <>
-      <div ref={anchorEl}>
-        <ButtonGrey
-          text="Přidat citaci"
-          onClick={() => setOpenForm(prev => !prev)}
-          bold
-          inline
-          Icon={<Add fontSize="small" />}
-        />
+    <React.Fragment>
+      <div className={classesSpacing.mt1} ref={anchorEl}>
+        <MuiTooltip title="Přidat citaci" arrow={true}>
+          <MuiIconButton
+            style={{ marginTop: "8px" }}
+            color="primary"
+            aria-label="add-citation"
+            component="span"
+            onClick={handleAddCitation}
+          >
+            <MuiAddCircleIcon fontSize="default" />
+          </MuiIconButton>
+        </MuiTooltip>
       </div>
-      {openForm && (
-        <CardDetailContentAddRecordForm
-          card={card}
-          cardContent={cardContent}
-          setCardContent={setCardContent}
-          openForm={openForm}
-          setOpenForm={setOpenForm}
-          anchorEl={anchorEl}
-        />
-      )}
-    </>
+      <CardDetailContentAddRecordForm
+        card={card}
+        cardContent={cardContent}
+        setCardContent={setCardContent}
+        openForm={openForm}
+        setOpenForm={setOpenForm}
+        anchorEl={anchorEl}
+      />
+    </React.Fragment>
   );
 };

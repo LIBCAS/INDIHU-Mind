@@ -17,8 +17,10 @@ import java.util.Set;
 @Table(name = "vzb_card_template")
 @Entity
 public class CardTemplate extends NamedObject {
+
     @ManyToOne
     private User owner;
+
     @OneToMany(mappedBy = "cardTemplate", fetch = FetchType.EAGER)
     @OrderBy("ordinalNumber")
     private Set<AttributeTemplate> attributeTemplates = new HashSet<>();

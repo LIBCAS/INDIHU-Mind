@@ -13,7 +13,7 @@ import {
 import { api } from "../../utils/api";
 import { notEmpty } from "../../utils/form/validate";
 import { CardProps } from "../../types/card";
-import { OptionType } from "../form/reactSelect/_reactSelectTypes";
+import { OptionType } from "../select/_types";
 import { Formik } from "../form/Formik";
 import { Select } from "../form/Select";
 
@@ -74,7 +74,7 @@ export const TableGroupEdit: React.FC<TableGroupEditProps> = ({
     }
     if (values.type === "delete") {
       const ids = checkboxRows.map(c => c.id);
-      const request = api().post(`card/set_softdelete`, {
+      const request = api().post(`card/set-softdelete`, {
         json: {
           ids,
           value: true

@@ -15,17 +15,22 @@ import { Bin } from "../modules/bin/Bin";
 import { useTokenRefresh } from "../hooks/authHooks";
 
 import { routes, adminRoutes, RoutesProps } from "./_routes";
+import { isAdmin } from "../utils/token";
 
 const RouterView: React.FC<RouteComponentProps> = ({ location }) => {
   const token = useTokenRefresh();
-  const isPathLogin = location.pathname === "/login";
-  if (!token && !isPathLogin) {
-    return <Redirect to="/login" />;
+
+  const isPathLogin = location.pathname === "/";
+  const isResetPassword = location.pathname === "/reset-password";
+  const notAuth = !isPathLogin && !isResetPassword;
+
+  if (!token && notAuth) {
+    return <Redirect to="/" />;
   }
-  if (token && location.pathname === "/") {
+
+  if (token && isPathLogin) {
     return <Redirect to="/cards" />;
   }
-  const isAdmin = token && token.authorities.indexOf("ROLE_ADMIN") !== -1;
 
   const mapRoutes = (r: RoutesProps) => (
     <Route
@@ -37,15 +42,15 @@ const RouterView: React.FC<RouteComponentProps> = ({ location }) => {
   );
   return (
     <ConditionalWrapper
-      condition={!isPathLogin}
+      condition={notAuth}
       wrap={(children: any) => <AppWrapper>{children}</AppWrapper>}
     >
       <Switch>
         {routes.map(mapRoutes)}
-        {isAdmin && adminRoutes.map(mapRoutes)}
+        {isAdmin(token) && adminRoutes.map(mapRoutes)}
         <Route path="/bin" component={Bin} />
         {/* empty route for page refresh https://github.com/ReactTraining/react-router/issues/1982#issuecomment-314167564 */}
-        <Route path="empty" component={undefined} key="empty" />
+        {/*<Route path="empty" component={undefined} key="empty" />*/}
       </Switch>
     </ConditionalWrapper>
   );

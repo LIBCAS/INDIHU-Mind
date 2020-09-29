@@ -1,5 +1,8 @@
 package cz.cas.lib.vzb.dto;
 
+import cz.cas.lib.vzb.dto.validation.Uuid;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
+import cz.cas.lib.vzb.reference.marc.template.ReferenceTemplate;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,14 +12,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DTO for generating PDF from given id of {@link cz.cas.lib.vzb.reference.template.ReferenceTemplate}
- * and list of ids of {@link cz.cas.lib.vzb.reference.marc.Record}
+ * DTO for generating PDF from given id of {@link ReferenceTemplate}
+ * and list of ids of {@link Citation}
  */
 @Getter
 @Setter
 public class GeneratePdfDto {
-    @NotBlank
-    private String templateId;
-    @NotEmpty
-    private List<String> ids = new ArrayList<>();
+
+    @NotBlank private String templateId;
+    @NotEmpty private List<@Uuid String> ids = new ArrayList<>();
+
 }

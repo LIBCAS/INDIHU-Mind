@@ -2,7 +2,6 @@ package cz.cas.lib.vzb.security.user;
 
 import core.index.IndexedDatedStore;
 import core.security.authorization.assign.AssignedRoleStore;
-import lombok.Getter;
 import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
@@ -12,8 +11,13 @@ import java.util.ArrayList;
 public class UserStore extends IndexedDatedStore<User, QUser, IndexedUser> {
 
     private AssignedRoleStore assignedRoleStore;
-    @Getter
+
     private final String indexType = "user";
+
+    @Override
+    public String getIndexType() {
+        return indexType;
+    }
 
     public UserStore() {
         super(User.class, QUser.class, IndexedUser.class);

@@ -1,6 +1,6 @@
 package core.exception;
 
-public class GeneralRollbackException extends Exception {
+public class GeneralRollbackException extends RuntimeException {
     public GeneralRollbackException() {
         super();
     }

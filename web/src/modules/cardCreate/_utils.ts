@@ -1,23 +1,27 @@
 import uuid from "uuid/v4";
-import { api } from "../../utils/api";
-import { flattenDeep } from "lodash";
+import { flattenDeep, isArray, pick, isEmpty } from "lodash";
 
 import {
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_ERROR_TEXT_SET
 } from "../../context/reducers/status";
 
+import { api } from "../../utils/api";
 import { AttributeProps } from "../../types/attribute";
 import { CardTemplateProps } from "../../types/cardTemplate";
 import { CategoryProps } from "../../types/category";
 import { LabelProps } from "../../types/label";
 import { FileProps } from "../../types/file";
-import { OptionType } from "../../components/form/reactSelect/_reactSelectTypes";
+import { OptionType } from "../../components/select/_types";
+import { parseAttributeForApi } from "../../utils/card";
 import {
-  translateFileError,
-  FileErrors,
-  parseAttributeForApi
-} from "../../utils/card";
+  createErrorMessage,
+  updateFile,
+  uploadFile
+} from "../attachments/_utils";
+import { getAttributeTypeDefaultValue } from "../../utils/attribute";
+import Categories from "../categories/Categories";
+import { Labels } from "../../components/tabContent/Labels";
 
 export const deleteAttribute = (
   formikBagParent: any,
@@ -57,82 +61,40 @@ export const onSubmitAttribute = (
   setOpen(false);
 };
 
-export const onChangeType = (formikBag: any, e: any) => {
-  switch (e.target.value) {
-    case "STRING":
-    case "DOUBLE":
-      return formikBag.setFieldValue("value", "");
-    case "BOOLEAN":
-      return formikBag.setFieldValue("value", false);
-    case "DATETIME":
-      return formikBag.setFieldValue("value", new Date());
-  }
+export const onChangeType = (formikBag: any, value: any) => {
+  formikBag.setFieldValue("value", getAttributeTypeDefaultValue(value));
 };
 
 const newCard = (values: any, cardId: string) => {
-  const formData = new FormData();
-  const {
-    attributes,
-    categories,
-    labels,
-    name,
-    note,
-    linkedCards,
-    records
-  } = values;
-
-  formData.append("id", cardId);
-  formData.append("name", name);
-  formData.append("note", note);
-  categories.forEach((opt: any, i: number) =>
-    formData.append(`categories[${i}]`, opt.value)
-  );
-  labels.forEach((opt: any, i: number) =>
-    formData.append(`labels[${i}]`, opt.value)
-  );
-  if (records) {
-    records.forEach((opt: any, i: number) =>
-      formData.append(`records[${i}]`, opt.value)
-    );
-  }
-  linkedCards.forEach((card: any, i: number) =>
-    formData.append(`linkedCards[${i}]`, card.id)
-  );
-  const attributesParsed = attributes.map(parseAttributeForApi);
-  attributesParsed.forEach((att: any, i: number) => {
-    formData.append(`attributes[${i}].name`, att.name);
-    formData.append(`attributes[${i}].ordinalNumber`, att.ordinalNumber);
-    formData.append(`attributes[${i}].type`, att.type);
-    formData.append(`attributes[${i}].value`, att.value);
-  });
-  return formData;
+  const mapArrayValue = (field: any, mapField: string = "value") => {
+    const value = values[`${field}`];
+    const arr = isArray(value) ? value : value ? [value] : [];
+    return !isEmpty(arr)
+      ? {
+          [`${field}`]: arr.map((opt: any) => opt[`${mapField}`])
+        }
+      : {};
+  };
+  return {
+    ...pick(values, ["name", "note"]),
+    id: cardId,
+    attributes: values.attributes.map(parseAttributeForApi),
+    categories: values.categories,
+    labels: values.labels,
+    ...mapArrayValue("records", "id"),
+    ...mapArrayValue("linkedCards", "id")
+  };
 };
 
 export const filesUpload = (files: FileProps[], cardId: string) => {
   if (files) {
-    return files.map((file: FileProps, i: number) => {
-      const formData = new FormData();
-      formData.append(`cardId`, cardId);
-      formData.append(`id`, file.id);
-      formData.append(`name`, file.name);
-      formData.append(`type`, file.type);
-      formData.append(`ordinalNumber`, file.ordinalNumber.toString());
-      if (file.providerType === "LOCAL" && file.content) {
-        formData.append(`providerType`, file.providerType);
-        formData.append(`content`, file.content);
-      }
-      if (
-        file.providerType &&
-        file.providerType !== "LOCAL" &&
-        file.providerId
-      ) {
-        formData.append(`providerType`, file.providerType);
-        formData.append(`providerId`, file.providerId);
-        formData.append(`link`, file.link);
-      }
-      return api({ noContentType: true })
-        .post(`attachment_file`, { body: formData })
-        .json<any>();
+    return files.map((file: FileProps) => {
+      return file.id
+        ? updateFile({
+            ...file,
+            linkedCards: [...(file.linkedCards || []), cardId]
+          })
+        : uploadFile({ ...file, linkedCards: [cardId] });
     });
   }
   return [];
@@ -151,22 +113,19 @@ export const onSubmitCard = (
   setErrorMessage(undefined);
   const cardId = uuid();
   const cardBody = newCard(values, cardId);
-  const { files } = values;
-  api({ noContentType: true })
-    .post(`card`, { body: cardBody })
+  const { documents } = values;
+  api()
+    .post(`card`, { json: cardBody })
     .json<any[]>()
     .then(() => {
-      const filesPromises = filesUpload(files, cardId);
-      return Promise.all(filesPromises.map(p => p.catch(e => e)));
+      const documentsPromises = filesUpload(documents, cardId);
+      return Promise.all(documentsPromises.map(p => p.catch((e: any) => e)));
     })
     .then((results: any) => {
-      let filesErrors = "";
+      let documentsErrors = "";
       results.forEach((r: any, i: number) => {
         if (r.response && r.response.errorType) {
-          filesErrors += `| ${translateFileError(r.response
-            .errorType as FileErrors)}: ${
-            r.response.errorType === "FILE_TOO_BIG" ? `${files[i].name} ` : ""
-          }${r.response.errorMessage} `;
+          documentsErrors += `| ${createErrorMessage(r, documents[i].name)} `;
           // setErrorMessage(translated);
           // history.push(`/card/${cardId}`);
           // if (afterEdit) {
@@ -180,9 +139,9 @@ export const onSubmitCard = (
       dispatch({
         type: STATUS_ERROR_TEXT_SET,
         payload:
-          filesErrors === ""
+          documentsErrors === ""
             ? "Nová karta byla úspěšně vytvořena"
-            : `Nová karta byla vytvořena. ${filesErrors}`
+            : `Nová karta byla vytvořena. ${documentsErrors}`
       });
       dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       history.push(`/card/${cardId}`);
@@ -260,19 +219,6 @@ export const getTemplateName = (
     }
   });
   return templateExisting;
-};
-
-export const defaultValue = (type: string) => {
-  switch (type) {
-    case "STRING":
-      return "";
-    case "DOUBLE":
-      return 0;
-    case "BOOLEAN":
-      return false;
-    case "DATETIME":
-      return new Date();
-  }
 };
 
 export const getPathToCategory = (

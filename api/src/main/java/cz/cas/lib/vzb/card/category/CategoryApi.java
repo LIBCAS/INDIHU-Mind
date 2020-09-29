@@ -1,22 +1,20 @@
 package cz.cas.lib.vzb.card.category;
 
-import core.exception.BadArgument;
-import core.exception.ForbiddenObject;
-import core.exception.MissingObject;
-import core.store.Transactional;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.Roles;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import java.util.Collection;
 
-import static core.util.Utils.eq;
-import static core.util.Utils.notNull;
+import static cz.cas.lib.vzb.util.ResponseContainer.LIST;
 
 @Slf4j
 @RestController
@@ -28,39 +26,29 @@ public class CategoryApi {
     private UserDelegate userDelegate;
 
     @ApiResponse(code = 409, message = "Name of new entity already exists. Name uniqueness is enforced.")
-    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    @Transactional
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Category save(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id,
-                         @ApiParam(value = "Single instance", required = true)
-                         @RequestBody Category request) {
-        eq(id, request.getId(), () -> new BadArgument("id"));
-        return service.save(request);
+                         @ApiParam(value = "Single instance", required = true) @RequestBody Category category) {
+        return service.save(id, category);
     }
 
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    @Transactional
+    @DeleteMapping(value = "/{id}")
     public void delete(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
-        Category entity = service.find(id);
-        notNull(entity, () -> new MissingObject(Category.class, id));
-        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Category.class, id));
-        service.delete(entity);
+        service.delete(id);
     }
 
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Category get(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
-        Category entity = service.find(id);
-        notNull(entity, () -> new MissingObject(Category.class, id));
-
-        return entity;
+        return service.find(id);
     }
 
-
-    @RequestMapping(method = RequestMethod.GET)
+    @ApiOperation(value = "Retrieve all entities of user.")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = CategoryDto.class, responseContainer = LIST)})
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<CategoryDto> findAllOfUser() {
         return service.findAllOfUser(userDelegate.getId());
     }
+
 
     @Inject
     public void setService(CategoryService service) {
@@ -71,4 +59,5 @@ public class CategoryApi {
     public void setUserDelegate(UserDelegate userDelegate) {
         this.userDelegate = userDelegate;
     }
+
 }

@@ -38,32 +38,49 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
   Menu,
   history,
   ComponentDetail,
-  Toolbar
+  Toolbar,
+  createModalProps
 }) => {
   const classes = useStyles();
+
   const classesLayout = useLayoutStyles();
+
   const classesSpacing = useSpacingStyles();
+
   const theme: Theme = useTheme();
+
   const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
+
   // show modal with create form
   const [showForm, setShowForm] = useState(false);
+
   // currently selected row
   const [selectedRow, setSelectedRow] = useState<any>(undefined);
+
   // checkboxed items
   const [checkboxRows, setCheckboxRows] = useState<any[]>([]);
+
   const [loading, setLoading] = useState<boolean>(false);
+
   // filter for POST request - combined filter, sorting, page, pageSize
   const [filter, setFilter] = useState<any>({});
+
   const [order, setOrder] = useState<OrderProps>({
     column: "",
     direction: "ASC"
   });
+
   const [data, setData] = useState<DataProps>({ count: 0, items: [] });
+
   const [page, setPage] = useState<number>(0);
+
   const [rowsPerPage, setrowsPerPage] = useState<number>(10);
+
   // open custom menu to edit row
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
+
   const matches1400 = useMediaQuery("(min-width:1400px)");
+
   // change http request - set POST params to load data from api in the right order & page
   useEffect(() => {
     changeFilter(setFilter, query, order, page, rowsPerPage);
@@ -148,6 +165,7 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
   return (
     <>
       <Modal
+        {...createModalProps}
         open={showForm}
         setOpen={setShowForm}
         content={<CreateForm setShowModal={setShowForm} />}

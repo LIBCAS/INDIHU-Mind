@@ -1,0 +1,143 @@
+[
+  {
+    "czech": "Číslo České národní bibliografie",
+    "tag": "015",
+    "code": "a"
+  },
+  {
+    "czech": "ISBN",
+    "tag": "020",
+    "code": "a"
+  },
+  {
+    "czech": "ISSN",
+    "tag": "022",
+    "code": "a"
+  },
+  {
+    "czech": "ISMN",
+    "tag": "024",
+    "code": "u",
+    "indicator1": "2"
+  },
+  {
+    "czech": "Tvůrce",
+    "tag": "100",
+    "code": "a"
+  },
+  {
+    "czech": "Tvůrce (Název společnosti)",
+    "tag": "110",
+    "code": "a"
+  },
+  {
+    "czech": "Název dokumentu",
+    "tag": "245",
+    "code": "a"
+  },
+  {
+    "czech": "Podnázev dokumentu",
+    "tag": "245",
+    "code": "b"
+  },
+  {
+    "czech": "Typ nosiče",
+    "tag": "245",
+    "code": "h"
+  },
+  {
+    "czech": "Označení souboru map",
+    "tag": "246",
+    "code": "a"
+  },
+  {
+    "czech": "Vydání",
+    "tag": "250",
+    "code": "a"
+  },
+  {
+    "czech": "Měřítko",
+    "tag": "255",
+    "code": "a"
+  },
+  {
+    "czech": "Místo",
+    "tag": "264",
+    "code": "a"
+  },
+  {
+    "czech": "Nakladatel",
+    "tag": "264",
+    "code": "b"
+  },
+  {
+    "czech": "Rok",
+    "tag": "264",
+    "code": "c"
+  },
+  {
+    "czech": "Počet stran",
+    "tag": "300",
+    "code": "a"
+  },
+  {
+    "czech": "Technika",
+    "tag": "300",
+    "code": "b"
+  },
+  {
+    "czech": "Rozměry",
+    "tag": "300",
+    "code": "c"
+  },
+  {
+    "czech": "Edice",
+    "tag": "490",
+    "code": "a"
+  },
+  {
+    "czech": "Číslo edice",
+    "tag": "490",
+    "code": "v"
+  },
+  {
+    "czech": "Tvůrce (dodatečný)",
+    "tag": "700",
+    "code": "a"
+  },
+  {
+    "czech": "Tvůrce (dodatečný - Název společnosti)",
+    "tag": "710",
+    "code": "a"
+  },
+  {
+    "czech": "Rozsah stran",
+    "tag": "773",
+    "code": "g"
+  },
+  {
+    "czech": "Zdrojový dokument",
+    "tag": "773",
+    "code": "t"
+  },
+  {
+    "czech": "ISSN zdrojového časopisu",
+    "tag": "773",
+    "code": "x"
+  },
+  {
+    "czech": "Dostupné z",
+    "tag": "856",
+    "code": "u"
+  },
+  {
+    "czech": "Lokace",
+    "tag": "910",
+    "code": "a"
+  },
+  {
+    "czech": "Číslo dokumentu",
+    "tag": "910",
+    "code": "b"
+  }
+]

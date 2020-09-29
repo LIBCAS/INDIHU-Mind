@@ -10,6 +10,7 @@ import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.card.label.LabelStore;
 import cz.cas.lib.vzb.card.template.CardTemplate;
 import cz.cas.lib.vzb.card.template.CardTemplateStore;
+import cz.cas.lib.vzb.init.builders.*;
 import cz.cas.lib.vzb.security.user.User;
 import cz.cas.lib.vzb.security.user.UserService;
 import helper.auth.WithMockCustomUser;
@@ -24,11 +25,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Set;
 
+import static core.util.Utils.asList;
 import static core.util.Utils.asSet;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -43,8 +42,7 @@ public class DomainBaseTest {
     @Inject private AttributeTemplateStore attributeTemplateStore;
     @Inject private CardService cardService;
     @Inject private TransactionTemplate transactionTemplate;
-    @Inject private CardApi cardApi;
-    @Inject CardContentStore cardContentStore;
+    @Inject private CardContentStore cardContentStore;
 
     /**
      * just run through the domain base and tests that methods may be called, dependencies are injected etc.
@@ -53,31 +51,21 @@ public class DomainBaseTest {
     @WithMockCustomUser
     @Transactional
     public void domainBaseRunThrough() {
-        User u = transactionTemplate.execute(status -> {
-            User user = User.builder().password("blah").email("user").allowed(false).build();
+        User user = transactionTemplate.execute(status -> userService.create(UserBuilder.builder().id("user").password("blah").email("user").allowed(false).build()));
 
-            user.setId("user");
-            userService.create(user);
-            return user;
-        });
+        Category category1 = CategoryBuilder.builder().name("test").ordinalNumber(0).parent(null).owner(user).build();
+        Category category2 = CategoryBuilder.builder().name("testnested").ordinalNumber(0).parent(category1).owner(user).build();
+        Category category3 = CategoryBuilder.builder().name("test").ordinalNumber(1).parent(null).owner(user).build();
+        categoryStore.save(asList(category1, category2, category3));
 
-        Category c = new Category("test", 0, null, u);
-        Category c2 = new Category("testnested", 0, c, u);
-        Category c3 = new Category("test", 1, null, u);
-        Set<Category> categories = asSet(c, c2, c3);
-        categoryStore.save(c);
-        categoryStore.save(categories);
-        Label l = new Label("l1", Color.RED, u);
-        Label l2 = new Label("l2", Color.BLUE, u);
-        Set<Label> labels = asSet(l, l2);
-        labelStore.save(labels);
-        CardTemplate t1 = new CardTemplate();
-        t1.setName("template_private");
-        t1.setOwner(u);
-        CardTemplate t2 = new CardTemplate();
-        t2.setName("template_public");
-        Set<CardTemplate> templates = asSet(t1, t2);
-        cardTemplateStore.save(templates);
+        Label labelRed = LabelBuilder.builder().name("l1").color(Color.RED).owner(user).build();
+        Label labelBlue = LabelBuilder.builder().name("l2").color(Color.BLUE).owner(user).build();
+        labelStore.save(asList(labelRed, labelBlue));
+
+        CardTemplate t1 = new CardTemplate("template_private", user, asSet());
+        CardTemplate t2 = new CardTemplate("template_public", null, asSet());
+        cardTemplateStore.save(asList(t1, t2));
+
         AttributeTemplate at1 = new AttributeTemplate(1, "s1", t1, AttributeType.STRING);
         AttributeTemplate at2 = new AttributeTemplate(2, "d1", t1, AttributeType.DOUBLE);
         AttributeTemplate at3 = new AttributeTemplate(3, "i1", t1, AttributeType.INTEGER);
@@ -88,37 +76,36 @@ public class DomainBaseTest {
         AttributeTemplate at8 = new AttributeTemplate(3, "i1", t2, AttributeType.INTEGER);
         AttributeTemplate at9 = new AttributeTemplate(4, "dt1", t2, AttributeType.DATETIME);
         AttributeTemplate at10 = new AttributeTemplate(5, "b1", t2, AttributeType.BOOLEAN);
-        Set<AttributeTemplate> attributeTemplates = asSet(at1, at2, at3, at4, at5, at6, at7, at8, at9, at10);
-        attributeTemplateStore.save(attributeTemplates);
+        attributeTemplateStore.save(asList(at1, at2, at3, at4, at5, at6, at7, at8, at9, at10));
 
-        Card card1 = new Card(1, "c1", null, u, asSet(), asSet(), asSet(), asSet());
-        Card card2 = new Card(2, "c2", null, u, asSet(), asSet(), asSet(), asSet());
-        cardStore.save(card1);
-        cardStore.save(card2);
+        Card card1 = CardBuilder.builder().pid(1).name("c1").owner(user).build();
+        Card card2 = CardBuilder.builder().pid(2).name("c2").owner(user).build();
+        cardStore.save(asList(card1, card2));
         CardContent cc1 = new CardContent();
         cc1.setCard(card1);
         cc1.setLastVersion(true);
         CardContent cc2 = new CardContent();
         cc2.setCard(card2);
         cc2.setLastVersion(true);
-        cardContentStore.save(asSet(cc1, cc2));
+        cardContentStore.save(asList(cc1, cc2));
 
-        Attribute a1 = new Attribute(cc1, 1, "s1", AttributeType.STRING, null, null);
-        Attribute a2 = new Attribute(cc1, 2, "d1", AttributeType.DOUBLE, null, null);
-        Attribute a3 = new Attribute(cc1, 3, "i1", AttributeType.INTEGER, null, null);
-        Attribute a4 = new Attribute(cc1, 4, "dt1", AttributeType.DATETIME, null, null);
-        Attribute a5 = new Attribute(cc1, 5, "b1", AttributeType.BOOLEAN, null, null);
-        Attribute a6 = new Attribute(cc2, 1, "s1", AttributeType.STRING, null, null);
-        Attribute a7 = new Attribute(cc2, 2, "d1", AttributeType.DOUBLE, null, null);
-        Attribute a8 = new Attribute(cc2, 3, "i1", AttributeType.INTEGER, null, null);
-        Attribute a9 = new Attribute(cc2, 4, "dt1", AttributeType.DATETIME, null, null);
-        Attribute a10 = new Attribute(cc2, 5, "b1", AttributeType.BOOLEAN, null, null);
-        Set<Attribute> cc1Atrs = asSet(a1, a2, a3, a4, a5);
-        Set<Attribute> cc2Atrs = asSet(a6, a7, a8, a9, a10);
-        attributeStore.save(cc1Atrs);
-        attributeStore.save(cc2Atrs);
-        cc1.setAttributes(cc1Atrs);
-        cc2.setAttributes(cc2Atrs);
+        Attribute a1 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(1).name("s1").type(AttributeType.STRING).value(null).jsonValue(null).build();
+        Attribute a2 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(2).name("d1").type(AttributeType.DOUBLE).value(null).jsonValue(null).build();
+        Attribute a3 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(3).name("i1").type(AttributeType.INTEGER).value(null).jsonValue(null).build();
+        Attribute a4 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(4).name("dt1").type(AttributeType.DATETIME).value(null).jsonValue(null).build();
+        Attribute a5 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(5).name("b1").type(AttributeType.BOOLEAN).value(null).jsonValue(null).build();
+
+        Attribute a6 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(1).name("s1").type(AttributeType.STRING).value(null).jsonValue(null).build();
+        Attribute a7 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(2).name("d1").type(AttributeType.DOUBLE).value(null).jsonValue(null).build();
+        Attribute a8 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(3).name("i1").type(AttributeType.INTEGER).value(null).jsonValue(null).build();
+        Attribute a9 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(4).name("dt1").type(AttributeType.DATETIME).value(null).jsonValue(null).build();
+        Attribute a10 = AttributeBuilder.builder().cardContent(cc1).ordinalNumber(5).name("b1").type(AttributeType.BOOLEAN).value(null).jsonValue(null).build();
+        attributeStore.save(asList(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
+
+        Set<Attribute> content1Attributes = asSet(a1, a2, a3, a4, a5);
+        Set<Attribute> content2Attributes = asSet(a6, a7, a8, a9, a10);
+        cc1.setAttributes(content1Attributes);
+        cc2.setAttributes(content2Attributes);
 
         for (Attribute attribute : cc1.getAttributes()) {
             attribute.setName(attribute.getName() + "updated");
@@ -135,6 +122,7 @@ public class DomainBaseTest {
                 attribute.setName("updated twice");
             everySnd = !everySnd;
         }
+
         UpdateCardContentDto updateCardContentDto2 = new UpdateCardContentDto();
         updateCardContentDto2.setNewVersion(false);
         updateCardContentDto2.setAttributes(new ArrayList<>(cc1.getAttributes()));
@@ -144,22 +132,22 @@ public class DomainBaseTest {
         card2.setLinkedCards(asSet(card1));
         cardService.getStore().save(card2);
 
-        card1.setCategories(asSet(c, c2));
-        card1.setLabels(asSet(l, l2));
+        card1.setCategories(asSet(category1, category2));
+        card1.setLabels(asSet(labelRed, labelBlue));
         card1.setLinkedCards(asSet(card2));
         cardService.getStore().save(card1);
-        card1.setCategories(asSet(c, c3));
+        card1.setCategories(asSet(category1, category3));
         card1.setLabels(asSet());
         cardService.getStore().save(card1);
 
         Card card = cardService.find(card1.getId());
 
-        assertThat(card.getCategories(), hasSize(2));
-        assertThat(card.getCategories(), containsInAnyOrder(c, c3));
-        assertThat(card.getLabels(), empty());
-        assertThat(card.getLinkedCards(), hasSize(1));
-        assertThat(card.getLinkedCards(), containsInAnyOrder(card2));
-        assertThat(card.getLinkingCards(), hasSize(1));
-        assertThat(card.getLinkingCards(), containsInAnyOrder(card2));
+        assertThat(card.getCategories()).hasSize(2);
+        assertThat(card.getCategories()).containsExactlyInAnyOrder(category1, category3);
+        assertThat(card.getLabels()).isEmpty();
+        assertThat(card.getLinkedCards()).hasSize(1);
+        assertThat(card.getLinkedCards()).containsExactlyInAnyOrder(card2);
+        assertThat(card.getLinkingCards()).hasSize(1);
+        assertThat(card.getLinkingCards()).containsExactlyInAnyOrder(card2);
     }
 }

@@ -18,15 +18,19 @@ export const RecordDetail: React.FC<RouteComponentProps> = ({
   const recordId = match.params.id;
   const classesSpacing = useSpacingStyles();
   const [loading, setLoading] = useState<boolean>(true);
+  const [detailContentKey, setDetailContentKey] = useState<boolean>(true);
   const [record, setRecord] = useState<RecordProps | null>(null);
-  const loadRecord = () => {
+  const loadRecord = (refresh?: boolean) => {
     api()
       .get(`record/${recordId}`)
       .json<RecordProps>()
-      .then(res => {
+      .then((res: any) => {
         setLoading(false);
         if (res) {
           setRecord(res);
+          if (refresh) {
+            setDetailContentKey(!detailContentKey);
+          }
         }
         return;
       })
@@ -46,13 +50,13 @@ export const RecordDetail: React.FC<RouteComponentProps> = ({
         <>
           <RecordDetailActions
             record={record}
-            loadRecord={loadRecord}
+            refresh={() => loadRecord(true)}
             history={history}
           />
           <Typography variant="h5" className={classNames(classesSpacing.mb1)}>
             Citace {record.name}
           </Typography>
-          <RecordDetailContent record={record} />
+          <RecordDetailContent key={`${detailContentKey}`} record={record} />
         </>
       )}
     </>

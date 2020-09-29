@@ -2,6 +2,7 @@ package cz.cas.lib.vzb.card;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import core.domain.DomainObject;
+import core.domain.NamedObject;
 import core.exception.GeneralException;
 import core.index.IndexField;
 import core.index.IndexQueryUtils;
@@ -9,15 +10,16 @@ import core.index.dto.Params;
 import core.index.dto.Result;
 import core.store.NamedStore;
 import core.util.TemporalConverters;
-import cz.cas.lib.vzb.card.attachment.AttachmentFile;
-import cz.cas.lib.vzb.card.attachment.AttachmentFileStore;
+import cz.cas.lib.vzb.attachment.AttachmentFile;
+import cz.cas.lib.vzb.attachment.AttachmentFileStore;
 import cz.cas.lib.vzb.card.attribute.Attribute;
 import cz.cas.lib.vzb.card.attribute.AttributeType;
 import cz.cas.lib.vzb.card.category.Category;
 import cz.cas.lib.vzb.card.category.CategoryStore;
 import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.card.label.LabelStore;
-import cz.cas.lib.vzb.reference.marc.Record;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
+import cz.cas.lib.vzb.search.searchable.AdvancedSearchStore;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -27,11 +29,11 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.mapping.Dynamic;
 import org.springframework.data.solr.core.mapping.Indexed;
+import org.springframework.data.solr.core.mapping.SolrDocument;
 import org.springframework.data.solr.core.query.*;
 import org.springframework.data.solr.core.query.result.HighlightPage;
 import org.springframework.stereotype.Repository;
@@ -42,10 +44,10 @@ import java.io.IOException;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static core.index.IndexQueryUtils.buildFilters;
-import static core.index.IndexQueryUtils.initializeQuery;
 
 
 /**
@@ -54,7 +56,7 @@ import static core.index.IndexQueryUtils.initializeQuery;
  */
 @Repository
 @Slf4j
-public class CardStore extends NamedStore<Card, QCard> {
+public class CardStore extends NamedStore<Card, QCard> implements AdvancedSearchStore<IndexedCard> {
 
     public CardStore() {
         super(Card.class, QCard.class);
@@ -68,7 +70,6 @@ public class CardStore extends NamedStore<Card, QCard> {
     }
 
     private Map<String, IndexField> indexedFields = new HashMap<>();
-    private String cardCollectionName;
     private CardContentStore cardContentStore;
     private SolrClient solrClient;
     private LabelStore labelStore;
@@ -113,22 +114,15 @@ public class CardStore extends NamedStore<Card, QCard> {
         return fetch;
     }
 
-    public List<Card> findCardsOfRecord(Record record) {
+    public List<Card> findCardsOfCitation(Citation citation) {
         List<Card> fetch = query()
                 .select(qObject())
-                .where(qObject().records.contains(record))
+                .where(qObject().records.contains(citation))
                 .fetch();
         detachAll();
         return fetch;
     }
 
-    private String toFieldName(Attribute attribute) {
-        if (attribute.getName() == null || attribute.getName().trim().length() == 0)
-            throw new IllegalArgumentException("Attribute must have a name");
-        String ascii = Normalizer.normalize(attribute.getName(), Normalizer.Form.NFD).replaceAll("[\u0300-\u036F]", "");
-        String dashCase = ascii.trim().toLowerCase().replaceAll(" ", "_");
-        return dashCase + attribute.getType().getIndexSuffix();
-    }
 
     private SolrInputDocument toSolrInputDocument(Card card) {
         SolrInputDocument cardDoc = new SolrInputDocument();
@@ -150,33 +144,52 @@ public class CardStore extends NamedStore<Card, QCard> {
         else
             filledLabels = card.getLabels();
         Set<AttachmentFile> filledFiles;
-        if (card.getFiles().stream().anyMatch(c -> c.getName() == null))
+        if (card.getDocuments().stream().anyMatch(c -> c.getName() == null))
             filledFiles = new HashSet<>(attachmentFileStore.findAllInList(card.getLabels().stream().map(DomainObject::getId).collect(Collectors.toList())));
         else
-            filledFiles = card.getFiles();
+            filledFiles = card.getDocuments();
         cardDoc.addField(IndexedCard.LABELS, filledLabels.stream().map(Label::getName).collect(Collectors.toList()));
         cardDoc.addField(IndexedCard.CATEGORIES, filledCategories.stream().map(Category::getName).collect(Collectors.toList()));
         cardDoc.addField(IndexedCard.CATEGORY_IDS, filledCategories.stream().map(Category::getId).collect(Collectors.toList()));
-        cardDoc.addField(IndexedCard.ATTACHMENT_FILES, filledFiles.stream().map(AttachmentFile::getName).collect(Collectors.toList()));
+        cardDoc.addField(IndexedCard.ATTACHMENT_FILES_NAMES, filledFiles.stream().map(AttachmentFile::getName).collect(Collectors.toList()));
         cardDoc.addField(IndexedCard.NAME, card.getName());
         cardDoc.addField(IndexedCard.NOTE, card.getNote());
+
+        // TODO: Should we index only last card content?
         List<CardContent> allOfCard = cardContentStore.findAllOfCard(card.getId());
         for (CardContent cardContent : allOfCard) {
-            SolrInputDocument cDoc = new SolrInputDocument();
-            cDoc.addField(IndexQueryUtils.TYPE_FIELD, IndexedCard.CONTENT_TYPE);
-            cDoc.addField(IndexedCard.ID, cardContent.getId());
-            cDoc.addField(IndexedCard.CONTENT_CREATED, TemporalConverters.instantToIsoUtcString(cardContent.getCreated()));
-            cDoc.addField(IndexedCard.CONTENT_UPDATED, TemporalConverters.instantToIsoUtcString(cardContent.getUpdated()));
-            cDoc.addField(IndexedCard.CONTENT_LAST_VERSION, cardContent.isLastVersion());
+            SolrInputDocument contentDoc = new SolrInputDocument();
+            contentDoc.addField(IndexQueryUtils.TYPE_FIELD, IndexedCard.CONTENT_TYPE);
+            contentDoc.addField(IndexedCard.ID, cardContent.getId());
+            contentDoc.addField(IndexedCard.CONTENT_CREATED, TemporalConverters.instantToIsoUtcString(cardContent.getCreated()));
+            contentDoc.addField(IndexedCard.CONTENT_UPDATED, TemporalConverters.instantToIsoUtcString(cardContent.getUpdated()));
+            contentDoc.addField(IndexedCard.CONTENT_LAST_VERSION, cardContent.isLastVersion());
             for (Attribute attribute : cardContent.getAttributes()) {
-                Object value = attribute.getType() == AttributeType.DATETIME ? TemporalConverters.instantToIsoUtcString((Instant) attribute.getValue()) : attribute.getValue();
-                cDoc.addField(toFieldName(attribute), value);
+                Object value = normalizeAttributeValue(attribute);
+                contentDoc.addField(normalizeAttributeName(attribute), value);
                 if (attribute.getType() == AttributeType.STRING && cardContent.isLastVersion())
                     cardDoc.addField(IndexedCard.ATTRIBUTES, value);
             }
-            cardDoc.addChildDocument(cDoc);
+            cardDoc.addChildDocument(contentDoc);
         }
+
         return cardDoc;
+    }
+
+    private Object normalizeAttributeValue(Attribute attribute) {
+        if (attribute.getType() == AttributeType.DATETIME || attribute.getType() == AttributeType.DATE) {
+            return TemporalConverters.instantToIsoUtcString((Instant) attribute.getValue());
+        }
+        return attribute.getValue();
+
+    }
+
+    private String normalizeAttributeName(Attribute attribute) {
+        if (attribute.getName() == null || attribute.getName().trim().length() == 0)
+            throw new IllegalArgumentException("Attribute must have a name");
+        String ascii = Normalizer.normalize(attribute.getName(), Normalizer.Form.NFD).replaceAll("[\u0300-\u036F]", "");
+        String dashCase = ascii.trim().toLowerCase().replaceAll(" ", "_");
+        return dashCase + attribute.getType().getIndexSuffix();
     }
 
     public Map<String, Long> findCategoryFacets(String ownerId) {
@@ -188,9 +201,9 @@ public class CardStore extends NamedStore<Card, QCard> {
         solrQuery.setFacetMinCount(1);
         solrQuery.setFacetMissing(false);
         solrQuery.addFacetField(IndexedCard.CATEGORY_IDS);
-        QueryResponse result = null;
+        QueryResponse result;
         try {
-            result = solrClient.query(cardCollectionName, solrQuery);
+            result = solrClient.query(getIndexCollection(), solrQuery);
         } catch (SolrServerException | IOException e) {
             throw new GeneralException(e);
         }
@@ -198,30 +211,21 @@ public class CardStore extends NamedStore<Card, QCard> {
     }
 
     //methods copied from indexed store and those overriding domain store
-    @Override
-    public void hardDelete(Card entity) {
-        super.hardDelete(entity);
-        removeIndex(entity);
-    }
 
-    @Override
-    public void delete(Card entity) {
-        entity.setDeleted(Instant.now());
-        saveAndIndex(entity);
-    }
 
     public Result<Card> findAll(Params params) {
         SimpleQuery query = new SimpleQuery();
-        initializeQuery(query, params, indexedFields);
+        IndexQueryUtils.initSortingAndPaging(query, params, indexedFields);
         query.addProjectionOnField("id");
         query.addCriteria(typeCriteria());
         if (params.getInternalQuery() != null)
             query.addCriteria(params.getInternalQuery());
         query.addFilterQuery(new SimpleFilterQuery(buildFilters(params, getIndexType(), indexedFields)));
-        Result<Card> result = new Result<>();
         Page<IndexedCard> page = getTemplate().query(getIndexCollection(), query, getUType());
         List<String> ids = page.getContent().stream().map(IndexedCard::getId).collect(Collectors.toList());
         List<Card> sorted = findAllInList(ids);
+
+        Result<Card> result = new Result<>();
         result.setItems(sorted);
         result.setCount(page.getTotalElements());
         return result;
@@ -235,12 +239,12 @@ public class CardStore extends NamedStore<Card, QCard> {
         options.addField(IndexedCard.CATEGORIES);
         options.addField(IndexedCard.NOTE);
         options.addField(IndexedCard.NAME);
-        options.addField(IndexedCard.ATTACHMENT_FILES);
+        options.addField(IndexedCard.ATTACHMENT_FILES_NAMES);
         options.addHighlightParameter("f." + IndexedCard.CATEGORIES + ".hl.preserveMulti", "true");
         options.addHighlightParameter("f." + IndexedCard.ATTRIBUTES + ".hl.preserveMulti", "true");
         options.addHighlightParameter("f." + IndexedCard.LABELS + ".hl.preserveMulti", "true");
-        options.addHighlightParameter("f." + IndexedCard.ATTACHMENT_FILES + ".hl.preserveMulti", "true");
-        initializeQuery(query, params, indexedFields);
+        options.addHighlightParameter("f." + IndexedCard.ATTACHMENT_FILES_NAMES + ".hl.preserveMulti", "true");
+        IndexQueryUtils.initSortingAndPaging(query, params, indexedFields);
         query.setHighlightOptions(options);
         query.addProjectionOnField("id");
         query.addCriteria(typeCriteria());
@@ -256,10 +260,6 @@ public class CardStore extends NamedStore<Card, QCard> {
     @Getter
     private final String indexType = IndexedCard.CARD_TYPE;
 
-    public String getIndexCollection() {
-        return cardCollectionName;
-    }
-
     public boolean supportsChildren() {
         return true;
     }
@@ -270,8 +270,8 @@ public class CardStore extends NamedStore<Card, QCard> {
 
     public Card index(Card card) {
         SolrInputDocument cardDoc = toSolrInputDocument(card);
-        getTemplate().saveDocument(cardCollectionName, cardDoc);
-        getTemplate().commit(cardCollectionName);
+        getTemplate().saveDocument(getIndexCollection(), cardDoc);
+        getTemplate().commit(getIndexCollection());
         return card;
     }
 
@@ -287,15 +287,68 @@ public class CardStore extends NamedStore<Card, QCard> {
         return objects;
     }
 
-    public Card saveAndIndex(Card entity) {
-        super.save(entity);
+
+    public Card saveWithoutIndex(Card entity) {
+        return super.save(entity);
+    }
+
+    public Collection<? extends Card> saveWithoutIndex(Collection<? extends Card> entities) {
+        return super.save(entities);
+    }
+
+    @Override
+    public void hardDelete(Card entity) {
+        super.hardDelete(entity);
+        removeIndex(entity);
+    }
+
+    /**
+     * Sets deleted field to Instant.now() and saves changes to Solr index.
+     *
+     * In indexed domain stores, such as {@link core.index.IndexedNamedStore#delete(NamedObject)}, delete operations
+     * removes index. However, the index is updated in the {@link CardStore} to allow for querying soft-deleted cards
+     * that rely on attribute {@link Card#getDeleted()}.
+     *
+     * @implNote setting field and committing to DB is done manually instead of super.delete().
+     *         This way developer has control over entity and field `deleted` and can simply index entity.
+     *         Without access to the JPA updated entity there would be no index action on deleted field because it would
+     *         be null.
+     */
+    @Override
+    public void delete(Card entity) {
+        if (!entityManager.contains(entity) && entity != null) {
+            entity = entityManager.find(type, entity.getId());
+        }
+
+        if (entity != null) {
+            Instant now = Instant.now();
+            entity.setDeleted(now);
+
+            entityManager.merge(entity);
+
+            entityManager.flush();
+            detachAll();
+
+            logDeleteEvent(entity);
+
+            if (supportsChildren()) {
+                removeIndex(entity);
+            }
+            index(entity); // usually is index removed, here it is kept for purposes of soft-deletion flag
+        }
+    }
+
+    @Override
+    public Card save(Card entity) {
+        entity = super.save(entity);
         if (supportsChildren()) {
             removeIndex(entity);
         }
         return index(entity);
     }
 
-    public Collection<? extends Card> saveAndIndex(Collection<? extends Card> entities) {
+    @Override
+    public Collection<? extends Card> save(Collection<? extends Card> entities) {
         super.save(entities);
         if (supportsChildren()) {
             entities.forEach(this::removeIndex);
@@ -338,29 +391,56 @@ public class CardStore extends NamedStore<Card, QCard> {
         for (Card instance : instances) {
             index(instance);
             counter++;
+
+            // logging information by 20 indexed cards to show progress
             if (counter % 20 == 0 || counter == instances.size()) {
                 log.debug("reindexed " + counter + " records of core: " + getIndexCollection());
             }
         }
         log.trace("reindexed all " + instances.size() + " records of core: " + getIndexCollection());
-        instances.forEach(this::index);
     }
 
     public void dropReindex() {
-        log.debug("drop-reindexing core: " + getIndexCollection());
+        log.info("drop-reindexing core: " + getIndexCollection());
         removeAllIndexes();
         reindex();
     }
 
-    //setters
+    public String getIndexCollection() {
+        SolrDocument document = getUType().getAnnotation(SolrDocument.class);
+
+        if (document == null || document.collection().isEmpty()) {
+            throw new GeneralException(String.format("Missing Solr @SolrDocument.collection for class: `%s`", getUType().getSimpleName()));
+        }
+
+        return document.collection();
+    }
+
+    // ------------------------------------ ADVANCED SEARCH MIXIN ------------------------------------
+    @Override
+    public SolrTemplate getSolrTemplateForSearch() {
+        return getTemplate();
+    }
+
+    @Override
+    public Criteria getTypeCriteriaForSearch() {
+        return typeCriteria();
+    }
+
+    @Override
+    public Class<IndexedCard> getTypeClassForSearch() {
+        return getUType();
+    }
+
+    @Override
+    public Supplier<IndexedCard> getConstructor() {
+        return IndexedCard::new;
+    }
+
+    // ------------------------------------ SETTERS ------------------------------------
     @Resource(name = "SchemaSolrTemplate")
     public void setTemplate(SolrTemplate template) {
         this.template = template;
-    }
-
-    @Inject
-    public void setCardCollectionName(@Value("${vzb.index.cardCollectionName}") String cardCollectionName) {
-        this.cardCollectionName = cardCollectionName;
     }
 
     @Inject

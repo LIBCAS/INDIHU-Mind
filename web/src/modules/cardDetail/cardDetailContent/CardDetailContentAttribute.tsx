@@ -9,8 +9,8 @@ import { Formik } from "../../../components/form/Formik";
 import { InputText } from "../../../components/form/InputText";
 import { Switch } from "../../../components/form/Switch";
 import { DateTimePicker } from "../../../components/form/DateTimePicker";
+import { GPSPicker } from "../../../components/form/GPSPicker";
 
-import { notEmpty } from "../../../utils/form/validate";
 import { CardContentProps } from "../../../types/card";
 import { AttributeProps } from "../../../types/attribute";
 
@@ -20,6 +20,8 @@ import { onSubmitAttribute, onDeleteAttribute } from "./_utils";
 import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
 import { useStyles as useLayoutStyles } from "../../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { AttributeType } from "../../../enums";
+import { validateAttributeType } from "../../../utils/attribute";
 
 interface CardDetailContentAttributeProps {
   card: CardContentProps;
@@ -34,17 +36,25 @@ interface FormValues {
   attributeValue: any;
 }
 
-export const CardDetailContentAttribute: React.FC<
-  CardDetailContentAttributeProps
-> = ({ attribute, card, setCardContent }) => {
+export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProps> = ({
+  attribute,
+  card,
+  setCardContent
+}) => {
   const classesText = useTextStyles();
+
   const classesLayout = useLayoutStyles();
+
   const classesSpacing = useSpacingStyles();
+
   const [editValue, setEditValue] = useState(false);
+
   const { type } = attribute;
+
   const onRemoveAttribute = () => {
     onDeleteAttribute(card, setCardContent, () => {}, attribute);
   };
+
   const onSubmitValue = (values: FormValues) => {
     const att: AttributeProps = {
       ...attribute,
@@ -53,6 +63,7 @@ export const CardDetailContentAttribute: React.FC<
     onSubmitAttribute(att, card, setCardContent, () => {}, attribute);
     setEditValue(false);
   };
+
   return (
     <div
       key={attribute.id}
@@ -64,10 +75,11 @@ export const CardDetailContentAttribute: React.FC<
       )}
     >
       <Typography
-        className={classNames(classesText.textBold, classesSpacing.mr1, {
+        className={classNames(classesSpacing.mr1, {
           [classesText.cursor]: !editValue && card.lastVersion
         })}
         component="span"
+        variant="subtitle1"
         onClick={() => (card.lastVersion ? setEditValue(true) : undefined)}
       >
         {attribute.name}
@@ -83,32 +95,10 @@ export const CardDetailContentAttribute: React.FC<
                 <div className={classesSpacing.mb1}>
                   <Field
                     name="attributeValue"
-                    validate={(value: any) => {
-                      let error;
-                      const notEmptyTypes = ["STRING", "DOUBLE"];
-                      if (notEmptyTypes.indexOf(type) !== -1) {
-                        error = notEmpty(value);
-                      }
-                      return error;
-                    }}
+                    validate={validateAttributeType(type)}
                     render={({ field, form }: FieldProps<AttributeProps>) => {
                       switch (type) {
-                        case "STRING":
-                        case "DOUBLE":
-                          return (
-                            <InputText
-                              key={attribute.id}
-                              field={field}
-                              form={form}
-                              type={type === "STRING" ? "text" : "number"}
-                              multiline={type === "STRING"}
-                              autoFocus
-                              inputProps={{
-                                rows: type === "STRING" ? 4 : undefined
-                              }}
-                            />
-                          );
-                        case "BOOLEAN":
+                        case AttributeType.BOOLEAN:
                           return (
                             <Switch
                               key={attribute.id}
@@ -118,30 +108,50 @@ export const CardDetailContentAttribute: React.FC<
                               }}
                               form={form}
                               label={field.value ? "Ano" : "Ne"}
-                              autoFocus
+                              autoFocus={false}
                             />
                           );
-                        case "DATETIME":
+                        case AttributeType.DATE:
+                        case AttributeType.DATETIME:
                           return (
                             <div
                               key={attribute.id}
                               className={classNames(classesSpacing.mt2)}
                             >
                               <DateTimePicker
-                                // onAccept={() => {
-                                //   console.log("ACCEPT")
-                                //   if (formikBag.isSubmitting) return;
-                                //   formikBag.submitForm();
-                                // }}
-                                // onClose={() => {
-                                //   console.log("CLOSED")
-                                //   setEditValue(false);
-                                // }}
-                                autoFocus={true}
+                                autoFocus={false}
                                 field={field}
                                 form={form}
+                                dateOnly={type === AttributeType.DATE}
                               />
                             </div>
+                          );
+                        case AttributeType.GEOLOCATION:
+                          return (
+                            <GPSPicker
+                              key={attribute.id}
+                              field={field}
+                              form={form}
+                            />
+                          );
+                        default:
+                          return (
+                            <InputText
+                              key={attribute.id}
+                              field={field}
+                              form={form}
+                              type={
+                                type === AttributeType.DOUBLE
+                                  ? "number"
+                                  : "text"
+                              }
+                              multiline={type === AttributeType.STRING}
+                              autoFocus={false}
+                              inputProps={{
+                                rows:
+                                  type === AttributeType.STRING ? 4 : undefined
+                              }}
+                            />
                           );
                       }
                     }}
@@ -176,7 +186,7 @@ export const CardDetailContentAttribute: React.FC<
                       Zrušit
                     </Button>
                     <Popconfirm
-                      Button={() => (
+                      Button={
                         <Button
                           type="button"
                           size="small"
@@ -186,7 +196,7 @@ export const CardDetailContentAttribute: React.FC<
                         >
                           Smazat atribut
                         </Button>
-                      )}
+                      }
                       confirmText="Smazat atribut?"
                       onConfirmClick={(e: any) => {
                         e.stopPropagation();
@@ -204,10 +214,12 @@ export const CardDetailContentAttribute: React.FC<
           className={classNames({
             [classesText.cursor]: !editValue && card.lastVersion
           })}
-          onClick={() => (card.lastVersion ? setEditValue(true) : undefined)}
+          variant="body2"
           component="span"
         >
-          {parseAttribute(attribute)}
+          {parseAttribute(attribute, () =>
+            card.lastVersion ? setEditValue(true) : undefined
+          )}
         </Typography>
       )}
     </div>

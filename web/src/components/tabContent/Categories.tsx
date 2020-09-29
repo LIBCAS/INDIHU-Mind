@@ -15,21 +15,30 @@ import { CreateCategory } from "./CreateCategory";
 interface CategoriesProps {
   activeTab: TabProps;
   setActiveTab: Function;
+  transition: boolean;
 }
 
 export const Categories: React.FC<CategoriesProps> = ({
   activeTab,
-  setActiveTab
+  setActiveTab,
+  transition
 }) => {
   const context: any = useContext(GlobalContext);
+
   const state: StateProps = context.state;
+
   const dispatch: Function = context.dispatch;
+
   const { categories, categoryActive } = state.category;
+
   const [categoriesExpanded, setCategoriesExpanded] = useState<CategoryProps[]>(
     []
   );
+
   const [open, setOpen] = useState<boolean>(false);
+
   const classes = useStyles();
+
   const loadCategories = () => {
     categoryGet(dispatch);
   };
@@ -76,7 +85,7 @@ export const Categories: React.FC<CategoriesProps> = ({
   }, [activeTab]);
 
   return (
-    <>
+    <React.Fragment>
       <Button
         onClick={() => setOpen(true)}
         className={classes.createButton}
@@ -97,17 +106,30 @@ export const Categories: React.FC<CategoriesProps> = ({
           />
         }
       />
-      {categories.map(c => (
-        <CategoryItem
-          key={c.id}
-          c={c}
-          categoryActiveSetHandler={categoryActiveSetHandler}
-          findCategoryById={findCategoryById}
-          categoryActive={categoryActive}
-          categoriesExpanded={categoriesExpanded}
-          setCategoriesExpanded={setCategoriesExpanded}
-        />
-      ))}
-    </>
+      <div
+        className={classes.categoriesContainer}
+        style={{
+          maxHeight: transition
+            ? window.innerWidth < 512
+              ? "75%"
+              : "90%"
+            : window.innerWidth < 512
+            ? "85%"
+            : `calc(100% - 32px)`
+        }}
+      >
+        {categories.map(c => (
+          <CategoryItem
+            key={c.id}
+            c={c}
+            categoryActiveSetHandler={categoryActiveSetHandler}
+            findCategoryById={findCategoryById}
+            categoryActive={categoryActive}
+            categoriesExpanded={categoriesExpanded}
+            setCategoriesExpanded={setCategoriesExpanded}
+          />
+        ))}
+      </div>
+    </React.Fragment>
   );
 };

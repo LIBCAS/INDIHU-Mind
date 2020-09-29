@@ -8,10 +8,10 @@ import { Formik } from "../../../components/form/Formik";
 import { GlobalContext, StateProps } from "../../../context/Context";
 import { labelGet } from "../../../context/actions/label";
 import { CreateLabel } from "../../../components/tabContent/CreateLabel";
+import { Select } from "../../../components/form/Select";
 
 import { LabelProps } from "../../../types/label";
-import { OptionType } from "../../../components/form/reactSelect/_reactSelectTypes";
-import { ReactSelect } from "../../../components/form/reactSelect/ReactSelect";
+import { OptionType } from "../../../components/select/_types";
 import { parseLabel } from "../../cardCreate/_utils";
 import { CardContentProps } from "../../../types/card";
 import { Modal } from "../../../components/portal/Modal";
@@ -34,12 +34,16 @@ interface CardDetailContentAddLabelFormProps {
 }
 
 interface FormValues {
-  labels: OptionType[];
+  labels: string[];
 }
 
-export const CardDetailContentAddLabelForm: React.FC<
-  CardDetailContentAddLabelFormProps
-> = ({ card, setCardContent, openForm, setOpenForm, anchorEl }) => {
+export const CardDetailContentAddLabelForm: React.FC<CardDetailContentAddLabelFormProps> = ({
+  card,
+  setCardContent,
+  openForm,
+  setOpenForm,
+  anchorEl
+}) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
   const classesText = useTextStyles();
@@ -72,7 +76,7 @@ export const CardDetailContentAddLabelForm: React.FC<
   const onSubmit = (values: FormValues) => {
     // to transform option to normal label
     const resultTransformed = state.label.labels.filter(o =>
-      values.labels.some(c => c.value === o.id)
+      values.labels.some(id => id === o.id)
     );
     onEditCard("labels", resultTransformed, card, setCardContent);
     setOpenForm(false);
@@ -85,7 +89,7 @@ export const CardDetailContentAddLabelForm: React.FC<
         overflowVisible
         anchorEl={anchorEl.current}
         content={
-          <div>
+          <div className={classNames(classesSpacing.p2, classesSpacing.pt3)}>
             <Formik
               initialValues={initialValues}
               enableReinitialize
@@ -129,13 +133,14 @@ export const CardDetailContentAddLabelForm: React.FC<
                                 Uložit změny
                               </Button>
                             </div>
-                            <ReactSelect
+                            <Select
                               form={form}
                               field={field}
                               loading={false}
+                              isMulti={true}
                               options={options}
                               onCreate={onCreate}
-                              autoFocus
+                              autoFocus={false}
                               menuIsOpen
                             />
                             <Modal

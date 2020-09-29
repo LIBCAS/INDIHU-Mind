@@ -106,8 +106,8 @@ public abstract class DbTest {
         s.close();
     }
 
-    public void initializeStores(DomainStore... stores) {
-        for (DomainStore store : stores) {
+    public void initializeStores(DomainStore<?, ?>... stores) {
+        for (DomainStore<?, ?> store : stores) {
             store.setEntityManager(em);
             store.setQueryFactory(new JPAQueryFactory(em));
         }

@@ -18,16 +18,16 @@ public class CategoryDto {
     private Set<CategoryDto> subCategories = new HashSet<>();
     private Long cardsCount = 0L;
 
-    public void addSubCategory(CategoryDto c) {
-        subCategories.add(c);
+    public CategoryDto(Category source) {
+        this.id = source.getId();
+        this.ordinalNumber = source.getOrdinalNumber();
+        this.name = source.getName();
+        if (source.getParent() != null)
+            this.parentId = source.getParent().getId();
     }
 
-    public CategoryDto(Category source) {
-        setId(source.getId());
-        setOrdinalNumber(source.getOrdinalNumber());
-        setName(source.getName());
-        if (source.getParent() != null)
-            setParentId(source.getParent().getId());
+    public void addSubCategory(CategoryDto c) {
+        subCategories.add(c);
     }
 
     public void incrementCardsCount(Long v) {

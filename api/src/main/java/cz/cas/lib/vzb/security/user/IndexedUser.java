@@ -2,6 +2,8 @@ package cz.cas.lib.vzb.security.user;
 
 import core.index.IndexFieldType;
 import core.index.IndexedDatedObject;
+import cz.cas.lib.vzb.search.searchable.AdvancedSearch;
+import cz.cas.lib.vzb.search.query.QueryType;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.solr.client.solrj.beans.Field;
@@ -22,6 +24,7 @@ public class IndexedUser extends IndexedDatedObject {
 
     @Field(value = EMAIL)
     @Indexed(type = IndexFieldType.STRING)
+    @AdvancedSearch(czech = "E-mail", type = QueryType.STRING)
     private String email;
 
     @Field(value = ALLOWED)
@@ -31,4 +34,5 @@ public class IndexedUser extends IndexedDatedObject {
     @Field(value = ROLES)
     @Indexed(type = IndexFieldType.STRING)
     private List<String> roles;
+
 }

@@ -22,6 +22,7 @@ export interface TableProps {
   Menu: any;
   ComponentDetail: React.FC<{ selectedRow: any }>;
   Toolbar?: React.FC<{ checkboxRows: any[] }>;
+  createModalProps?: any;
 }
 
 export interface DataProps {

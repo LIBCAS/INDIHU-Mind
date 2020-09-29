@@ -34,7 +34,7 @@ public class ResourceExceptionHandler {
     }
 
     @ExceptionHandler(InvalidAttribute.class)
-    public ResponseEntity invalidAttribute(BadRequestException e) {
+    public ResponseEntity invalidAttribute(InvalidAttribute e) {
         return errorResponse(e, HttpStatus.BAD_REQUEST);
     }
 

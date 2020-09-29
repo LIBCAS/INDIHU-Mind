@@ -16,9 +16,11 @@ public class LabelStore extends DomainStore<Label, QLabel> {
      **/
     public Label findEqualNameDifferentId(Label newLabel) {
         if (requireNonNull(newLabel).getName() == null) return null;
+        if (requireNonNull(newLabel).getOwner() == null) return null;
 
         Label entity = query()
                 .select(qObject())
+                .where(qObject().owner.id.eq(newLabel.getOwner().getId()))
                 .where(qObject().name.eq(newLabel.getName()))
                 .where(qObject().id.ne(newLabel.getId()))
                 .fetchFirst();

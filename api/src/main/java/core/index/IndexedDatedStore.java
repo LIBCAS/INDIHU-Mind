@@ -4,7 +4,6 @@ import com.querydsl.core.types.dsl.EntityPathBase;
 import core.domain.DatedObject;
 import core.index.dto.Params;
 import core.index.dto.Result;
-import core.rest.data.DataAdapter;
 import core.store.DatedStore;
 import core.store.Transactional;
 import lombok.Getter;
@@ -20,7 +19,7 @@ import static core.util.Utils.toDate;
 @Getter
 @Transactional
 public abstract class IndexedDatedStore<T extends DatedObject, Q extends EntityPathBase<T>, U extends IndexedDatedObject>
-        extends DatedStore<T, Q> implements IndexedStore<T, U>, DataAdapter<T> {
+        extends DatedStore<T, Q> implements IndexedStore<T, U> {
     protected SolrTemplate template;
 
     private Class<U> uType;
@@ -58,7 +57,7 @@ public abstract class IndexedDatedStore<T extends DatedObject, Q extends EntityP
 
     @Override
     public Collection<? extends T> save(Collection<? extends T> entities) {
-        super.save(entities);
+        entities = super.save(entities);
         return IndexedStore.super.save(entities);
     }
 

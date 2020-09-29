@@ -35,6 +35,7 @@ import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles"
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 
 import { onSubmitTemplate } from "./_utils";
+import { theme } from "../../theme/theme";
 
 export interface TemplatesFormValues {
   id: string;
@@ -105,15 +106,22 @@ export const TemplatesForm: React.FC<TemplatesFormProps> = ({
         }}
         render={(formikBag: FormikProps<TemplatesFormValues>) => {
           return (
-            <Form>
+            <Form
+              className={classNames(
+                classesLayout.flex,
+                classesLayout.directionColumn,
+                classesLayout.spaceBetween,
+                classes.templateFormWrapper
+              )}
+            >
               <div
                 className={classNames(
                   classesLayout.flex,
                   classesLayout.flexWrap,
                   classesLayout.justifyCenter,
                   classesLayout.directionColumn,
-                  classesSpacing.ml2,
-                  classesSpacing.mr2
+                  classesSpacing.ml3,
+                  classesSpacing.mr3
                 )}
               >
                 <Field
@@ -128,7 +136,7 @@ export const TemplatesForm: React.FC<TemplatesFormProps> = ({
                       type="text"
                       field={field}
                       form={form}
-                      autoFocus={template ? false : true}
+                      autoFocus={false}
                     />
                   )}
                 />
@@ -137,20 +145,28 @@ export const TemplatesForm: React.FC<TemplatesFormProps> = ({
                     classesText.subtitle,
                     classesSpacing.mt2
                   )}
+                  style={{ marginTop: theme.spacing(2) }}
                 >
                   ATRIBUTY
                 </Typography>
-                {formikBag.values.attributeTemplates.map(
-                  (att: CardTemplateAttribute) => {
-                    return (
-                      <TemplatesAttribute
-                        key={att.id}
-                        attribute={att}
-                        formikBag={formikBag}
-                      />
-                    );
-                  }
-                )}
+                <div
+                  className={classNames(
+                    classesLayout.flex,
+                    classesLayout.flexWrap
+                  )}
+                >
+                  {formikBag.values.attributeTemplates.map(
+                    (att: CardTemplateAttribute) => {
+                      return (
+                        <TemplatesAttribute
+                          key={att.id}
+                          attribute={att}
+                          formikBag={formikBag}
+                        />
+                      );
+                    }
+                  )}
+                </div>
                 <div ref={AddAttributeRef} className={classes.addWrapper}>
                   <ButtonGrey
                     text="Přidat atribut"
@@ -162,6 +178,7 @@ export const TemplatesForm: React.FC<TemplatesFormProps> = ({
                     open={popoverOpen}
                     setOpen={setPopoverOpen}
                     anchorEl={AddAttributeRef.current}
+                    overflowVisible={true}
                     content={
                       <TemplatesAddAttribute
                         formikBagParent={formikBag}
@@ -171,22 +188,27 @@ export const TemplatesForm: React.FC<TemplatesFormProps> = ({
                   />
                 </div>
               </div>
-              <Divider className={classesSpacing.mt3} />
-              <div
-                className={classNames(
-                  classesLayout.flex,
-                  classesLayout.justifyCenter,
-                  classesSpacing.mb1
-                )}
-              >
-                <Button
-                  className={classesSpacing.mt3}
-                  variant="contained"
-                  color="primary"
-                  type="submit"
+              <div>
+                <Divider className={classesSpacing.mt3} />
+                <div
+                  className={classNames(
+                    classesLayout.flex,
+                    classesLayout.justifyCenter,
+                    classesSpacing.mb1
+                  )}
                 >
-                  {template ? "Změnit šablonu" : "Vytvořit šablonu"}
-                </Button>
+                  <Button
+                    className={classNames(
+                      classesSpacing.mt3,
+                      classesSpacing.mb2
+                    )}
+                    variant="contained"
+                    color="primary"
+                    type="submit"
+                  >
+                    {template ? "Změnit šablonu" : "Vytvořit šablonu"}
+                  </Button>
+                </div>
               </div>
             </Form>
           );

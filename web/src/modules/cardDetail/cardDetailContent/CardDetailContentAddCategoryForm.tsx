@@ -8,10 +8,10 @@ import { Formik } from "../../../components/form/Formik";
 import { GlobalContext, StateProps } from "../../../context/Context";
 import { categoryGet } from "../../../context/actions/category";
 import { CreateCategory } from "../../../components/tabContent/CreateCategory";
+import { Select } from "../../../components/form/Select";
 
 import { CategoryProps } from "../../../types/category";
-import { OptionType } from "../../../components/form/reactSelect/_reactSelectTypes";
-import { ReactSelect } from "../../../components/form/reactSelect/ReactSelect";
+import { OptionType } from "../../../components/select/_types";
 import { flattenCategory, getFlatCategories } from "../../cardCreate/_utils";
 import { CardContentProps } from "../../../types/card";
 import { Modal } from "../../../components/portal/Modal";
@@ -31,33 +31,50 @@ interface CardDetailContentAddCategoryFormProps {
   openForm: any;
   setOpenForm: any;
   anchorEl: any;
+  refreshCard: () => void;
 }
 
 interface FormValues {
-  categories: OptionType[];
+  categories: string[];
 }
 
-export const CardDetailContentAddCategoryForm: React.FC<
-  CardDetailContentAddCategoryFormProps
-> = ({ card, setCardContent, openForm, setOpenForm, anchorEl }) => {
+export const CardDetailContentAddCategoryForm: React.FC<CardDetailContentAddCategoryFormProps> = ({
+  card,
+  setCardContent,
+  openForm,
+  setOpenForm,
+  anchorEl,
+  refreshCard
+}) => {
   const classes = useStyles();
+
   const classesSpacing = useSpacingStyles();
+
   const classesText = useTextStyles();
+
   const [initialValues, setInitialValues] = useState<{
     categories: OptionType[];
   }>({
     categories: []
   });
+
   const context: any = useContext(GlobalContext);
+
   const state: StateProps = context.state;
+
   const dispatch: Function = context.dispatch;
+
   const [options, setOptions] = useState<OptionType[]>([]);
+
   const [createValue, setCreateValue] = useState<string>("");
+
   const [open, setOpen] = useState(false);
-  const onCreate = (inputValue: string) => {
+
+  const handleCreate = (inputValue: string) => {
     setCreateValue(inputValue);
     setOpen(true);
   };
+
   useEffect(() => {
     if (initialValues.categories.length === 0) {
       // to get whole category path (subcategory > subsubcategory)
@@ -75,34 +92,35 @@ export const CardDetailContentAddCategoryForm: React.FC<
     setOptions(flatten);
   }, [state.category.categories]);
 
-  const onSubmit = (values: FormValues) => {
+  const handleSubmit = (values: FormValues) => {
     // to get transform option to normal category
     const allFlatten = getFlatCategories(state.category.categories);
     const resultFlatten = allFlatten.filter(o =>
-      values.categories.some(c => c.value === o.id)
+      values.categories.some(id => id === o.id)
     );
     onEditCard(
       "categories",
       // values.categories.map(v => ({ id: v.value })),
       resultFlatten,
       card,
-      setCardContent
+      setCardContent,
+      refreshCard
     );
     setOpenForm(false);
   };
   return (
-    <>
+    <React.Fragment>
       <Popover
         open={openForm}
         setOpen={setOpenForm}
         anchorEl={anchorEl.current}
         overflowVisible
         content={
-          <div>
+          <div className={classNames(classesSpacing.p2, classesSpacing.pt3)}>
             <Formik
               initialValues={initialValues}
               enableReinitialize
-              onSubmit={onSubmit}
+              onSubmit={handleSubmit}
               render={(formikBag: FormikProps<FormValues>) => (
                 <Form>
                   <div className={classes.categoryFormWrapper}>
@@ -142,13 +160,14 @@ export const CardDetailContentAddCategoryForm: React.FC<
                                 Uložit změny
                               </Button>
                             </div>
-                            <ReactSelect
+                            <Select
                               form={form}
                               field={field}
                               loading={false}
+                              isMulti={true}
                               options={options}
-                              onCreate={onCreate}
-                              autoFocus
+                              onCreate={handleCreate}
+                              autoFocus={false}
                               menuIsOpen
                             />
                             <Modal
@@ -174,6 +193,6 @@ export const CardDetailContentAddCategoryForm: React.FC<
           </div>
         }
       />
-    </>
+    </React.Fragment>
   );
 };

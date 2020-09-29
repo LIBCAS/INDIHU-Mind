@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static core.index.IndexQueryUtils.buildFilters;
-import static core.index.IndexQueryUtils.initializeQuery;
 
 /**
  * {@link DatedStore} with automatic Solr indexing and filtering.
@@ -146,7 +145,7 @@ public interface IndexedStore<T extends DomainObject, U extends IndexedDomainObj
     default Result<T> findAll(Params params) {
         SimpleQuery query = new SimpleQuery();
         Map<String, IndexField> indexedFields = IndexQueryUtils.INDEXED_FIELDS_MAP.get(getIndexType());
-        initializeQuery(query, params, indexedFields);
+        IndexQueryUtils.initSortingAndPaging(query, params, indexedFields);
 
         query.addProjectionOnField("id");
         query.addCriteria(typeCriteria());
@@ -190,9 +189,9 @@ public interface IndexedStore<T extends DomainObject, U extends IndexedDomainObj
 
     /**
      * Gets index type of the object.
-     * <p>
-     *     One index collection may contain objects of multiple types. The type attribute is used to distinguish between these objects.
-     * </p>
+     *
+     * One index collection may contain objects of multiple types. The type attribute is used to distinguish between
+     * these objects.
      *
      * @return Name of Solr type
      */
@@ -206,11 +205,11 @@ public interface IndexedStore<T extends DomainObject, U extends IndexedDomainObj
     default String getIndexCollection() {
         SolrDocument document = getUType().getAnnotation(SolrDocument.class);
 
-        if (document != null) {
-            return document.collection().equalsIgnoreCase("") ? document.collection() : document.collection();
-        } else {
-            throw new GeneralException("Missing Solr @SolrDocument.collection for " + getUType().getSimpleName());
+        if (document == null || document.collection().isEmpty()) {
+            throw new GeneralException(String.format("Missing Solr @SolrDocument.collection for class: `%s`", getUType().getSimpleName()));
         }
+
+        return document.collection();
     }
 
     default void removeIndex(T obj) {
@@ -329,10 +328,11 @@ public interface IndexedStore<T extends DomainObject, U extends IndexedDomainObj
     }
 
     /**
-     * nested index support
-     * <br>
-     * <b>all child docs are removed during parent removal and also during parent indexation, therefore child objects MUST be allways indexed
-     * during parent object indexation in custom {@link #index(DomainObject)} method</b>
+     * Nested index support
+     *
+     * <b>all child docs are removed during parent removal and also during parent indexation,
+     * therefore child objects MUST be always indexed during parent object indexation
+     * in custom {@link #index(DomainObject)} method</b>
      */
     default boolean isParentStore() {
         return false;

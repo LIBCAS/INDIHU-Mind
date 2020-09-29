@@ -1,13 +1,13 @@
+<meta charset="UTF-8">
+<meta http-equiv="Content-type" content="text/html; charset=UTF-8">
 <p>Vážená paní / Vážený pane,</p>
 
-<p>dne ${createdDate} v ${createdTime} ste v aplikaci ${appName} pozadali o vygenerovani hesla.</p>
-<p>Pro nastaveni noveho hesla pouzijte nasledujici odkaz: <a href="${result}">Odkaz na zmenu hesla</a></p>
-<p>V pripade ze ste tuto akci nevyzadali, ignorujte tenhle mail</p>
+<p>informujeme Vás, že v systému <a href="${appUrl}">Indihu Mind</a> bylo zažádáno o obnovu hesla k vašemu účtu.</p>
+<p>Na následujícím odkazu si můžete heslo obnovit. Platnost uvedeného odkazu je 15 minut.</p>
+<p>Pokud jste o obnovení hesla nežádali, odkaz ignorujte a informujte svého administrátora.</p>
 
-<p>
-    S pozdravem
-    <br/>
-    Aplikace ${appName}
-</p>
+<p><a href="${passwordResetUrl}">Odkaz na zmenu hesla</a></p>
 
-<p style="color: silver">Tento e-mail byl vygenerován automaticky, prosím neodpovídejte na něj.</p>
+<hr>
+<p>Systém Indihu Mind</p>
+<p style="color: #666666">Tento e-mail byl vygenerován automaticky, prosím neodpovídejte na něj.</p>

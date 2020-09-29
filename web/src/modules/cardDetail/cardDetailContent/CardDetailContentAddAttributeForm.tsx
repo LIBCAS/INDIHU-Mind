@@ -3,7 +3,8 @@ import { FormikProps, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
 
 import { CardContentProps } from "../../../types/card";
-import { AttributeProps, AttributeTypeProps } from "../../../types/attribute";
+import { AttributeProps } from "../../../types/attribute";
+import { AttributeTypeEnum } from "../../../enums";
 import { notEmpty } from "../../../utils/form/validate";
 
 import { Formik } from "../../../components/form/Formik";
@@ -22,13 +23,6 @@ const initialValues = {
   ordinalNumber: 0
 };
 
-const types: { value: AttributeTypeProps; label: string }[] = [
-  { value: "STRING", label: "Text" },
-  { value: "DOUBLE", label: "Číslo" },
-  { value: "BOOLEAN", label: "Boolean" },
-  { value: "DATETIME", label: "Datum" }
-];
-
 interface CardDetailContentAddAttributeFormProp {
   card: CardContentProps;
   cardContent: CardContentProps[] | undefined;
@@ -39,9 +33,12 @@ interface CardDetailContentAddAttributeFormProp {
   previousAttribute?: AttributeProps;
 }
 
-export const CardDetailContentAddAttributeForm: React.FC<
-  CardDetailContentAddAttributeFormProp
-> = ({ card, setCardContent, setOpen, previousAttribute }) => {
+export const CardDetailContentAddAttributeForm: React.FC<CardDetailContentAddAttributeFormProp> = ({
+  card,
+  setCardContent,
+  setOpen,
+  previousAttribute
+}) => {
   const classes = useStyles();
   return (
     <Formik
@@ -74,7 +71,7 @@ export const CardDetailContentAddAttributeForm: React.FC<
                   field={field}
                   form={form}
                   label="Název"
-                  inputProps={{ autoFocus: true }}
+                  inputProps={{ autoFocus: false }}
                 />
               )}
             />
@@ -85,9 +82,9 @@ export const CardDetailContentAddAttributeForm: React.FC<
                 <Select
                   field={field}
                   form={form}
-                  onChange={(e: any) => onChangeType(formikBag, e)}
+                  onChange={(value: any) => onChangeType(formikBag, value)}
                   label="Typ"
-                  options={types}
+                  options={AttributeTypeEnum}
                 />
               )}
             />

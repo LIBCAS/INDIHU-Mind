@@ -2,13 +2,19 @@ package cz.cas.lib.vzb;
 
 import cz.cas.lib.vzb.card.Card;
 import cz.cas.lib.vzb.card.CardStore;
+import cz.cas.lib.vzb.card.IndexedCard;
 import cz.cas.lib.vzb.card.category.Category;
 import cz.cas.lib.vzb.card.category.CategoryStore;
 import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.card.label.LabelStore;
+import cz.cas.lib.vzb.init.builders.CardBuilder;
+import cz.cas.lib.vzb.init.builders.CategoryBuilder;
+import cz.cas.lib.vzb.init.builders.LabelBuilder;
+import cz.cas.lib.vzb.init.builders.UserBuilder;
 import cz.cas.lib.vzb.security.user.Roles;
 import cz.cas.lib.vzb.security.user.User;
 import cz.cas.lib.vzb.security.user.UserService;
+import cz.cas.lib.vzb.security.user.UserStore;
 import helper.ApiTest;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,17 +23,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.util.Collections;
+import java.util.Set;
 
+import static core.util.Utils.asList;
 import static core.util.Utils.asSet;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,77 +41,74 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 public class CategoryApiTest extends ApiTest {
 
+    private static final String CATEGORY_API_URL = "/api/category/";
+
+    @Inject private UserStore userStore;
     @Inject private CategoryStore categoryStore;
     @Inject private CardStore cardStore;
     @Inject private UserService userService;
     @Inject private LabelStore labelStore;
 
-    private User user = User.builder().password("password").email("mail").allowed(false).build();
+    private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(false).build();
+
+    @Override
+    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
+        return Collections.singleton(IndexedCard.class);
+    }
 
     @Before
     public void before() {
-        user.setId("user");
         transactionTemplate.execute((t) -> userService.create(user));
     }
 
     @Test
     public void createUpdate() throws Exception {
-        Category c1 = new Category();
-        c1.setOrdinalNumber(1);
-        String c1Json = objectMapper.writeValueAsString(c1);
+        Category category1 = CategoryBuilder.builder().ordinalNumber(1).parent(null).owner(null).build();
+        String category1Json = objectMapper.writeValueAsString(category1);
 
         securedMvc().perform(
-                put("/api/category/{1}", c1.getId())
-                        .content(c1Json)
+                put(CATEGORY_API_URL + category1.getId())
+                        .content(category1Json)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status().isOk())
-        ;
-        Category c2 = new Category();
-        c2.setOrdinalNumber(1);
-        c2.setParent(c1);
-        String c2Json = objectMapper.writeValueAsString(c2);
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk());
+
+        Category category2 = CategoryBuilder.builder().ordinalNumber(1).parent(category1).owner(null).build();
+        String category2Json = objectMapper.writeValueAsString(category2);
 
         securedMvc().perform(
-                put("/api/category/{1}", c2.getId())
-                        .content(c2Json)
+                put(CATEGORY_API_URL + category2.getId())
+                        .content(category2Json)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status().isOk())
-        ;
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk());
 
-        c1.setOrdinalNumber(0);
-        c1Json = objectMapper.writeValueAsString(c1);
+        category1.setOrdinalNumber(0);
+        category1Json = objectMapper.writeValueAsString(category1);
         securedMvc().perform(
-                put("/api/category/{1}", c1.getId())
-                        .content(c1Json)
+                put(CATEGORY_API_URL + category1.getId())
+                        .content(category1Json)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status().isOk())
-        ;
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk());
 
-        assertThat(categoryStore.countAll(), is(2L));
-        Category parent = categoryStore.find(c1.getId());
-        assertThat(parent.getParent(), nullValue());
-        assertThat(parent.getOwner(), is(user));
-        assertThat(parent.getOrdinalNumber(), is(0));
+        assertThat(categoryStore.countAll()).isEqualTo(2L);
+        Category parent = categoryStore.find(category1.getId());
+        assertThat(parent.getParent()).isNull();
+        assertThat(parent.getOwner()).isEqualTo(user);
+        assertThat(parent.getOrdinalNumber()).isEqualTo(0);
 
-        Category child = categoryStore.find(c2.getId());
-        assertThat(child.getParent(), is(c1));
-        assertThat(child.getOwner(), is(user));
-        assertThat(child.getOrdinalNumber(), is(1));
+        Category child = categoryStore.find(category2.getId());
+        assertThat(child.getParent()).isEqualTo(category1);
+        assertThat(child.getOwner()).isEqualTo(user);
+        assertThat(child.getOrdinalNumber()).isEqualTo(1);
 
         securedMvc().perform(
-                put("/api/category/{1}", c1.getId())
-                        .content(c1Json)
+                put(CATEGORY_API_URL + category1.getId())
+                        .content(category1Json)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(mockedUser("otherUser", Roles.USER))
-        )
-                .andExpect(status().isForbidden())
-        ;
+                        .with(mockedUser("otherUser", Roles.USER)))
+                .andExpect(status().isForbidden());
     }
 
     // Enforce db.changelog addUniqueConstraint on columns name,parent,owner
@@ -114,16 +117,17 @@ public class CategoryApiTest extends ApiTest {
         createCategoryWithExistingName(true);
     }
 
-    // In this test categories have same name but different parent
+    // In this test, categories have same name but different parent
     @Test
     public void existingNameDifferentParent() throws Exception {
         createCategoryWithExistingName(false);
     }
 
     private void createCategoryWithExistingName(boolean sameParent) throws Exception {
-        Category parent = new Category();
-        Category entity = new Category();
-        entity.setName("name");
+        final String IDENTICAL_NAME = "this is an identical name for categories, what is not allowed by DB constraint";
+
+        Category parent = CategoryBuilder.builder().name("parentName").parent(null).owner(user).build();
+        Category entity = CategoryBuilder.builder().name(IDENTICAL_NAME).parent(null).owner(user).build();
         if (sameParent) entity.setParent(parent);
 
         transactionTemplate.execute((t) -> {
@@ -132,42 +136,54 @@ public class CategoryApiTest extends ApiTest {
             return null;
         });
 
-        ResultMatcher status = sameParent ? status().isConflict() : status().isOk();
+        Category newWithSameName = CategoryBuilder.builder().name(IDENTICAL_NAME).parent(parent).owner(user).build();
 
-        Category newWithSameName = new Category();
-        newWithSameName.setParent(parent);
-        newWithSameName.setName("name");
+        ResultMatcher status = sameParent ? status().isConflict() : status().isOk();
         securedMvc().perform(
-                put("/api/category/" + newWithSameName.getId())
+                put(CATEGORY_API_URL + newWithSameName.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(newWithSameName))
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status)
-        ;
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status);
 
-        assertThat(categoryStore.find(entity.getId()), notNullValue());
-        if (sameParent) assertThat(categoryStore.find(newWithSameName.getId()), nullValue());
-        else assertThat(categoryStore.find(newWithSameName.getId()), notNullValue());
+        assertThat(categoryStore.find(entity.getId())).isNotNull();
+        if (sameParent) assertThat(categoryStore.find(newWithSameName.getId())).isNull();
+        else assertThat(categoryStore.find(newWithSameName.getId())).isNotNull();
     }
 
+    @Test
+    public void existingNameDifferentOwner() throws Exception {
+        final String IDENTICAL_NAME = "identical name for categories of different users is allowed";
+
+        User otherUser = UserBuilder.builder().password("other").email("other").allowed(false).build();
+        Category entityOfOtherUser = CategoryBuilder.builder().name(IDENTICAL_NAME).parent(null).owner(otherUser).build();
+
+        transactionTemplate.execute((t) -> {
+            userService.create(otherUser);
+            categoryStore.save(entityOfOtherUser);
+            return null;
+        });
+
+        Category newWithSameName = CategoryBuilder.builder().name(IDENTICAL_NAME).parent(null).owner(user).build();
+        securedMvc().perform(
+                put(CATEGORY_API_URL + newWithSameName.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newWithSameName))
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk());
+
+        assertThat(categoryStore.find(entityOfOtherUser.getId())).isNotNull();
+        assertThat(categoryStore.find(newWithSameName.getId())).isNotNull();
+    }
 
 
     @Test
     public void updateParent() throws Exception {
-        Category parent1 = new Category();
-        parent1.setOrdinalNumber(1);
-        parent1.setOwner(user);
-        Category parent2 = new Category();
-        parent2.setOrdinalNumber(2);
-        parent2.setOwner(user);
-        Category child1 = new Category();
-        child1.setOrdinalNumber(1);
-        child1.setParent(parent1);
-        child1.setOwner(user);
+        Category parent1 = CategoryBuilder.builder().ordinalNumber(1).parent(null).owner(user).build();
+        Category parent2 = CategoryBuilder.builder().ordinalNumber(2).parent(null).owner(user).build();
+        Category child1 = CategoryBuilder.builder().ordinalNumber(1).parent(parent1).owner(user).build();
         transactionTemplate.execute(t -> {
-            categoryStore.save(asSet(parent1, parent2));
-            categoryStore.save(child1);
+            categoryStore.save(asList(parent1, parent2, child1));
             return null;
         });
 
@@ -175,152 +191,137 @@ public class CategoryApiTest extends ApiTest {
         String childJson = objectMapper.writeValueAsString(child1);
 
         securedMvc().perform(
-                put("/api/category/{1}", child1.getId())
+                put(CATEGORY_API_URL + child1.getId())
                         .content(childJson)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status().isOk())
-        ;
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk());
 
-        assertThat(categoryStore.find(child1.getId()), notNullValue());
-        assertThat(child1.getParent(), is(parent2));
+        assertThat(categoryStore.find(child1.getId())).isNotNull();
+        assertThat(child1.getParent()).isEqualTo(parent2);
     }
 
     @Test
     public void retrieve() throws Exception {
-        Category c1 = new Category(null, 0, null, user);
-        Category c2 = new Category(null, 0, c1, user);
-        Category c3 = new Category(null, 0, c2, user);
-        Category c4 = new Category(null, 1, null, user);
+        Category category1 = CategoryBuilder.builder().name(null).ordinalNumber(0).parent(null).owner(user).build();
+        Category category2 = CategoryBuilder.builder().name(null).ordinalNumber(0).parent(category1).owner(user).build();
+        Category category3 = CategoryBuilder.builder().name(null).ordinalNumber(0).parent(category2).owner(user).build();
+        Category category4 = CategoryBuilder.builder().name(null).ordinalNumber(1).parent(null).owner(user).build();
         transactionTemplate.execute(t -> {
-            categoryStore.save(asSet(c1, c4));
-            categoryStore.save(c2);
-            categoryStore.save(c3);
+            categoryStore.save(asSet(category1, category4));
+            categoryStore.save(category2);
+            categoryStore.save(category3);
             return null;
         });
 
         securedMvc().perform(
-                get("/api/category/{1}", c3.getId())
+                get(CATEGORY_API_URL + category3.getId())
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(c3.getId())))
-                .andExpect(jsonPath("$.parent.id", is(c2.getId())))
-                .andExpect(jsonPath("$.parent.parent.id", is(c1.getId())))
-        ;
+                .andExpect(jsonPath("$.id", is(category3.getId())))
+                .andExpect(jsonPath("$.parent.id", is(category2.getId())))
+                .andExpect(jsonPath("$.parent.parent.id", is(category1.getId())));
 
         User other = new User();
-        c3.setParent(null);
-        c3.setOwner(other);
+        category3.setParent(null);
+        category3.setOwner(other);
         transactionTemplate.execute(t -> {
-            userService.getDelegate().save(other);
-            categoryStore.save(c3);
+            userStore.save(other);
+            categoryStore.save(category3);
             return null;
         });
 
-
         securedMvc().perform(
-                get("/api/category")
+                get(CATEGORY_API_URL)
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id", is(c1.getId())))
+                .andExpect(jsonPath("$[0].id", is(category1.getId())))
                 .andExpect(jsonPath("$[0].parentId", nullValue()))
                 .andExpect(jsonPath("$[0].subCategories", hasSize(1)))
-                .andExpect(jsonPath("$[0].subCategories[0].id", is(c2.getId())))
-                .andExpect(jsonPath("$[0].subCategories[0].parentId", is(c1.getId())))
+                .andExpect(jsonPath("$[0].subCategories[0].id", is(category2.getId())))
+                .andExpect(jsonPath("$[0].subCategories[0].parentId", is(category1.getId())))
                 .andExpect(jsonPath("$[0].subCategories[0].subCategories", hasSize(0)))
-                .andExpect(jsonPath("$[1].id", is(c4.getId())))
-                .andExpect(jsonPath("$[1].subCategories", hasSize(0)))
-        ;
+                .andExpect(jsonPath("$[1].id", is(category4.getId())))
+                .andExpect(jsonPath("$[1].subCategories", hasSize(0)));
 
-        c1.setOrdinalNumber(5);
-        transactionTemplate.execute(t -> categoryStore.save(c1));
+        category1.setOrdinalNumber(5);
+        transactionTemplate.execute(t -> categoryStore.save(category1));
 
         securedMvc().perform(
-                get("/api/category")
+                get(CATEGORY_API_URL)
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id", is(c4.getId())))
-                .andExpect(jsonPath("$[1].id", is(c1.getId())))
-        ;
+                .andExpect(jsonPath("$[0].id", is(category4.getId())))
+                .andExpect(jsonPath("$[1].id", is(category1.getId())));
 
         securedMvc().perform(
-                get("/api/category")
+                get(CATEGORY_API_URL)
                         .with(mockedUser(other.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(c3.getId())))
-        ;
+                .andExpect(jsonPath("$[0].id", is(category3.getId())));
     }
 
     @Test
     public void faceting() throws Exception {
-        Category c1 = new Category(null, 0, null, user);
-        Category c2 = new Category(null, 0, c1, user);
-        Category c3 = new Category(null, 0, c2, user);
-        Category c4 = new Category(null, 1, null, user);
+        Category category1 = CategoryBuilder.builder().name(null).ordinalNumber(0).parent(null).owner(user).build();
+        Category category2 = CategoryBuilder.builder().name(null).ordinalNumber(0).parent(category1).owner(user).build();
+        Category category3 = CategoryBuilder.builder().name(null).ordinalNumber(0).parent(category2).owner(user).build();
+        Category category4 = CategoryBuilder.builder().name(null).ordinalNumber(1).parent(null).owner(user).build();
 
-        Card card1 = new Card(1, "c1", null, user, asSet(c1, c2), asSet(), asSet(), asSet());
-        Card card2 = new Card(2, "c1", null, user, asSet(c4, c2), asSet(), asSet(), asSet());
+        Card card1 = CardBuilder.builder().pid(1).name("c1").owner(user).categories(category1, category2).build();
+        Card card2 = CardBuilder.builder().pid(2).name("c1").owner(user).categories(category4, category2).build();
 
         transactionTemplate.execute(t -> {
-            categoryStore.save(asSet(c1, c4));
-            categoryStore.save(c2);
-            categoryStore.save(c3);
-            cardStore.saveAndIndex(asSet(card1, card2));
+            categoryStore.save(asList(category1, category2, category3, category4));
+            cardStore.save(asList(card1, card2));
             return null;
         });
 
         securedMvc().perform(
-                get("/api/category")
+                get(CATEGORY_API_URL)
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id", is(c1.getId())))
+                .andExpect(jsonPath("$[0].id", is(category1.getId())))
                 .andExpect(jsonPath("$[0].cardsCount", is(3)))
                 .andExpect(jsonPath("$[0].subCategories", hasSize(1)))
-                .andExpect(jsonPath("$[0].subCategories[0].id", is(c2.getId())))
+                .andExpect(jsonPath("$[0].subCategories[0].id", is(category2.getId())))
                 .andExpect(jsonPath("$[0].subCategories[0].cardsCount", is(2)))
-                .andExpect(jsonPath("$[1].id", is(c4.getId())))
+                .andExpect(jsonPath("$[1].id", is(category4.getId())))
                 .andExpect(jsonPath("$[1].cardsCount", is(1)))
-                .andExpect(jsonPath("$[1].subCategories", hasSize(0)))
-        ;
+                .andExpect(jsonPath("$[1].subCategories", hasSize(0)));
     }
 
     @Test
-    public void delete() throws Exception {
-        Category cat1 = new Category(null, 0, null, user);
-        Category cat3 = new Category(null, 2, null, user);
-        transactionTemplate.execute(t -> categoryStore.save(asSet(cat1, cat3)));
-        Category cat2 = new Category(null, 1, cat1, user);
-        Card c = new Card();
-        c.setPid(1);
-        c.setName("d");
-        c.setOwner(user);
-        c.setCategories(asSet(cat1, cat2, cat3));
+    public void deleteCategory() throws Exception {
+        Category category1 = CategoryBuilder.builder().name(null).ordinalNumber(0).parent(null).owner(user).build();
+        Category category3 = CategoryBuilder.builder().name(null).ordinalNumber(2).parent(null).owner(user).build();
+        Category childOfCategory1 = CategoryBuilder.builder().name(null).ordinalNumber(1).parent(category1).owner(user).build();
+
+        Card card = CardBuilder.builder().pid(1).name("d").owner(user).categories(category1, childOfCategory1, category3).build();
 
         transactionTemplate.execute(t -> {
-            categoryStore.save(cat2);
-            cardStore.save(c);
+            categoryStore.save(asList(category1, childOfCategory1, category3));
+            cardStore.save(card);
             return null;
         });
 
         securedMvc().perform(
-                MockMvcRequestBuilders.delete("/api/category/{1}", cat1.getId())
-                        .with(mockedUser("otheruser", Roles.USER)))
-                .andExpect(status().isForbidden())
-        ;
+                delete(CATEGORY_API_URL + category1.getId())
+                        .with(mockedUser("unknownUser-ID", Roles.USER)))
+                .andExpect(status().isForbidden());
 
         securedMvc().perform(
-                MockMvcRequestBuilders.delete("/api/category/{1}", cat1.getId())
+                delete(CATEGORY_API_URL + category1.getId())
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().isOk())
-        ;
-        assertThat(categoryStore.findAll(), containsInAnyOrder(cat3));
-        Card card = cardStore.find(c.getId());
-        assertThat(card.getCategories(), containsInAnyOrder(cat3));
+                .andExpect(status().isOk());
+
+        assertThat(categoryStore.findAll()).containsExactlyInAnyOrder(category3);
+        Card cardFromDb = cardStore.find(card.getId());
+        assertThat(cardFromDb.getCategories()).containsExactlyInAnyOrder(category3);
     }
 
     /**
@@ -332,46 +333,32 @@ public class CategoryApiTest extends ApiTest {
     public void categoryManipulationReindex() throws Exception {
         // If the test are failing try to increase this number to figure out if the problem is in threading
         // For the sake of overall tests duration, try to keep the number reasonably low.
-        long threadSleepTimeInMillis = 2500;
+        long THREAD_SLEEP_MILLISECONDS = 2500;
 
-        Category cat1 = new Category("first", 0, null, user);
-        Category cat3 = new Category("third", 2, null, user);
-        transactionTemplate.execute(t -> categoryStore.save(asSet(cat1, cat3)));
-        Category cat2 = new Category("second", 1, cat1, user);
-        Label l = new Label("label", Color.BLACK, user);
-        Card c = new Card();
-        c.setPid(1);
-        c.setName("blah");
-        c.setOwner(user);
-        c.setCategories(asSet(cat1, cat2, cat3));
-        c.setLabels(asSet(l));
-        Card c2 = new Card();
-        c2.setPid(2);
-        c2.setName("slah");
-        c2.setOwner(user);
-        c2.setCategories(asSet(cat1));
-        c2.setLabels(asSet(l));
-        Card c3 = new Card();
-        c3.setPid(3);
-        c3.setName("nah");
-        c3.setOwner(user);
-        c3.setCategories(asSet(cat2));
-        c3.setLabels(asSet(l));
+        Category category1 = CategoryBuilder.builder().name("first").ordinalNumber(0).parent(null).owner(user).build();
+        Category category3 = CategoryBuilder.builder().name("third").ordinalNumber(2).parent(null).owner(user).build();
+        Category childOfCategory1 = CategoryBuilder.builder().name("second").ordinalNumber(1).parent(category1).owner(user).build();
+
+        Label label = LabelBuilder.builder().name("label").color(Color.BLACK).owner(user).build();
+
+        Card card1 = CardBuilder.builder().pid(1).name("blah").owner(user).categories(category1, childOfCategory1, category3).labels(label).build();
+        Card card2 = CardBuilder.builder().pid(2).name("slah").owner(user).categories(category1).labels(label).build();
+        Card card3 = CardBuilder.builder().pid(3).name("nah").owner(user).categories(childOfCategory1).labels(label).build();
 
         transactionTemplate.execute(t -> {
-            labelStore.save(l);
-            categoryStore.save(cat2);
-            cardStore.saveAndIndex(asSet(c, c2, c3));
+            labelStore.save(label);
+            categoryStore.save(asList(category1, childOfCategory1, category3));
+            cardStore.save(asList(card1, card2, card3));
             return null;
         });
 
         securedMvc().perform(
-                MockMvcRequestBuilders.delete("/api/category/{1}", cat1.getId())
+                delete(CATEGORY_API_URL + category1.getId())
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().isOk())
-        ;
-        Thread.sleep(threadSleepTimeInMillis);
+                .andExpect(status().isOk());
+        Thread.sleep(THREAD_SLEEP_MILLISECONDS);
 
+        // ---------- CARD API SEARCH ----------
         securedMvc().perform(get("/api/card/search").param("q", "first")
                 .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
@@ -392,16 +379,16 @@ public class CategoryApiTest extends ApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count", is(3)));
 
-        cat3.setName("fourth");
+        category3.setName("fourth");
         securedMvc().perform(
-                MockMvcRequestBuilders.put("/api/category/{1}", cat3.getId())
+                put(CATEGORY_API_URL + category3.getId())
                         .with(mockedUser(user.getId(), Roles.USER))
-                        .content(objectMapper.writeValueAsString(cat3))
+                        .content(objectMapper.writeValueAsString(category3))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-        ;
-        Thread.sleep(threadSleepTimeInMillis);
+                .andExpect(status().isOk());
+        Thread.sleep(THREAD_SLEEP_MILLISECONDS);
 
+        // ---------- CARD API SEARCH ----------
         securedMvc().perform(get("/api/card/search").param("q", "third")
                 .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())

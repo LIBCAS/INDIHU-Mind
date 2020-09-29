@@ -6,12 +6,30 @@ export const useStyles = makeStyles((theme: Theme) => {
     tabContentWrapper: {
       display: "flex",
       height: "100%",
-      // justifyContent: "center",
+      justifyContent: "start",
+      [theme.breakpoints.up("md")]: {
+        maxHeight: "calc(100vh - 196px)",
+        justifyContent: "space-between"
+      },
       flexDirection: "column",
       padding: theme.spacing(2)
     },
     createButton: {
       marginBottom: theme.spacing(1)
+    },
+    categoriesContainer: {
+      overflow: "auto",
+      "&::-webkit-scrollbar": {
+        width: "6px",
+        backgroundColor: "#F5F5F5"
+      },
+      "&::-webkit-scrollbar-track": {
+        "-webkit-box-shadow": "inset 0 0 6px rgba(0,0,0,0.3)",
+        backgroundColor: "#F5F5F5"
+      },
+      "&::-webkit-scrollbar-thumb": {
+        backgroundColor: "#093d77"
+      }
     },
     category: {
       display: "flex",
@@ -36,7 +54,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       flexDirection: "column",
       padding: theme.spacing(4),
       [theme.breakpoints.up("md")]: {
-        padding: theme.spacing(2)
+        padding: theme.spacing(3)
       }
     },
     label: {

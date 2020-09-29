@@ -3,6 +3,7 @@ package core.mail;
 import core.Changed;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.springframework.mail.MailPreparationException;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
@@ -22,8 +23,18 @@ public class Templater {
         this.freeMarkerConfig.setClassLoaderForTemplateLoading(this.getClass().getClassLoader(), "/");
     }
 
-    public String transform(String template, Map<String, Object> beans) throws TemplateException, IOException {
-        return FreeMarkerTemplateUtils.processTemplateIntoString(
-                freeMarkerConfig.getTemplate(template, StandardCharsets.UTF_8.name()), beans);
+    /**
+     * Transform template into string of HTML
+     *
+     * @param templateName path to template
+     * @param beans        fields to fill into template
+     * @return generated HTML string
+     */
+    public String transform(String templateName, Map<String, Object> beans) {
+        try {
+            return FreeMarkerTemplateUtils.processTemplateIntoString(freeMarkerConfig.getTemplate(templateName, StandardCharsets.UTF_8.name()), beans);
+        } catch (IOException | TemplateException e) {
+            throw new MailPreparationException(e);
+        }
     }
 }

@@ -1,9 +1,8 @@
 import React from "react";
 import moment from "moment";
+import { get, pick, compact } from "lodash";
 
 import { ColumnProps } from "../../components/tableCard/_types";
-import { get } from "lodash";
-import uuid from "uuid/v4";
 
 import {
   STATUS_ERROR_TEXT_SET,
@@ -12,11 +11,29 @@ import {
 } from "../../context/reducers/status";
 import { api } from "../../utils/api";
 import { RecordProps } from "../../types/record";
-import {
-  RecordRequest,
-  DataFieldsEntity,
-  SubfieldsEntity
-} from "./RecordsForm";
+import { RecordRequest } from "./RecordsForm";
+import { RecordType } from "../../enums";
+
+const url = "record";
+
+export const getRecords = async (text?: string, page = 0, pageSize = 10) => {
+  try {
+    const response = await api().post(`${url}/parametrized`, {
+      json: {
+        page,
+        pageSize,
+        ...(text
+          ? { filter: [{ field: "name", operation: "EQ", value: text }] }
+          : {})
+      }
+    });
+
+    return await response.json();
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+};
 
 export const onSubmitRecord = (
   values: RecordRequest,
@@ -26,20 +43,32 @@ export const onSubmitRecord = (
   dispatch: any,
   history: any,
   record?: RecordProps,
-  afterEdit?: () => void
+  afterEdit?: () => void,
+  redirect?: boolean,
+  onSubmitCallback?: Function
 ) => {
-  let id = uuid();
-  if (record) {
-    id = record.id;
-  }
-  const body = values;
-  const { leader } = values;
-  api()
-    .put(`record/${id}`, {
-      json: { ...body, id, leader: leader ? leader : "" }
-    })
+  const { document, isBrief, type } = values;
+  const func = record ? api().put : api().post;
+  func(url, {
+    json: {
+      ...pick(
+        values,
+        compact([
+          "id",
+          "name",
+          isBrief || type === RecordType.BRIEF ? "content" : "dataFields"
+        ])
+      ),
+      ...(values.id
+        ? {}
+        : { type: isBrief ? RecordType.BRIEF : RecordType.MARC }),
+      ...(document ? { documentId: document.id } : {}),
+      linkedCards: (values.linkedCards || []).map(({ id }) => id)
+    }
+  })
     .json()
-    .then(() => {
+    .then((res: any) => {
+      const newId = res ? res.id : null;
       dispatch({
         type: STATUS_ERROR_TEXT_SET,
         payload: record
@@ -51,13 +80,18 @@ export const onSubmitRecord = (
       }
       dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       setLoading(false);
-      history.push(`record/${id}`);
+      redirect && newId && history.push(`/record/${newId}`);
       setError(false);
       setShowModal(false);
+      onSubmitCallback && onSubmitCallback([{ id: newId, name: values.name }]);
     })
-    .catch(() => {
+    .catch(err => {
       setLoading(false);
-      setError(true);
+      setError(
+        get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
+          ? "Citace se zvoleným názvem již existuje."
+          : true
+      );
     });
 };
 
@@ -68,7 +102,7 @@ export const onDeleteRecord = (
 ) => {
   dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: 1 });
   api()
-    .delete(`record/${id}`)
+    .delete(`${url}/${id}`)
     .then(() => {
       dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       dispatch({

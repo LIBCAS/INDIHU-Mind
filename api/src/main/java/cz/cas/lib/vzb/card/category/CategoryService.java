@@ -1,7 +1,10 @@
 package cz.cas.lib.vzb.card.category;
 
 import core.domain.DomainObject;
+import core.exception.BadArgument;
 import core.exception.ForbiddenObject;
+import core.exception.MissingObject;
+import core.store.Transactional;
 import cz.cas.lib.vzb.card.Card;
 import cz.cas.lib.vzb.card.CardStore;
 import cz.cas.lib.vzb.exception.NameAlreadyExistsException;
@@ -16,8 +19,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static core.util.Utils.eq;
-import static core.util.Utils.isNull;
+import static core.util.Utils.*;
 
 @Service
 @Slf4j
@@ -27,23 +29,28 @@ public class CategoryService {
     private CardStore cardStore;
     private TaskExecutor taskExecutor;
 
-    public void delete(Category entity) {
+    @Transactional
+    public void delete(String id) {
+        Category entity = find(id);
         Set<Card> orphanedCards = store.deleteAndReturnOrphanedCards(entity);
         log.debug("Deleting category " + entity.getName() + " of user " + entity.getOwner() + ", asynchronously reindexing " + orphanedCards.size() + " cards");
         CompletableFuture.runAsync(() -> cardStore.index(orphanedCards), taskExecutor);
     }
 
-    public Category save(Category newCat) {
+    @Transactional
+    public Category save(String id, Category newCat) {
+        eq(id, newCat.getId(), () -> new BadArgument("id"));
         Category catFromDb = store.find(newCat.getId());
         if (catFromDb != null)
             eq(catFromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Category.class, newCat.getId()));
 
         // enforce addUniqueConstraint `vzb_category_of_user_uniqueness` of columnNames="name,parent_id,owner_id"
-        Category nameExists = store.findEqualNameDifferentIdInParent(newCat);
-        isNull(nameExists, () -> new NameAlreadyExistsException(Category.class, nameExists.getId(), nameExists.getName()));
-
         newCat.setOwner(userDelegate.getUser());
+        Category nameExists = store.findEqualNameDifferentIdInParent(newCat);
+        isNull(nameExists, () -> new NameAlreadyExistsException(Category.class, nameExists.getId(), nameExists.getName(), nameExists.getOwner()));
+
         store.save(newCat);
+
         if (catFromDb != null && !StringUtils.equals(catFromDb.getName(), newCat.getName())) {
             List<Card> cardsOfCategory = cardStore.findCardsOfCategory(newCat);
             log.debug("Updating category " + newCat.getName() + " of user " + newCat.getOwner() + ", asynchronously reindexing " + cardsOfCategory.size() + " cards");
@@ -53,35 +60,59 @@ public class CategoryService {
     }
 
     public Category find(String id) {
-        return store.find(id);
+        Category entity = store.find(id);
+        notNull(entity, () -> new MissingObject(Category.class, id));
+        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Category.class, id));
+        return entity;
     }
 
+    /**
+     * Create structure of Category DTOs
+     *
+     * <pre>
+     * Parent1 --- Sub1
+     *         \-- Sub2 --- Sub21
+     * Parent2
+     * </pre>
+     *
+     * @return list of the highest parents in hierarchy, other subcategories are accessible through the parents.
+     */
     public Collection<CategoryDto> findAllOfUser(String ownerId) {
-        Collection<Category> unstructuredCategories = store.findByUser(ownerId);
-        Map<String, Long> categoryFacets = cardStore.findCategoryFacets(ownerId);
+        Collection<Category> unstructuredCategoriesFromDb = store.findByUser(ownerId);
 
-        Map<String, CategoryDto> categoryDtos = unstructuredCategories.stream()
+        // for counting cards of subcategories
+        Map<String, Long> categoryIdsWithCardsCount = cardStore.findCategoryFacets(ownerId);
+
+        Map<String, CategoryDto> categoryDtos = unstructuredCategoriesFromDb.stream()
                 .collect(Collectors.toMap(DomainObject::getId, CategoryDto::new));
 
-        List<CategoryDto> dtos = new ArrayList<>();
+        List<CategoryDto> resultStructuredDtos = new ArrayList<>();
 
-        for (Category cat : unstructuredCategories) {
-            CategoryDto current = categoryDtos.get(cat.getId());
-            Long currentCardsCount = categoryFacets.get(cat.getId());
-            if (currentCardsCount == null)
-                currentCardsCount = 0L;
-            if (cat.getParent() != null) {
-                CategoryDto parent = categoryDtos.get(cat.getParent().getId());
-                parent.addSubCategory(current);
-                current.incrementCardsCount(currentCardsCount);
-                parent.incrementCardsCount(currentCardsCount);
+        for (Category unstructuredCat : unstructuredCategoriesFromDb) {
+            CategoryDto currentCat = categoryDtos.get(unstructuredCat.getId());
+            Long cardsCountOfCurrentCat = categoryIdsWithCardsCount.getOrDefault(unstructuredCat.getId(), 0L);
+
+            if (unstructuredCat.getParent() == null) {
+                addParentToStructure(currentCat, cardsCountOfCurrentCat, resultStructuredDtos);
             } else {
-                current.incrementCardsCount(currentCardsCount);
-                dtos.add(current);
+                addSubcategoryToStructure(currentCat, cardsCountOfCurrentCat, unstructuredCat, categoryDtos);
             }
         }
-        return dtos;
+        return resultStructuredDtos;
     }
+
+    private void addParentToStructure(CategoryDto currentCat, Long cardsCountOfCurrentCat, List<CategoryDto> resultStructuredDtos) {
+        currentCat.incrementCardsCount(cardsCountOfCurrentCat);
+        resultStructuredDtos.add(currentCat);
+    }
+
+    private void addSubcategoryToStructure(CategoryDto currentCat, Long cardsCountOfCurrentCat, Category unstructuredCat, Map<String, CategoryDto> categoryDtos) {
+        CategoryDto parent = categoryDtos.get(unstructuredCat.getParent().getId());
+        parent.addSubCategory(currentCat);
+        currentCat.incrementCardsCount(cardsCountOfCurrentCat);
+        parent.incrementCardsCount(cardsCountOfCurrentCat);
+    }
+
 
     @Inject
     public void setStore(CategoryStore store) {

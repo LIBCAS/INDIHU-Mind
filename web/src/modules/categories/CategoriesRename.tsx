@@ -3,6 +3,7 @@ import { Form, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
 import * as Yup from "yup";
 import classNames from "classnames";
+import { get } from "lodash";
 
 import {
   STATUS_ERROR_COUNT_CHANGE,
@@ -50,11 +51,11 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
   const classesLayout = useLayoutStyles();
   const classesText = useTextStyles();
   const [loading, setLoading] = useState<boolean>(false);
-  const [errorShow, setErrorShow] = useState<boolean>(false);
+  const [error, setError] = useState<boolean | string>(false);
   return (
     <>
       <Loader loading={loading} />
-      {errorShow && <MessageSnackbar setVisible={setErrorShow} />}
+      {error && <MessageSnackbar setVisible={setError} message={error} />}
       <Formik
         initialValues={initialValues}
         validationSchema={CategoriesRenameSchema}
@@ -83,9 +84,13 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
               setContent("menu");
               setOpen(false);
             })
-            .catch(() => {
+            .catch(err => {
               setLoading(false);
-              setErrorShow(true);
+              setError(
+                get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
+                  ? "Kategorie se zvoleným názvem již existuje."
+                  : true
+              );
             });
         }}
         render={() => (
@@ -96,7 +101,9 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
                 classesLayout.flex,
                 classesLayout.flexWrap,
                 classesLayout.justifyCenter,
-                classesSpacing.m1
+                classesSpacing.p2,
+                classesSpacing.pt1,
+                classesSpacing.pb1
               )}
             >
               <Field
@@ -109,13 +116,13 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
                     label="Přejmenovat kategorii"
                     field={field}
                     form={form}
-                    autoFocus
+                    autoFocus={false}
                   />
                 )}
               />
               <div
                 className={classNames(
-                  classesSpacing.mt2,
+                  classesSpacing.mt1,
                   classesLayout.flex,
                   classesLayout.spaceBetween,
                   classesLayout.flexGrow,

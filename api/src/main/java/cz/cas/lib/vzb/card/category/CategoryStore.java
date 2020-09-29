@@ -35,6 +35,7 @@ public class CategoryStore extends DomainStore<Category, QCategory> {
      **/
     public Category findEqualNameDifferentIdInParent(Category newCategory) {
         if (requireNonNull(newCategory).getName() == null) return null;
+        if (requireNonNull(newCategory).getOwner() == null) return null;
 
         BooleanExpression parentIsEqual = newCategory.getParent() == null
                 ? qObject().parent.isNull()
@@ -43,6 +44,7 @@ public class CategoryStore extends DomainStore<Category, QCategory> {
         Category entity = query()
                 .select(qObject())
                 .where(parentIsEqual)
+                .where(qObject().owner.id.eq(newCategory.getOwner().getId()))
                 .where(qObject().name.eq(newCategory.getName()))
                 .where(qObject().id.ne(newCategory.getId()))
                 .fetchFirst();

@@ -1,7 +1,11 @@
 package core.exception;
 
 import core.domain.DomainObject;
+import core.rest.config.ResourceExceptionHandler;
 
+/**
+ * @see ResourceExceptionHandler#forbiddenOperation(ForbiddenOperation)
+ */
 public class ForbiddenOperation extends GeneralException {
     private Object object;
 

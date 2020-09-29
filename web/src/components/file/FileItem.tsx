@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
 import PictureAsPdf from "@material-ui/icons/PictureAsPdf";
 import CloudDownload from "@material-ui/icons/CloudDownload";
 import Tooltip from "@material-ui/core/Tooltip";
@@ -6,17 +7,17 @@ import Delete from "@material-ui/icons/Delete";
 import InsertDriveFile from "@material-ui/icons/InsertDriveFile";
 import classNames from "classnames";
 
-import { api } from "../../utils/api";
 import { Drive } from "../../components/icons/Drive";
 import { Dropbox } from "../../components/icons/Dropbox";
 import { Popconfirm } from "../../components/portal/Popconfirm";
 import { FileProps } from "../../types/file";
-
+import { FileType } from "../../enums";
 import { useStyles } from "./_fileStyles";
 import { useStyles as useEffectStyles } from "../../theme/styles/effectStyles";
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { downloadFile } from "./_utils";
 
 interface FileItemProps {
   file: FileProps;
@@ -34,27 +35,24 @@ export const FileItem: React.FC<FileItemProps> = ({
   const classesSpacing = useSpacingStyles();
   const classesText = useTextStyles();
   const classesEffect = useEffectStyles();
-  const { name, type, link, providerType } = file;
-  const onDownload = () => {
-    if (file.providerType === "LOCAL") {
-      api({ noContentType: true })
-        .get(`attachment_file/${file.id}`)
-        .then(response => response.blob())
-        .then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          let a = document.createElement("a");
-          a.href = url;
-          a.download = file.name;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-        });
-    } else {
-      window.open(link, "_blank");
-    }
+  const history = useHistory();
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const { name, type, providerType } = file;
+  const onDownload = (e: any) => {
+    e.stopPropagation();
+    downloadFile(file);
   };
   return (
-    <div className={classes.fileWrapper}>
+    <div
+      className={classes.fileWrapper}
+      onClick={() => {
+        !deleteConfirmOpen &&
+          history.push(`/attachments?search=${encodeURI(file.name)}`);
+        setDeleteConfirmOpen(false);
+      }}
+    >
       <Tooltip title={type}>
         <div className={classesLayout.flex}>
           {type === "pdf" ? (
@@ -76,7 +74,7 @@ export const FileItem: React.FC<FileItemProps> = ({
         </div>
       </Tooltip>
       <span className={classesSpacing.ml1} />
-      {providerType === "GOOGLE_DRIVE" && (
+      {providerType === FileType.GOOGLE_DRIVE && (
         <Tooltip title="Stáhnout přílohu">
           <div className={classesLayout.flex}>
             <Drive
@@ -90,7 +88,7 @@ export const FileItem: React.FC<FileItemProps> = ({
           </div>
         </Tooltip>
       )}
-      {providerType === "DROPBOX" && (
+      {providerType === FileType.DROPBOX && (
         <Tooltip title="Stáhnout přílohu">
           <div className={classesLayout.flex}>
             <Dropbox
@@ -105,7 +103,8 @@ export const FileItem: React.FC<FileItemProps> = ({
         </Tooltip>
       )}
 
-      {((providerType !== "DROPBOX" && providerType !== "GOOGLE_DRIVE") ||
+      {((providerType !== FileType.DROPBOX &&
+        providerType !== FileType.GOOGLE_DRIVE) ||
         onDelete === undefined) &&
         !disableDownload && (
           <Tooltip title="Stáhnout přílohu">
@@ -117,7 +116,6 @@ export const FileItem: React.FC<FileItemProps> = ({
                   classes.fileIcons,
                   classesEffect.hoverPrimary
                 )}
-                color="action"
               />
             </div>
           </Tooltip>
@@ -125,10 +123,15 @@ export const FileItem: React.FC<FileItemProps> = ({
 
       {onDelete && (
         <Popconfirm
-          confirmText="Smazat přílohu?"
-          onConfirmClick={() => onDelete(file)}
-          Button={() => (
-            <Tooltip title="Smazat přílohu">
+          confirmText="Odebrat přílohu z karty?"
+          acceptText="Odebrat"
+          onConfirmClick={(e: any) => {
+            e.stopPropagation();
+            onDelete(file);
+          }}
+          onOpenCallback={() => setDeleteConfirmOpen(true)}
+          Button={
+            <Tooltip title="Odebrat přílohu z karty">
               <div className={classesLayout.flex}>
                 <Delete
                   className={classNames(
@@ -136,11 +139,10 @@ export const FileItem: React.FC<FileItemProps> = ({
                     classes.fileIcons,
                     classesEffect.hoverSecondary
                   )}
-                  color="action"
                 />
               </div>
             </Tooltip>
-          )}
+          }
         />
       )}
     </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { CSSProperties } from "react";
 import Button from "@material-ui/core/Button";
 import classNames from "classnames";
 
@@ -12,6 +12,7 @@ interface ButtonAddProps {
   bold?: boolean;
   big?: boolean;
   inline?: boolean;
+  style?: CSSProperties;
 }
 
 export const ButtonGrey: React.FC<ButtonAddProps> = ({
@@ -20,7 +21,8 @@ export const ButtonGrey: React.FC<ButtonAddProps> = ({
   Icon,
   bold,
   big,
-  inline
+  inline,
+  style
 }) => {
   const classes = useStyles();
   const classesText = useTextStyles();
@@ -33,6 +35,7 @@ export const ButtonGrey: React.FC<ButtonAddProps> = ({
         root: classNames(classes.button),
         label: classNames({ [classesText.textBold]: bold, [classes.big]: big })
       }}
+      style={style}
     >
       {Icon}
       {text}

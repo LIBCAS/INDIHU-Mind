@@ -55,13 +55,15 @@ export const Categories: React.FC<RouteComponentProps> = () => {
           </div>
           {state.category.categories.length === 0 &&
             state.status.loadingCount === 0 && <div>Žádné kategorie</div>}
-          {state.category.categories.map(cat => (
-            <CategoriesItem
-              key={cat.id}
-              category={cat}
-              loadCategories={loadCategories}
-            />
-          ))}
+          <div className={classes.categoriesContainer}>
+            {state.category.categories.map(cat => (
+              <CategoriesItem
+                key={cat.id}
+                category={cat}
+                loadCategories={loadCategories}
+              />
+            ))}
+          </div>
         </div>
       </Fade>
       <Modal

@@ -15,8 +15,9 @@ export const useStyles = makeStyles((theme: Theme) => ({
   tableWrapper: {
     overflowX: "auto"
   },
-  toolbarRoot: {
-    paddingRight: theme.spacing(1)
+  toolbar: {
+    display: "flex",
+    alignItems: "flex-end"
   },
   tableCell: {
     whiteSpace: "nowrap",
@@ -67,7 +68,7 @@ export const useStyles = makeStyles((theme: Theme) => ({
   },
   icons: {
     padding: "5px",
-    color: theme.greyText,
+    color: theme.blackIconColor,
     [theme.breakpoints.up("md")]: {
       opacity: 0
     }
@@ -104,6 +105,7 @@ export const useStyles = makeStyles((theme: Theme) => ({
   },
   groupTitle: {
     marginRight: theme.spacing(1),
+    minWidth: 190,
     ["@media (min-width:1200px)"]: {
       width: "auto"
     }

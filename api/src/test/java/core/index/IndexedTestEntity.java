@@ -29,7 +29,7 @@ public class IndexedTestEntity extends IndexedDatedObject {
     protected String textAttributeWithStringCpyField;
 
     @Field
-    @Indexed(type = IndexFieldType.FOLDING)
+    @Indexed(type = IndexFieldType.KEYWORD)
     protected String foldingAttribute;
 
     @Field

@@ -5,8 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import core.rest.config.ResourceExceptionHandler;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.User;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.SolrClient;
 import org.junit.After;
+import org.junit.Before;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,8 +32,9 @@ import java.util.stream.Collectors;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
+@Slf4j
 @Component
-public abstract class ApiTest {
+public abstract class ApiTest implements AlterSolrCollection {
 
     @Inject private Filter springSecurityFilterChain;
     @Inject private WebApplicationContext webApplicationContext;
@@ -38,7 +42,22 @@ public abstract class ApiTest {
     @Inject private SolrClient solrClient;
     @Inject protected ObjectMapper objectMapper;
     @Inject protected TransactionTemplate transactionTemplate;
-    @Value("${vzb.index.cardCollectionName}") private String cardCollectionName;
+
+    /** Name of test collection for {@link cz.cas.lib.vzb.card.IndexedCard} */
+    @Getter
+    @Value("${vzb.index.cardCollectionName}")
+    private String cardTestCollectionName;
+
+    /** Name of test collection for entities extending {@link core.index.IndexedDomainObject} */
+    @Getter
+    @Value("${vzb.index.uasTestCollectionName}")
+    private String uasTestCollectionName;
+
+
+    @Before
+    public void alterSolrCollection() {
+        modifySolrDocumentAnnotationForIndexedClasses();
+    }
 
     private ObjectMapper mapper() {
         return new ObjectMapper();
@@ -70,6 +89,7 @@ public abstract class ApiTest {
         return SecurityMockMvcRequestPostProcessors.user(new UserDelegate(u, authorities));
     }
 
+
     @After
     public void apiTestTearDown() throws Exception {
         if (dataSource != null) {
@@ -80,11 +100,13 @@ public abstract class ApiTest {
             c.close();
         }
         if (solrClient != null) {
-            solrClient.deleteByQuery(cardCollectionName, "*:*");
-            solrClient.commit(cardCollectionName);
-//todo: use test collection instead
-            solrClient.deleteByQuery("uas", "*:*");
-            solrClient.commit("uas");
+            log.info("Deleting indices from collection: " + cardTestCollectionName);
+            solrClient.deleteByQuery(cardTestCollectionName, "*:*");
+            solrClient.commit(cardTestCollectionName);
+
+            log.info("Deleting indices from collection: " + uasTestCollectionName);
+            solrClient.deleteByQuery(uasTestCollectionName, "*:*");
+            solrClient.commit(uasTestCollectionName);
         }
     }
 }

@@ -1,11 +1,16 @@
-spring.application.name: vzb
+env: deploy # staging / deploy
+
 spring:
+  application:
+    name: vzb
+
   datasource:
     url: jdbc:postgresql://localhost:5432/vzb
     username: uas
     password: vuji61oilo
     driver-class-name: org.postgresql.Driver
     name: mainPool
+
   jpa:
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQL9Dialect
@@ -14,39 +19,44 @@ spring:
       naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
       use-new-id-generator-mappings: true
     properties.hibernate.jdbc.lob.non_contextual_creation: true
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10250KB # 10MB + 10KB buffer for request fields
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
-  mail:
+
+  mail: # data for connecting to SMTP server
     host: smtp.gmail.com
     port: 465
     username: noreply@inqool.cz
-    password: blah38espro
+    password: DER8wJQWB44ppa2V
     protocol: smtp
     properties.mail.smtp:
       auth: true
       starttls.enable: false
       ssl.trust: smtp.gmail.com
       ssl.enable: true
+
   liquibase:
     changeLog: classpath:/dbchangelog.vzb.xml
     url: jdbc:postgresql://localhost:5432/vzb
     user: uas
     password: vuji61oilo
-mail:
+
+mail: # data for creating email in UAS MailCenter
   sender:
-    email: noreply@indihumind.inqool.cz
+    email: noreply@mind.indihu.cz
     name: Indihu Mind
   app:
     name: Indihu Mind
     logo: logo.png
-    link: http://indihumind.inqool.cz
-    url: http://indihumind.inqool.cz
+    url: https://mind.indihu.cz
   enabled: true
+
 security:
   basic:
     authQuery: "/api/login"
@@ -58,21 +68,21 @@ security:
     length: 8
     digit: true
     alphabet: true
+
 file.path: filerepository
+
 json:
   serializeNulls: true
-env: deploy # staging / deploy
+
 vzb:
   index:
     endpoint: http://localhost:8983/solr
-    cardCollectionName: card
   token:
     expirationTime: 15 # Minutes
   quota:
-    kbPerUser: 10000000
+    kbPerUser: 10000000 # 10GB
   marc:
     template:
       placeholder: ${?}
+      missing-data: (%s%s NENALEZENO)
     pdf-name: citace # without extension .pdf
-server:
-  url: http://localhost:8080

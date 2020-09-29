@@ -42,8 +42,20 @@ export const TableActions: React.FC<TableActionsProps> = ({
   const classesEffect = useEffectStyles();
   return (
     <div className={classes.iconsWrapper} onClick={e => e.stopPropagation()}>
+      <Tooltip title="Editovat">
+        <IconButton
+          onClick={e => {
+            selectRow(e, row);
+            setMenuOpen(prev => !prev);
+            // history.push(`/${baseUrl}/${row.id}`);
+          }}
+          className={classNames(classesEffect.hoverPrimary, classes.icons)}
+        >
+          <Edit />
+        </IconButton>
+      </Tooltip>
       <Popconfirm
-        Button={() => (
+        Button={
           <Tooltip title="Smazat">
             <IconButton
               className={classNames(
@@ -54,7 +66,7 @@ export const TableActions: React.FC<TableActionsProps> = ({
               <Delete />
             </IconButton>
           </Tooltip>
-        )}
+        }
         confirmText="Smazat?"
         onConfirmClick={() => {
           const request = api().delete(`${baseUrl}/${row.id}`);
@@ -76,18 +88,6 @@ export const TableActions: React.FC<TableActionsProps> = ({
             });
         }}
       />
-      <Tooltip title="Editovat">
-        <IconButton
-          onClick={e => {
-            selectRow(e, row);
-            setMenuOpen(prev => !prev);
-            // history.push(`/${baseUrl}/${row.id}`);
-          }}
-          className={classNames(classesEffect.hoverPrimary, classes.icons)}
-        >
-          <Edit />
-        </IconButton>
-      </Tooltip>
     </div>
   );
 };

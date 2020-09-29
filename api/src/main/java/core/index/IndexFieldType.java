@@ -19,8 +19,13 @@ public class IndexFieldType {
     public static final String STRING = "string";
     /**
      * keyword with ascii folding and lowercase
+     *
+     * should be when querying for a single keyword, e.g. names of entities.
+     * names: 'test', 'testing service', 'ultratest'
+     * keyword query: 'test' returns all 3 names.
+     * querying for 'service testing' does not return entity with name 'testing service'
      */
-    public static final String FOLDING = "keyword_folding";
+    public static final String KEYWORD = "keyword_folding";
     /**
      * standard tokenizer with ascii folding and lowercase
      * should be used for longer texts with some advanced analysis (stopwords etc.) or when e.g. proximity search is required

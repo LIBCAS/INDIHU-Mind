@@ -9,6 +9,9 @@ export const useStyles = makeStyles((theme: Theme) => {
     m2: {
       margin: theme.spacing(2)
     },
+    m3: {
+      margin: theme.spacing(2)
+    },
     mtAuto: {
       marginTop: "auto"
     },
@@ -42,6 +45,9 @@ export const useStyles = makeStyles((theme: Theme) => {
     mb2: {
       marginBottom: theme.spacing(2)
     },
+    mb3: {
+      marginBottom: theme.spacing(3)
+    },
     mlAuto: {
       marginLeft: "auto"
     },
@@ -59,6 +65,39 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     p1: {
       padding: theme.spacing(1)
+    },
+    p2: {
+      padding: theme.spacing(2)
+    },
+    p3: {
+      padding: theme.spacing(3)
+    },
+    pt1: {
+      paddingTop: theme.spacing(1)
+    },
+    pt2: {
+      paddingTop: theme.spacing(2)
+    },
+    pt3: {
+      paddingTop: theme.spacing(3)
+    },
+    pb1: {
+      paddingBottom: theme.spacing(1)
+    },
+    pb2: {
+      paddingBottom: theme.spacing(2)
+    },
+    pb3: {
+      paddingBottom: theme.spacing(3)
+    },
+    pr1: {
+      paddingRight: theme.spacing(1)
+    },
+    pr2: {
+      paddingRight: theme.spacing(2)
+    },
+    pr3: {
+      paddingRight: theme.spacing(3)
     }
   };
 });

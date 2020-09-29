@@ -75,7 +75,7 @@ export const CardCreateAddTemplate: React.FC<CardCreateAddTemplateProps> = ({
                     field={field}
                     form={form}
                     label="Název"
-                    inputProps={{ autoFocus: true }}
+                    inputProps={{ autoFocus: false }}
                   />
                 )}
               />

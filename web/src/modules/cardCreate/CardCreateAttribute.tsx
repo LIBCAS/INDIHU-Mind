@@ -2,12 +2,12 @@ import React, { useRef, useState, useEffect } from "react";
 import { Field } from "formik";
 
 import { AttributeProps } from "../../types/attribute";
-import { notEmpty } from "../../utils/form/validate";
 import { Popover } from "../../components/portal/Popover";
 
-import { useStyles } from "./_cardCreateStyles";
 import { CardCreateAddAttribute } from "./CardCreateAddAttribute";
 import { CardCreateAttributeInput } from "./CardCreateAttributeInput";
+import { AttributeType } from "../../enums";
+import { validateAttributeType } from "../../utils/attribute";
 
 interface CardCreateAttributeProps {
   attribute: AttributeProps;
@@ -18,7 +18,6 @@ export const CardCreateAttribute: React.FC<CardCreateAttributeProps> = ({
   attribute,
   formikBag
 }) => {
-  const classes = useStyles();
   const anchorRef = useRef(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [formValue, setFormValue] = useState<any>(null);
@@ -39,14 +38,11 @@ export const CardCreateAttribute: React.FC<CardCreateAttributeProps> = ({
       (att: AttributeProps) => {
         if (att.id === id) {
           switch (type) {
-            case "BOOLEAN":
+            case AttributeType.BOOLEAN:
               att.value = Boolean(checked);
               break;
-            case "DOUBLE":
+            case AttributeType.DOUBLE:
               att.value = Number(value);
-              break;
-            case "DATETIME":
-              att.value = value;
               break;
             default:
               att.value = value;
@@ -60,23 +56,16 @@ export const CardCreateAttribute: React.FC<CardCreateAttributeProps> = ({
 
   return (
     <>
-      <div ref={anchorRef} className={classes.atributeFieldwrapper}>
+      <div ref={anchorRef}>
         <Field
           name={id}
           value={formValue}
-          validate={(value: any) => {
-            let error;
-            const notEmptyTypes = ["STRING", "DOUBLE"];
-            if (notEmptyTypes.indexOf(type) !== -1) {
-              error = notEmpty(value);
-            }
-            return error;
-          }}
+          validate={!formValue && validateAttributeType(type)}
           render={({ field, form }: any) => {
             const transformedField = {
               ...field,
               onChange: (e: any) =>
-                type === "DATETIME"
+                type === AttributeType.DATE || type === AttributeType.DATETIME
                   ? onChange({ target: { value: e.toDate() } }, field)
                   : onChange(e, field),
               value: formValue,

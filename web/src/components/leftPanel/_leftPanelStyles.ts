@@ -15,10 +15,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     buttonWrapper: {
       display: "flex",
       flexDirection: "column",
-      marginTop: theme.spacing(5),
-      marginBottom: theme.spacing(4),
-      marginLeft: "auto",
-      marginRight: "auto"
+      margin: "20px 30px"
     },
     buttonRegister: {
       display: "flex",
@@ -52,8 +49,10 @@ export const useStyles = makeStyles((theme: Theme) => {
       flexDirection: "column",
       background: "#212121",
       color: "#fff",
-      [theme.breakpoints.up("md")]: {
-        minHeight: "calc(100vh - 64px)"
+      [theme.breakpoints.up("lg")]: {
+        minHeight: "calc(100vh - 64px)",
+        maxHeight: "calc(100vh - 64px)",
+        marginTop: 64
       }
     },
     wrapper: {
@@ -75,6 +74,12 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     linkActive: {
       borderBottom: "1px solid #fff"
+    },
+    leftPanelContent: {
+      height: "50vh",
+      [theme.breakpoints.up("lg")]: {
+        minHeight: "calc(100vh - 64px)"
+      }
     }
   };
 });

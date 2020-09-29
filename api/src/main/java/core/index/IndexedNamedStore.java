@@ -4,7 +4,6 @@ import com.querydsl.core.types.dsl.EntityPathBase;
 import core.domain.NamedObject;
 import core.index.dto.Params;
 import core.index.dto.Result;
-import core.rest.data.DataAdapter;
 import core.store.NamedStore;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -18,7 +17,7 @@ import static core.util.Utils.toDate;
 
 @Getter
 public abstract class IndexedNamedStore<T extends NamedObject, Q extends EntityPathBase<T>, U extends IndexedNamedObject>
-        extends NamedStore<T, Q> implements IndexedStore<T, U>, DataAdapter<T> {
+        extends NamedStore<T, Q> implements IndexedStore<T, U> {
     private SolrTemplate template;
 
     private Class<U> uType;

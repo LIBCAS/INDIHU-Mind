@@ -1,7 +1,11 @@
 package core.exception;
 
 import core.domain.DomainObject;
+import core.rest.config.ResourceExceptionHandler;
 
+/**
+ * @see ResourceExceptionHandler#conflictException(ConflictObject)
+ */
 public class ConflictObject extends GeneralException {
     private Object object;
 

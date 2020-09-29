@@ -17,7 +17,7 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 public class IndexedFileRef extends IndexedDatedObject {
 
     @Field
-    @Indexed(type = IndexFieldType.FOLDING)
+    @Indexed(type = IndexFieldType.KEYWORD)
     protected String name;
 
     @Field

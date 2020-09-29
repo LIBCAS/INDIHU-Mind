@@ -1,6 +1,7 @@
 package helper;
 
 
+import core.domain.DomainObject;
 import liquibase.util.SystemUtils;
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
@@ -8,6 +9,9 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static core.util.Utils.executeProcessDefaultResultHandle;
 
@@ -27,6 +31,10 @@ public class TestUtils {
         public static void stopAll() throws Exception {
             executeProcessDefaultResultHandle(KILL_CMD);
         }
+    }
+
+    public static List<String> extractIds(Collection<? extends DomainObject> collection) {
+        return collection.stream().map(DomainObject::getId).collect(Collectors.toList());
     }
 
     public static Matcher<Instant> closeTo(Instant operand, long error) {

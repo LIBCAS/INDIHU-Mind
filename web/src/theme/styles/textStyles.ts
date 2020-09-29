@@ -9,6 +9,9 @@ export const useStyles = makeStyles((theme: Theme) => {
     textGrey: {
       color: theme.greyText
     },
+    textGreyDark: {
+      color: theme.greyDark
+    },
     textWhite: {
       color: "#fff"
     },
@@ -25,6 +28,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       color: "#fff",
       fontSize: 16,
       whiteSpace: "nowrap",
+      cursor: "pointer",
       "&:hover": {
         textDecoration: "none"
       },
@@ -40,6 +44,9 @@ export const useStyles = makeStyles((theme: Theme) => {
     textLeft: {
       textAlign: "left"
     },
+    textRight: {
+      textAlign: "right"
+    },
     textCenter: {
       textAlign: "center"
     },
@@ -54,13 +61,16 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     icon: {
       display: "flex",
-      color: theme.greyText,
-      background: theme.greyLightUltra,
+      color: theme.blackIconColor,
+      background: "white", //theme.greyLightUltra,
       borderRadius: "50%",
       transition: ".3s ease color",
       "&:hover": {
         color: theme.palette.primary.main
       }
+    },
+    iconChangedBg: {
+      background: theme.blueLight
     },
     iconBig: {
       fontSize: 28
@@ -73,6 +83,9 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     normal: {
       fontSize: 16
+    },
+    textBlack: {
+      color: "#000"
     }
   };
 });

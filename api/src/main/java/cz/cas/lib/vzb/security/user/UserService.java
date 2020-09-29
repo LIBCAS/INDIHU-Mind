@@ -3,130 +3,132 @@ package cz.cas.lib.vzb.security.user;
 import core.exception.ConflictObject;
 import core.exception.ForbiddenOperation;
 import core.exception.MissingObject;
-import core.rest.data.DelegateAdapter;
+import core.index.dto.Filter;
+import core.index.dto.FilterOperation;
+import core.index.dto.Params;
+import core.index.dto.Result;
 import core.security.authorization.assign.AssignedRoleService;
 import core.security.password.GoodPasswordGenerator;
 import core.sequence.Sequence;
 import core.sequence.SequenceStore;
+import core.store.Transactional;
 import cz.cas.lib.vzb.dto.BulkFlagSetDto;
-import cz.cas.lib.vzb.security.password.PasswordResetToken;
-import cz.cas.lib.vzb.security.password.PasswordResetTokenStore;
-import cz.cas.lib.vzb.service.VzbMailCenter;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
+import cz.cas.lib.vzb.security.password.PasswordToken;
+import cz.cas.lib.vzb.security.password.PasswordTokenService;
+import cz.cas.lib.vzb.service.MailService;
+import lombok.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
+import javax.validation.constraints.Email;
+import java.util.*;
 
-import static core.util.Utils.isNull;
-import static core.util.Utils.notNull;
+import static core.util.Utils.*;
 import static cz.cas.lib.vzb.card.CardService.getPidSequenceId;
 
 @Service
-public class UserService implements DelegateAdapter<User> {
-    @Getter
-    private UserStore delegate;
-    private PasswordResetTokenStore passwordTokenDelegate;
+public class UserService {
+
+    private UserStore store;
+    private PasswordTokenService tokenService;
     private PasswordEncoder passwordEncoder;
     private SequenceStore sequenceStore;
     private GoodPasswordGenerator goodPasswordGenerator;
     private AssignedRoleService assignedRoleService;
-    private VzbMailCenter mailCenter;
+    private MailService mailService;
 
-    // inject from application.yml
-    private long expirationTime;
-    private String serverUrl;
+    @Transactional
+    public void register(String email, @Nullable String password) {
+        User emailTaken = store.findByEmail(email);
+        isNull(emailTaken, () -> new ConflictObject(User.class, email));
 
+        if (password == null) password = goodPasswordGenerator.generate();
 
-    public User register(String email, @Nullable String password) {
-        User user = delegate.findByEmail(email);
-        isNull(user, () -> new ConflictObject(User.class, email));
+        User user = new User();
+        user.setPassword(password);
+        user.setEmail(email);
+        if (assignedRoleService.getAssignedRolesMine().contains(Roles.ADMIN))
+            user.setAllowed(true);
+        create(user);
 
-        String passwd = password;
-        if (passwd == null) passwd = goodPasswordGenerator.generate();
-
-        User u = new User();
-        u.setPassword(passwd);
-        u.setEmail(email);
-        if (assignedRoleService.getAssignedRolesMine().contains(Roles.ADMIN)) u.setAllowed(true);
-        create(u);
-        assignedRoleService.assignRole(u.getId(), Roles.USER);
-        mailCenter.sendUserCreatedNotification(email, passwd);
-        return u;
+        mailService.sendUserCreatedEmail(email, password);
     }
 
-    public User create(User user) {
+    @Transactional
+    public User create(@NonNull User user) {
+        return createWithRoles(user, Collections.singleton(Roles.USER));
+    }
+
+    @Transactional
+    public User createWithRoles(@NonNull User user, @NonNull Set<String> roles) {
+        // there is no userID primary key constraint in db.changelog so this can be done even before user officially exists in DB
+        assignedRoleService.saveAssignedRoles(user.getId(), roles);
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user = save(user);
+        user = store.save(user);
+
+        // sequence defines number of cards for a user, used by Card#pid
         Sequence s = new Sequence();
         s.setId(getPidSequenceId(user.getId()));
         s.setFormat("0");
         s.setCounter(1L);
         sequenceStore.save(s);
+
         return user;
     }
 
+
+    @Transactional
     public void setAllowedStatus(BulkFlagSetDto dto) {
         List<User> affectedUsers = new ArrayList<>();
         dto.getIds().forEach(userId -> {
-            User user = delegate.find(userId);
+            User user = store.find(userId);
             notNull(user, () -> new MissingObject(User.class, userId));
             user.setAllowed(dto.getValue());
             affectedUsers.add(user);
         });
-        save(affectedUsers);
+        store.save(affectedUsers);
     }
 
-
-    public String sendResetLinkToEmail(String email) {
-        User user = delegate.findByEmail(email);
+    @Transactional
+    public void resetPassword(@Email String email) {
+        User user = store.findByEmail(email);
         notNull(user, () -> new MissingObject(User.class, email));
 
-        PasswordResetToken token = new PasswordResetToken();
-        token.setExpirationTime(Instant.now().plus(expirationTime, ChronoUnit.MINUTES));
-        token.setOwner(user);
-        passwordTokenDelegate.save(token);
-
-        String pwdGenerationLink = serverUrl + "/resetPassword?token=" + token.getId();
-        mailCenter.sendUserPasswordGenerationLink(email, pwdGenerationLink);
-        return pwdGenerationLink;
+        PasswordToken passwordToken = tokenService.generateNewToken(email);
+        mailService.sendResetPasswordEmail(email, passwordToken.getId());
     }
 
-    public void validateTokenSetNewPassword(String tokenId, String newPlainPassword) {
-        PasswordResetToken token = passwordTokenDelegate.find(tokenId);
-        notNull(token, () -> new MissingObject(PasswordResetToken.class, tokenId));
-
-        Instant expirationTime = token.getExpirationTime();
-        if (token.isUtilized() || Instant.now().compareTo(expirationTime) > 0)
-            throw new ForbiddenOperation(PasswordResetToken.class, tokenId);
-
+    @Transactional
+    public void setNewPassword(String tokenId, String newPlainPassword) {
+        PasswordToken token = tokenService.find(tokenId);
+        eq(Boolean.TRUE, tokenService.isTokenValid(token), () -> new ForbiddenOperation(PasswordToken.class, tokenId));
         User user = token.getOwner();
         user.setPassword(passwordEncoder.encode(newPlainPassword));
-        save(user);
-
-        token.setUtilized(true);
-        passwordTokenDelegate.save(token);
+        tokenService.utilizeToken(token);
+        store.save(user);
     }
 
-    @Inject
-    public void setExpirationTime(@Value("${vzb.token.expirationTime}") String expirationTime) {
-        this.expirationTime = Long.parseLong(expirationTime);
+    public Result<User> findAll(Params params) {
+        Filter rolesContainsAdmin = new Filter(IndexedUser.ROLES, FilterOperation.CONTAINS, Roles.ADMIN, null);
+        addPrefilter(params, new Filter(null, FilterOperation.NEGATE, null, asList(rolesContainsAdmin)));
+        return store.findAll(params);
     }
 
-    @Inject
-    public void setServerUrl(@Value("${server.url}") String serverUrl) {
-        this.serverUrl = serverUrl;
+    public void sendTestEmails(String email) {
+        mailService.sendDummyEmails(email);
     }
 
+    public Collection<PasswordToken> findAllTokens() {
+        return tokenService.listAll();
+    }
+
+
     @Inject
-    public void setDelegate(UserStore delegate) {
-        this.delegate = delegate;
+    public void setStore(UserStore store) {
+        this.store = store;
     }
 
     @Inject
@@ -150,12 +152,13 @@ public class UserService implements DelegateAdapter<User> {
     }
 
     @Inject
-    public void setMailCenter(VzbMailCenter mailCenter) {
-        this.mailCenter = mailCenter;
+    public void setMailService(MailService mailService) {
+        this.mailService = mailService;
     }
 
     @Inject
-    public void setPasswordTokenDelegate(PasswordResetTokenStore passwordTokenDelegate) {
-        this.passwordTokenDelegate = passwordTokenDelegate;
+    public void setTokenService(PasswordTokenService tokenService) {
+        this.tokenService = tokenService;
     }
+
 }

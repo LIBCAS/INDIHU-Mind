@@ -2,10 +2,15 @@ package cz.cas.lib.vzb;
 
 import cz.cas.lib.vzb.card.Card;
 import cz.cas.lib.vzb.card.CardStore;
+import cz.cas.lib.vzb.card.IndexedCard;
 import cz.cas.lib.vzb.card.category.Category;
 import cz.cas.lib.vzb.card.category.CategoryStore;
 import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.card.label.LabelStore;
+import cz.cas.lib.vzb.init.builders.CardBuilder;
+import cz.cas.lib.vzb.init.builders.CategoryBuilder;
+import cz.cas.lib.vzb.init.builders.LabelBuilder;
+import cz.cas.lib.vzb.init.builders.UserBuilder;
 import cz.cas.lib.vzb.security.user.Roles;
 import cz.cas.lib.vzb.security.user.User;
 import cz.cas.lib.vzb.security.user.UserService;
@@ -16,18 +21,16 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.util.Collections;
+import java.util.Set;
 
-import static core.util.Utils.asSet;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static core.util.Utils.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,12 +38,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 public class LabelApiTest extends ApiTest {
 
+    private static final String LABEL_API_URL = "/api/label/";
+
     @Inject private UserService userService;
     @Inject private LabelStore labelStore;
     @Inject private CardStore cardStore;
     @Inject private CategoryStore categoryStore;
-    private User user = User.builder().password("password").email("mail").allowed(false).build();
 
+    private final User user = UserBuilder.builder().password("password").email("mail").allowed(false).build();
+
+    @Override
+    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
+        return Collections.singleton(IndexedCard.class);
+    }
 
     @Before
     public void before() {
@@ -49,108 +59,112 @@ public class LabelApiTest extends ApiTest {
 
     @Test
     public void create() throws Exception {
-        Label l1 = new Label("l1", Color.BLACK, null);
+        Label label = LabelBuilder.builder().name("Totálně černý label").color(Color.BLACK).owner(null).build();
         securedMvc().perform(
-                put("/api/label/" + l1.getId())
+                put(LABEL_API_URL + label.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(l1))
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status().is2xxSuccessful())
-        ;
-        assertThat(labelStore.find(l1.getId()), notNullValue());
+                        .content(objectMapper.writeValueAsString(label))
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().is2xxSuccessful());
+
+        assertThat(labelStore.find(label.getId())).isNotNull();
     }
 
     // Enforce db.changelog addUniqueConstraint on columns name,owner
     @Test
     public void createLabelWithExistingName() throws Exception {
-        Label l1 = new Label("l1", Color.BLACK, null);
-        transactionTemplate.execute((t) -> labelStore.save(l1));
+        Label label = LabelBuilder.builder().name("l1").color(Color.BLACK).owner(user).build();
+        transactionTemplate.execute((t) -> labelStore.save(label));
 
-        Label duplicate = new Label("l1", Color.BLACK, null);
+        Label duplicate = LabelBuilder.builder().name("l1").color(Color.BLACK).owner(user).build();
         securedMvc().perform(
-                put("/api/label/" + duplicate.getId())
+                put(LABEL_API_URL + duplicate.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(duplicate))
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status().isConflict()) //409
-        ;
-        assertThat(labelStore.find(l1.getId()), notNullValue());
-        assertThat(labelStore.find(duplicate.getId()), nullValue());
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isConflict()); //409
+
+        assertThat(labelStore.find(label.getId())).isNotNull();
+        assertThat(labelStore.find(duplicate.getId())).isNull();
     }
 
+    @Test
+    public void existingNameDifferentOwner() throws Exception {
+        User otherUser = UserBuilder.builder().password("other").email("other").allowed(false).build();
+        Label labelOfOtherUser = LabelBuilder.builder().name("name").color(Color.BLACK).owner(otherUser).build();
 
-    // check basic update for same name, same id but difference in other attribute
+        transactionTemplate.execute(status -> {
+            userService.create(otherUser);
+            labelStore.save(labelOfOtherUser);
+            return null;
+        });
+
+        Label labelOfUser = LabelBuilder.builder().name("name").color(Color.GREEN).owner(user).build();
+        securedMvc().perform(
+                put(LABEL_API_URL + labelOfUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(labelOfUser))
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk()); //409
+
+        assertThat(labelStore.find(labelOfOtherUser.getId())).isNotNull();
+        assertThat(labelStore.find(labelOfUser.getId())).isNotNull();
+    }
+
+    // check basic update for same name, same id but different in other attribute
     @Test
     public void updateLabel() throws Exception {
-        Label l1 = new Label("l1", Color.BLACK, user);
+        Label l1 = LabelBuilder.builder().name("l1").color(Color.BLACK).owner(user).build();
         transactionTemplate.execute((t) -> labelStore.save(l1));
         l1.setColor(Color.GREEN);
         securedMvc().perform(
-                put("/api/label/" + l1.getId())
+                put(LABEL_API_URL + l1.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(l1))
-                        .with(mockedUser(user.getId(), Roles.USER))
-        )
-                .andExpect(status().isOk())
-        ;
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk());
+
         Label found = labelStore.find(l1.getId());
-        assertThat(found, notNullValue());
-        assertThat(found.getName(), is(l1.getName()));
-        assertThat(found.getColor(), is(l1.getColor()));
+        assertThat(found).isNotNull();
+        assertThat(found.getName()).isEqualTo(l1.getName());
+        assertThat(found.getColor()).isEqualTo(l1.getColor());
     }
 
     /**
      * This test runs async methods in LabelService. ( CompletableFuture.runAsync() )
      * Tests may fail because of Thread.sleep(threadSleepTimeInMillis)
-     *
+     * <p>
      * Look at variable `threadSleepTimeInMillis`
      */
     @Test
     public void labelManipulationReindex() throws Exception {
         // If the test are failing try to increase this number to figure out if the problem is in threading
         // For the sake of overall tests duration, try to keep the number reasonably low.
-        long threadSleepTimeInMillis = 2500;
+        long THREAD_SLEEP_MILLISECONDS = 2500;
 
-        Label l1 = new Label("first", Color.BLACK, user);
-        Label l2 = new Label("second", Color.WHITE, user);
-        Category cat = new Category("category", 1, null, user);
+        Label label1 = LabelBuilder.builder().name("first").color(Color.BLACK).owner(user).build();
+        Label label2 = LabelBuilder.builder().name("second").color(Color.WHITE).owner(user).build();
+        Category category = CategoryBuilder.builder().name("category").ordinalNumber(1).parent(null).owner(user).build();
 
         transactionTemplate.execute(t -> {
-            labelStore.save(asSet(l1, l2));
-            categoryStore.save(cat);
+            labelStore.save(asList(label1, label2));
+            categoryStore.save(category);
             return null;
         });
-        Card c = new Card();
-        c.setPid(1);
-        c.setName("blah");
-        c.setOwner(user);
-        c.setLabels(asSet(l1, l2));
-        c.setCategories(asSet(cat));
-        Card c2 = new Card();
-        c2.setPid(2);
-        c2.setName("slah");
-        c2.setOwner(user);
-        c2.setLabels(asSet(l1));
-        c2.setCategories(asSet(cat));
-        Card c3 = new Card();
-        c3.setPid(3);
-        c3.setName("nah");
-        c3.setOwner(user);
-        c3.setLabels(asSet(l2));
-        c3.setCategories(asSet(cat));
 
-        transactionTemplate.execute(t ->
-                cardStore.saveAndIndex(asSet(c, c2, c3)));
+        Card card1 = CardBuilder.builder().pid(1).name("bah").owner(user).categories(category).labels(label1, label2).build();
+        Card card2 = CardBuilder.builder().pid(2).name("sah").owner(user).categories(category).labels(label1).build();
+        Card card3 = CardBuilder.builder().pid(3).name("nah").owner(user).categories(category).labels(label2).build();
+
+        transactionTemplate.execute(t -> cardStore.save(asList(card1, card2, card3)));
 
         securedMvc().perform(
-                MockMvcRequestBuilders.delete("/api/label/{1}", l1.getId())
+                delete(LABEL_API_URL + label1.getId())
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().isOk())
-        ;
-        Thread.sleep(threadSleepTimeInMillis);
+                .andExpect(status().isOk());
+        Thread.sleep(THREAD_SLEEP_MILLISECONDS);
 
+        // ---------- CARD API SEARCH ----------
         securedMvc().perform(get("/api/card/search").param("q", "first")
                 .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
@@ -166,16 +180,16 @@ public class LabelApiTest extends ApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count", is(3)));
 
-        l2.setName("third");
+        label2.setName("third");
         securedMvc().perform(
-                MockMvcRequestBuilders.put("/api/label/{1}", l2.getId())
+                put(LABEL_API_URL + label2.getId())
                         .with(mockedUser(user.getId(), Roles.USER))
-                        .content(objectMapper.writeValueAsString(l2))
+                        .content(objectMapper.writeValueAsString(label2))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-        ;
-        Thread.sleep(threadSleepTimeInMillis);
+                .andExpect(status().isOk());
+        Thread.sleep(THREAD_SLEEP_MILLISECONDS);
 
+        // ---------- CARD API SEARCH ----------
         securedMvc().perform(get("/api/card/search").param("q", "second")
                 .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
@@ -191,4 +205,5 @@ public class LabelApiTest extends ApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count", is(3)));
     }
+
 }

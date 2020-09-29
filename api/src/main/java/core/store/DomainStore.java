@@ -6,9 +6,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import core.audit.AuditLogger;
 import core.domain.DomainObject;
 import core.exception.GeneralException;
-import core.index.dto.Params;
-import core.index.dto.Result;
-import core.rest.data.DataAdapter;
 import core.security.UserDetails;
 import core.security.authorization.assign.audit.EntityDeleteEvent;
 import core.security.authorization.assign.audit.EntitySaveEvent;
@@ -57,7 +54,7 @@ import static java.util.Collections.emptyList;
  * @param <T> Type of entity to hold
  * @param <Q> Type of query object
  */
-public abstract class DomainStore<T extends DomainObject, Q extends EntityPathBase<T>> implements DataAdapter<T> {
+public abstract class DomainStore<T extends DomainObject, Q extends EntityPathBase<T>> {
     /**
      * Entity manager used for JPA
      */
@@ -246,11 +243,6 @@ public abstract class DomainStore<T extends DomainObject, Q extends EntityPathBa
 
     public void hardDelete(T entity) {
         delete(entity);
-    }
-
-    @Override
-    public Result<T> findAll(Params params) {
-        throw new UnsupportedOperationException();
     }
 
     public T getReference(String id) {

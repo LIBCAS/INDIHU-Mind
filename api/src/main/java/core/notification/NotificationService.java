@@ -7,12 +7,10 @@ import core.index.dto.FilterOperation;
 import core.index.dto.Params;
 import core.index.dto.Result;
 import core.mail.MailCenter;
-import core.rest.data.DelegateAdapter;
 import core.security.UserDetails;
 import core.security.UserDetailsService;
 import core.store.Transactional;
 import cz.cas.lib.vzb.security.user.UserService;
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,11 +25,10 @@ import static core.util.Utils.*;
  * Center for working with Notification in UAS.
  */
 @Service
-public class NotificationService implements DelegateAdapter<Notification> {
+public class NotificationService {
     private UserDetails userDetails;
 
-    @Getter
-    private NotificationStore delegate;
+    private NotificationStore store;
 
     private UserDetailsService detailsService;
 
@@ -42,6 +39,7 @@ public class NotificationService implements DelegateAdapter<Notification> {
     private UserService userService;
 
     private MailCenter mailCenter;
+
 
     /**
      * Creates new notification and send it by email if requested and mail subsystem is active.
@@ -129,7 +127,7 @@ public class NotificationService implements DelegateAdapter<Notification> {
         Filter ownFilter = new Filter("recipientId", FilterOperation.EQ, userDetails.getId(), null);
         params.setFilter(asList(params.getFilter(), ownFilter));
 
-        return this.findAll(params);
+        return store.findAll(params);
     }
 
     /**
@@ -143,7 +141,7 @@ public class NotificationService implements DelegateAdapter<Notification> {
         Filter ownFilter = new Filter("authorId", FilterOperation.EQ, userDetails.getId(), null);
         params.setFilter(asList(params.getFilter(), ownFilter));
 
-        return this.findAll(params);
+        return store.findAll(params);
     }
 
     /**
@@ -153,7 +151,7 @@ public class NotificationService implements DelegateAdapter<Notification> {
      */
     @Transactional
     public void readNotification(String notificationId) {
-        Notification notification = this.find(notificationId);
+        Notification notification = store.find(notificationId);
         notNull(notification, () -> new MissingObject(Notification.class, notificationId));
         eq(notification.getRecipientId(), userDetails.getId(), () -> new ForbiddenObject(notification));
 
@@ -173,7 +171,7 @@ public class NotificationService implements DelegateAdapter<Notification> {
      * @return saved Form
      */
     public Notification save(Notification dto) {
-        Notification old = delegate.find(dto.getId());
+        Notification old = store.find(dto.getId());
 
         if (old == null) {
             if (unwrap(userDetails) != null) {
@@ -192,7 +190,7 @@ public class NotificationService implements DelegateAdapter<Notification> {
             dto.setRecipientName(old.getRecipientName());
         }
 
-        return delegate.save(dto);
+        return store.save(dto);
     }
 
     private void fillRecipient(Collection<Notification> notifications) {
@@ -211,8 +209,8 @@ public class NotificationService implements DelegateAdapter<Notification> {
     }
 
     @Inject
-    public void setDelegate(NotificationStore delegate) {
-        this.delegate = delegate;
+    public void setStore(NotificationStore store) {
+        this.store = store;
     }
 
     @Inject

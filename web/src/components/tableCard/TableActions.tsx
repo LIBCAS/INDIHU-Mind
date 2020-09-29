@@ -29,24 +29,6 @@ export const TableActions: React.FC<TableActionsProps> = ({
   const classesEffect = useEffectStyles();
   return (
     <div className={classes.iconsWrapper} onClick={e => e.stopPropagation()}>
-      <Popconfirm
-        Button={() => (
-          <Tooltip title="Smazat">
-            <IconButton
-              className={classNames(
-                classesEffect.hoverSecondary,
-                classes.icons
-              )}
-            >
-              <Delete />
-            </IconButton>
-          </Tooltip>
-        )}
-        confirmText="Smazat kartu?"
-        onConfirmClick={() => {
-          handleDelete(row.id, afterEdit);
-        }}
-      />
       <Tooltip title="Editovat">
         <IconButton
           onClick={() => {
@@ -59,6 +41,24 @@ export const TableActions: React.FC<TableActionsProps> = ({
           <Edit />
         </IconButton>
       </Tooltip>
+      <Popconfirm
+        Button={
+          <Tooltip title="Smazat">
+            <IconButton
+              className={classNames(
+                classesEffect.hoverSecondary,
+                classes.icons
+              )}
+            >
+              <Delete />
+            </IconButton>
+          </Tooltip>
+        }
+        confirmText="Smazat kartu?"
+        onConfirmClick={() => {
+          handleDelete(row.id, afterEdit);
+        }}
+      />
     </div>
   );
 };

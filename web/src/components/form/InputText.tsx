@@ -1,21 +1,19 @@
 import React from "react";
 import classNames from "classnames";
-import InputLabel from "@material-ui/core/InputLabel";
-import Typography from "@material-ui/core/Typography";
 import TextField from "@material-ui/core/TextField";
-import { getIn } from "formik";
 
 import { useStyles as useFormStyles } from "./_formStyles";
+import { FormFieldWrapper, FormFieldWrapperProps } from "./FormFieldWrapper";
 
-interface InputTextProps {
-  field: any;
-  form: any;
-  label?: string | JSX.Element;
+interface InputTextProps extends FormFieldWrapperProps {
   type?: "text" | "number" | "email" | "password";
+  disabled?: boolean;
   multiline?: boolean;
   inputProps?: any;
   autoFocus?: boolean;
   fullWidth?: boolean;
+  className?: string;
+  rowsMax?: number;
 }
 
 export const InputText: React.FC<InputTextProps> = ({
@@ -23,20 +21,21 @@ export const InputText: React.FC<InputTextProps> = ({
   field,
   form,
   type,
+  disabled,
   multiline,
   inputProps,
   autoFocus,
-  fullWidth = true
+  fullWidth = true,
+  className,
+  rowsMax,
+  ...props
 }) => {
   const classesForm = useFormStyles();
+
   return (
-    <>
-      {label && (
-        <InputLabel className={classesForm.label} htmlFor={field.name}>
-          {label}
-        </InputLabel>
-      )}
+    <FormFieldWrapper {...props} form={form} field={field} label={label}>
       <TextField
+        rowsMax={rowsMax}
         type={type}
         InputProps={{
           autoComplete: "off",
@@ -45,6 +44,8 @@ export const InputText: React.FC<InputTextProps> = ({
         multiline={multiline}
         fullWidth={fullWidth}
         autoFocus={autoFocus}
+        disabled={disabled}
+        className={className}
         inputProps={{
           ...inputProps,
           className: classNames(classesForm.default, {
@@ -54,13 +55,6 @@ export const InputText: React.FC<InputTextProps> = ({
         error={Boolean(form.touched[field.name] && form.errors[field.name])}
         {...field}
       />
-      {form.touched[field.name] && form.errors[field.name] && (
-        <Typography className={classNames(classesForm.error)} color="error">
-          {form.touched[field.name] &&
-            form.errors[field.name] &&
-            form.errors[field.name]}
-        </Typography>
-      )}
-    </>
+    </FormFieldWrapper>
   );
 };

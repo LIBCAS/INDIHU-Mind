@@ -3,7 +3,8 @@ package cz.cas.lib.vzb.card;
 import core.exception.*;
 import core.index.dto.*;
 import core.sequence.Generator;
-import cz.cas.lib.vzb.card.attachment.AttachmentFileService;
+import core.store.Transactional;
+import cz.cas.lib.vzb.attachment.AttachmentFileStore;
 import cz.cas.lib.vzb.card.attribute.*;
 import cz.cas.lib.vzb.card.category.Category;
 import cz.cas.lib.vzb.card.dto.CardSearchResultDto;
@@ -14,9 +15,10 @@ import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.card.template.CardTemplate;
 import cz.cas.lib.vzb.card.template.CardTemplateStore;
 import cz.cas.lib.vzb.dto.BulkFlagSetDto;
-import cz.cas.lib.vzb.reference.marc.Record;
+import cz.cas.lib.vzb.reference.marc.record.CitationStore;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.User;
+import cz.cas.lib.vzb.util.IndihuMindUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.solr.core.query.Criteria;
@@ -43,62 +45,81 @@ public class CardService {
     private CardContentStore cardContentStore;
     private AttributeTemplateStore attributeTemplateStore;
     private UserDelegate userDelegate;
-    private AttachmentFileService attachmentFileService;
+    private AttachmentFileStore fileStore;
+    private CitationStore citationStore;
 
 
-    public CardContent createCard(CreateCardDto cardDto) {
-        isNull(store.find(cardDto.getId()), () -> new ConflictObject(CreateCardDto.class, cardDto.getId()));
-        User callingUser = userDelegate.getUser();
+    @Transactional
+    public CardContent createCard(CreateCardDto dto) {
+        isNull(store.find(dto.getId()), () -> new ConflictObject(CreateCardDto.class, dto.getId()));
+        User loggedInUser = userDelegate.getUser();
+
         Card card = new Card();
-        card.setId(cardDto.getId());
-        card.setName(cardDto.getName());
-        card.setNote(cardDto.getNote());
-        card.setCategories(cardDto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
-        card.setLabels(cardDto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
-        card.setRecords(cardDto.getRecords().stream().map(Record::new).collect(Collectors.toSet()));
-        card.setLinkedCards(cardDto.getLinkedCards().stream().map(Card::new).collect(Collectors.toSet()));
-        card.setPid(generator.generatePlain(getPidSequenceId(callingUser.getId())));
-        card.setOwner(callingUser);
+        card.setOwner(loggedInUser);
+        card.setId(dto.getId());
+        card.setName(dto.getName());
+        card.setNote(dto.getNote());
+        card.setCategories(dto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
+        card.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
+        card.setLinkedCards(dto.getLinkedCards().stream().map(Card::new).collect(Collectors.toSet()));
+        card.setPid(generator.generatePlain(getPidSequenceId(loggedInUser.getId())));
+        card.setRecords(asSet(citationStore.findAllInList(dto.getRecords())));
+        card.setDocuments(asSet(fileStore.findAllInList(dto.getFiles()))); // TODO add to tests
         store.save(card);
-//        Set<AttachmentFile> savedFiles = attachmentFileService.saveAttachments(cardDto.getId(), new HashSet<>(cardDto.getFiles()));
-//        card.setFiles(savedFiles);
 
         CardContent v1 = new CardContent();
         v1.setLastVersion(true);
         v1.setCard(card);
         cardContentStore.save(v1);
 
-        cardDto.getAttributes().forEach(a -> a.setCardContent(v1));
-        attributeStore.save(cardDto.getAttributes());
+        dto.getAttributes().forEach(a -> a.setCardContent(v1));
+        attributeStore.save(dto.getAttributes());
 
         log.debug(String.format("Creating and indexing new Card %s for user %s", card.getId(), card.getOwner()));
-        store.saveAndIndex(card);
+        store.save(card);
 
-        v1.setAttributes(new HashSet<>(cardDto.getAttributes()));
+        v1.setAttributes(new HashSet<>(dto.getAttributes()));
         return v1;
     }
 
+    @Transactional
     public CardContent updateCard(String cardId, UpdateCardDto dto) {
         Card fromDb = store.find(cardId);
         notNull(fromDb, () -> new MissingObject(Card.class, cardId));
         eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Card.class, cardId));
+
+        fromDb.setName(dto.getName());
+        fromDb.setNote(dto.getNote());
         fromDb.setCategories(dto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
         fromDb.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
-        fromDb.setRecords(dto.getRecords().stream().map(Record::new).collect(Collectors.toSet()));
-        fromDb.setName(dto.getName());
         fromDb.setLinkedCards(dto.getLinkedCards().stream().map(Card::new).collect(Collectors.toSet()));
-        fromDb.setNote(dto.getNote());
+        fromDb.setRecords(asSet(citationStore.findAllInList(dto.getRecords())));
+        fromDb.setDocuments(asSet(fileStore.findAllInList(dto.getFiles())));
 
-        log.debug(String.format("Updating and indexing Card %s for user %s", fromDb.getId(), fromDb.getOwner()));
-        store.saveAndIndex(fromDb);
+        if (IndihuMindUtils.isCollectionModified(fromDb.getLinkingCards(), dto.getLinkingCards())) {
+            Set<Card> oldLinkingCards = fromDb.getLinkingCards();
+            oldLinkingCards.forEach(card -> card.getLinkedCards().remove(fromDb));
+            store.save(fromDb.getLinkingCards());
+
+            List<Card> newLinkingCards = store.findAllInList(dto.getLinkingCards());
+            newLinkingCards.forEach(linkingCard -> linkingCard.getLinkedCards().add(fromDb));
+            store.save(newLinkingCards);
+
+            fromDb.setLinkingCards(dto.getLinkingCards().stream().map(Card::new).collect(Collectors.toSet()));
+        }
+
+        store.save(fromDb);
 
         return cardContentStore.findLastVersionOfCard(cardId);
     }
 
+
+    @Transactional
     public CardContent updateCardContent(String cardId, UpdateCardContentDto dto) {
         Card fromDb = store.find(cardId);
         notNull(fromDb, () -> new MissingObject(Card.class, cardId));
         eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Card.class, cardId));
+
         CardContent lastContentVersion = cardContentStore.findLastVersionOfCard(cardId);
         if (dto.isNewVersion()) {
             lastContentVersion.setLastVersion(false);
@@ -109,38 +130,50 @@ public class CardService {
             newContent.setLastVersion(true);
             newContent.setOrigin(lastContentVersion);
             newContent.setCard(lastContentVersion.getCard());
+            cardContentStore.save(newContent);
 
             dto.getAttributes().forEach(a -> {
                 a.setCardContent(newContent);
                 //assigns new ids to the attributes of the content
                 a.setId(UUID.randomUUID().toString());
             });
-            cardContentStore.save(newContent);
             attributeStore.save(dto.getAttributes());
             newContent.setAttributes(new HashSet<>(dto.getAttributes()));
-            store.saveAndIndex(fromDb);
+            store.save(fromDb);
             return newContent;
         } else {
-            lastContentVersion.getAttributes().stream().filter(a -> !dto.getAttributes().contains(a)).forEach(
-                    a -> attributeStore.hardDelete(a)
-            );
+            lastContentVersion.getAttributes().stream()
+                    .filter(a -> !dto.getAttributes().contains(a))
+                    .forEach(a -> attributeStore.hardDelete(a));
             dto.getAttributes().forEach(a -> a.setCardContent(lastContentVersion));
             lastContentVersion.setAttributes(new HashSet<>(dto.getAttributes()));
             attributeStore.save(lastContentVersion.getAttributes());
             cardContentStore.save(lastContentVersion);
-            store.saveAndIndex(fromDb);
+            store.save(fromDb);
             return lastContentVersion;
         }
     }
 
-    public long deleteSoftDeletedCardsOfUser() {
-        User callingUser = userDelegate.getUser();
-        List<Card> softDeletedCardsOfUser = store.findSoftDeletedCardsOfUser(callingUser.getId());
+
+    @Transactional
+    public long eraseAllCardsFromTrashBin() {
+        List<Card> softDeletedCardsOfUser = store.findSoftDeletedCardsOfUser(userDelegate.getUser().getId());
         long numberOfRemovedCards = softDeletedCardsOfUser.size();
-        softDeletedCardsOfUser.forEach(this::hardDelete);
+        softDeletedCardsOfUser.forEach(card -> store.hardDelete(card));
         return numberOfRemovedCards;
     }
 
+
+    @Transactional
+    public void eraseSingleCardFromTrashBin(String cardId) {
+        Card card = find(cardId);
+        notNull(card.getDeleted(), () -> new ForbiddenOperation(Card.class, cardId));
+
+        store.hardDelete(card);
+    }
+
+
+    @Transactional
     public CardTemplate createTemplateFromCardVersion(String cardContentId) {
         CardContent cardContent = cardContentStore.find(cardContentId);
         notNull(cardContent, () -> new MissingObject(CardContent.class, cardContentId));
@@ -196,14 +229,14 @@ public class CardService {
                     .or(Criteria.where(IndexedCard.CATEGORIES).sloppy(queryString, sloppyDistance).boost(catAndLabelBoost)
                             .or(Criteria.where(IndexedCard.NAME).sloppy(queryString, sloppyDistance).boost(cardNameBoost)
                                     .or(Criteria.where(IndexedCard.NOTE).sloppy(queryString, sloppyDistance).boost(cardNoteBoost)
-                                            .or(Criteria.where(IndexedCard.ATTACHMENT_FILES).sloppy(queryString, sloppyDistance).boost(externalFileBoost)
+                                            .or(Criteria.where(IndexedCard.ATTACHMENT_FILES_NAMES).sloppy(queryString, sloppyDistance).boost(externalFileBoost)
                                                     .or(Criteria.where(IndexedCard.ATTRIBUTES).sloppy(queryString, sloppyDistance).boost(attributeContentBoost))))));
         } else {
             cardQuery = phrase(IndexedCard.LABELS, queryString).boost(catAndLabelBoost)
                     .or(phrase(IndexedCard.CATEGORIES, queryString).boost(catAndLabelBoost)
                             .or(phrase(IndexedCard.NAME, queryString).boost(cardNameBoost)
                                     .or(phrase(IndexedCard.NOTE, queryString).boost(cardNoteBoost)
-                                            .or(phrase(IndexedCard.ATTACHMENT_FILES, queryString).boost(externalFileBoost)
+                                            .or(phrase(IndexedCard.ATTACHMENT_FILES_NAMES, queryString).boost(externalFileBoost)
                                                     .or(phrase(IndexedCard.ATTRIBUTES, queryString).boost(attributeContentBoost))))));
         }
 
@@ -222,32 +255,25 @@ public class CardService {
     }
 
     public Card find(String id) {
-        return store.find(id);
+        Card card = store.find(id);
+        notNull(card, () -> new MissingObject(Card.class, id));
+        eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Card.class, id));
+
+        return card;
     }
 
-    public void hardDelete(Card c) {
-        notNull(c.getDeleted(), () -> new ForbiddenOperation(Card.class, c.getId()));
-        store.hardDelete(c);
-    }
 
-
-    private void changeSoftDeleteFlag(BulkFlagSetDto dto, Instant nowOrNull) {
+    @Transactional
+    public void switchSoftDeletionFlag(BulkFlagSetDto dto) {
         List<Card> affectedCards = new ArrayList<>();
-        dto.getIds().forEach(cardId -> {
-            Card card = find(cardId);
-            notNull(card, () -> new MissingObject(Card.class, cardId));
-            eq(card.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(card));
-            card.setDeleted(nowOrNull);
-            affectedCards.add(card);
-        });
-        store.saveAndIndex(affectedCards);
-    }
 
-    public void setSoftDelete(BulkFlagSetDto dto) {
-        if (dto.getValue()) // soft-delete
-            changeSoftDeleteFlag(dto, Instant.now());
-        else  // remove soft-delete
-            changeSoftDeleteFlag(dto, null);
+        for (String cardId : dto.getIds()) {
+            Card card = find(cardId);
+            card.setDeleted(dto.getValue() ? Instant.now() : null);
+            affectedCards.add(card);
+        }
+
+        store.save(affectedCards);
     }
 
     private Result<CardSearchResultDto> cardSearchPostProcess(HighlightPage<IndexedCard> page) {
@@ -267,7 +293,7 @@ public class CardService {
             for (HighlightEntry<IndexedCard> hlEntry : page.getHighlighted()) {
                 if (hlEntry.getEntity().getId().equals(card.getId())) {
                     for (HighlightEntry.Highlight highlight : hlEntry.getHighlights()) {
-                        highlight.getSnipplets().removeIf(str -> !str.contains("<em>"));
+                        highlight.getSnipplets().removeIf(snippetString -> !snippetString.contains("<em>"));
                         Set<String> snippetsSet = new HashSet<>(highlight.getSnipplets());
                         if (snippetsSet.isEmpty() || !cardAttributesMap.containsKey(card.getId()))
                             continue;
@@ -292,6 +318,11 @@ public class CardService {
 
     public static String getPidSequenceId(String userId) {
         return userId + "#" + "pid";
+    }
+
+    public List<CardContent> findAllContentsForCard(String cardId) {
+        Card card = find(cardId); // verify owner
+        return cardContentStore.findAllOfCard(card.getId());
     }
 
     @Inject
@@ -330,7 +361,12 @@ public class CardService {
     }
 
     @Inject
-    public void setAttachmentFileService(AttachmentFileService attachmentFileService) {
-        this.attachmentFileService = attachmentFileService;
+    public void setFileStore(AttachmentFileStore fileStore) {
+        this.fileStore = fileStore;
+    }
+
+    @Inject
+    public void setCitationStore(CitationStore citationStore) {
+        this.citationStore = citationStore;
     }
 }

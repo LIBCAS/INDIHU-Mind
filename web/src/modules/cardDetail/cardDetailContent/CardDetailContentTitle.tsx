@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import Typography from "@material-ui/core/Typography";
+import MuiTypography from "@material-ui/core/Typography";
+import MuiTooltip from "@material-ui/core/Tooltip";
 import { FormikProps, FieldProps, Field, Form } from "formik";
 import * as Yup from "yup";
-import ClickAwayListener from "@material-ui/core/ClickAwayListener";
-import Button from "@material-ui/core/Button";
+import MuiClickAwayListener from "@material-ui/core/ClickAwayListener";
+import MuiButton from "@material-ui/core/Button";
 import classNames from "classnames";
 
 import { Formik } from "../../../components/form/Formik";
@@ -13,6 +14,7 @@ import { CardContentProps } from "../../../types/card";
 import { onEditCard } from "./_utils";
 import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { useStyles, useTooltipStyles } from "./_cardStyles";
 
 interface CardDetailContentTitleProps {
   card: CardContentProps;
@@ -37,14 +39,21 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
   title
 }) => {
   const [edit, setEdit] = useState<boolean>(false);
+
   const classesText = useTextStyles();
+
   const classesSpacing = useSpacingStyles();
+
+  const classes = useStyles();
+  const classesTooltip = useTooltipStyles();
+
   const onSubmit = (values: FormValues) => {
     onEditCard("name", values.title, card, setCardContent);
     setEdit(false);
   };
+
   return (
-    <>
+    <React.Fragment>
       {edit ? (
         <Formik
           initialValues={{ title }}
@@ -54,7 +63,7 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
           render={(formikBag: FormikProps<FormValues>) => {
             return (
               <Form>
-                <ClickAwayListener
+                <MuiClickAwayListener
                   onClickAway={() => {
                     if (formikBag.isSubmitting) return;
                     formikBag.submitForm();
@@ -67,11 +76,11 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
                         <InputText
                           field={field}
                           form={form}
-                          inputProps={{ autoFocus: true }}
+                          inputProps={{ autoFocus: false }}
                         />
                       )}
                     />
-                    <Button
+                    <MuiButton
                       className={classNames(
                         classesSpacing.mr2,
                         classesSpacing.mt1
@@ -82,8 +91,8 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
                       type="submit"
                     >
                       OK
-                    </Button>
-                    <Button
+                    </MuiButton>
+                    <MuiButton
                       className={classesSpacing.mt1}
                       type="button"
                       size="small"
@@ -92,24 +101,33 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
                       variant="outlined"
                     >
                       Zrušit
-                    </Button>
+                    </MuiButton>
                   </div>
-                </ClickAwayListener>
+                </MuiClickAwayListener>
               </Form>
             );
           }}
         />
       ) : (
-        <Typography
-          onClick={() => (card.lastVersion ? setEdit(true) : undefined)}
-          variant="h5"
-          className={classNames(classesSpacing.mb1, {
-            [classesText.cursor]: card.lastVersion
-          })}
+        <MuiTooltip
+          title="Kliknutím můžete editovat název karty."
+          enterDelay={500}
+          leaveDelay={250}
+          arrow={true}
+          placement="bottom-start"
+          classes={classesTooltip}
         >
-          Detail karty {title}
-        </Typography>
+          <MuiTypography
+            onClick={() => (card.lastVersion ? setEdit(true) : undefined)}
+            variant="h5"
+            className={classNames(classesSpacing.mb1, {
+              [classesText.cursor]: card.lastVersion
+            })}
+          >
+            {title}
+          </MuiTypography>
+        </MuiTooltip>
       )}
-    </>
+    </React.Fragment>
   );
 };

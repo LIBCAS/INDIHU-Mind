@@ -12,6 +12,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 
+import java.util.Collections;
+import java.util.Set;
+
 import static core.util.Utils.asList;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -27,6 +30,11 @@ public class GeneralApiTest extends ApiTest {
     private GeneralEntity entity;
 
     private String missingId;
+
+    @Override
+    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
+        return Collections.emptySet();
+    }
 
     @Before
     public void setUp() {

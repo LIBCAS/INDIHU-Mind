@@ -12,7 +12,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class IndexedDatedStoreTest extends DbTest {
-    protected IndexedDatedStore indexedDatedStore;
+    protected IndexedDatedStore<TestEntity, QTestEntity, IndexedTestEntity> indexedDatedStore;
 
     @Mock
     protected SolrTemplate template;

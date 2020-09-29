@@ -17,12 +17,19 @@ import { TemplatesItem } from "./TemplatesItem";
 
 export const Templates: React.FC = () => {
   const classes = useStyles();
+
   const classesSpacing = useSpacingStyles();
+
   const classesLayout = useLayoutStyles();
+
   const context: any = useContext(GlobalContext);
+
   const state: StateProps = context.state;
+
   const dispatch: Function = context.dispatch;
+
   const templates = state.template.templates;
+
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -33,6 +40,7 @@ export const Templates: React.FC = () => {
       <Modal
         open={open}
         setOpen={setOpen}
+        fullSize={true}
         content={<TemplatesForm setShowModal={setOpen} />}
       />
       <div

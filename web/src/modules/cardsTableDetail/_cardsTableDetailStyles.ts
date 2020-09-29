@@ -9,7 +9,6 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     actionsIcon: {
       marginLeft: theme.spacing(1),
-      color: theme.greyText,
       transition: ".3s ease color",
       cursor: "pointer",
       "&:hover": {

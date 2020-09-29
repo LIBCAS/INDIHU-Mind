@@ -22,12 +22,15 @@ import org.springframework.data.solr.core.mapping.Indexed;
 @Getter
 @Setter
 public abstract class IndexedDomainObject {
+
+    public static final String ID = "id";
+
+    @Field(value = ID)
     @Indexed(type = IndexFieldType.STRING)
-    @Field
     protected String id;
 
-    @Indexed(type = IndexFieldType.STRING)
     @Field(IndexQueryUtils.TYPE_FIELD)
+    @Indexed(type = IndexFieldType.STRING)
     protected String type;
 
     public IndexedDomainObject(String id) {

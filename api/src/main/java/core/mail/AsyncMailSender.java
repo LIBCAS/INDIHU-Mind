@@ -15,7 +15,7 @@ public class AsyncMailSender {
     private JavaMailSender sender;
 
     @Async
-    public void send(MimeMessage msg) {
+    public void sendAsync(MimeMessage msg) {
         sender.send(msg);
     }
 

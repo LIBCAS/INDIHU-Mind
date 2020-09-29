@@ -1,5 +1,4 @@
 import React from "react";
-import { get } from "lodash";
 import moment from "moment";
 
 import { RecordsTemplatesForm } from "./RecordsTemplatesForm";
@@ -38,6 +37,7 @@ export const RecordsTemplates: React.FC = () => {
         title="Citační šablony"
         createLabel="Nová citační šablona"
         CreateForm={RecordsTemplatesForm}
+        createModalProps={{ fullSize: true }}
         baseUrl={baseUrl}
         query={query}
         columns={columns}
@@ -52,6 +52,7 @@ export const RecordsTemplates: React.FC = () => {
                 afterEdit={afterEdit}
               />
             }
+            fullSize={true}
           />
         )}
         ComponentDetail={({ selectedRow }: any) => (

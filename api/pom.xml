@@ -19,6 +19,7 @@
         <swagger.version>2.9.2</swagger.version>
         <jmockit.version>1.46</jmockit.version>
         <passay.version>1.5.0</passay.version>
+        <openhtmltopdf.version>1.0.3</openhtmltopdf.version>
     </properties>
 
     <dependencies>
@@ -161,12 +162,37 @@
             <artifactId>springfox-swagger2</artifactId>
             <version>${swagger.version}</version>
             <scope>compile</scope>
+
+            <!-- Swagger kept throwing upon opening the swagger-ui in browser
+                 Illegal DefaultValue 0 for parameter type integer java.lang.NumberFormatException: For input string: "" -->
+            <!-- This is manual fix with removing old version of annotations and models and explicitly adding them with newer version -->
+            <!-- https://github.com/springfox/springfox/issues/2265 -->
+            <exclusions>
+                <exclusion>
+                    <groupId>io.swagger</groupId>
+                    <artifactId>swagger-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.swagger</groupId>
+                    <artifactId>swagger-models</artifactId>
+                </exclusion>
+            </exclusions>
             <!--<exclusions>-->
             <!--<exclusion>-->
             <!--<groupId>aopalliance</groupId>-->
             <!--<artifactId>aopalliance</artifactId>-->
             <!--</exclusion>-->
             <!--</exclusions>-->
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.5.21</version>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-models</artifactId>
+            <version>1.5.21</version>
         </dependency>
 
         <!-- Logging -->
@@ -207,6 +233,19 @@
             <version>0.9.1</version>
         </dependency>
 
+        <!-- Java Faker (fake test data) -->
+        <dependency>
+            <groupId>com.github.javafaker</groupId>
+            <artifactId>javafaker</artifactId>
+            <version>1.0.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.yaml</groupId>
+                    <artifactId>snakeyaml</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- MARC4J -->
         <dependency>
             <groupId>org.marc4j</groupId>
@@ -214,11 +253,19 @@
             <version>2.9.1</version>
         </dependency>
 
-        <!-- PDF Box for exporting PDFs -->
+        <!-- GitHub of OpenHtmlToPdf project https://github.com/danfickle/openhtmltopdf/wiki/Integration-Guide -->
+        <!-- OpenHtmlToPdf runs on Apache PdfBox 2.X.Y -->
         <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>2.0.17</version>
+            <!-- ALWAYS required. -->
+            <groupId>com.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-core</artifactId>
+            <version>${openhtmltopdf.version}</version>
+        </dependency>
+        <dependency>
+            <!-- Required for PDF output. -->
+            <groupId>com.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-pdfbox</artifactId>
+            <version>${openhtmltopdf.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -227,25 +274,18 @@
             </exclusions>
         </dependency>
 
-        <!-- Generating PDF -->
+        <!-- Creating HTML -->
         <dependency>
-            <groupId>eu.de-swaef.pdf</groupId>
-            <artifactId>Markdown2Pdf</artifactId>
-            <version>2.0.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>bouncycastle</groupId>
-                    <artifactId>bcmail-jdk14</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>bouncycastle</groupId>
-                    <artifactId>bcprov-jdk14</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-io</groupId>
-                    <artifactId>commons-io</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.j2html</groupId>
+            <artifactId>j2html</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+
+        <!-- TIKA -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>1.24.1</version>
         </dependency>
 
         <!-- Testing -->
@@ -284,8 +324,27 @@
         </dependency>
 
         <dependency>
+            <groupId>org.jmockit</groupId>
+            <artifactId>jmockit</artifactId>
+            <version>${jmockit.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -301,18 +360,7 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.jmockit</groupId>
-            <artifactId>jmockit</artifactId>
-            <version>${jmockit.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.code.findbugs</groupId>
-                    <artifactId>jsr305</artifactId>
-                </exclusion>
-            </exclusions>
-            <scope>test</scope>
-        </dependency>
+
     </dependencies>
 
     <profiles>

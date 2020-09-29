@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import static core.util.Utils.notNull;
  */
 @Slf4j
 @RestController
+@ApiIgnore("Not used in the project")
 @Api(value = "file", description = "Api for accessing and storing files")
 @RequestMapping("/api/files")
 @Changed("content extraction and indexation not supported")

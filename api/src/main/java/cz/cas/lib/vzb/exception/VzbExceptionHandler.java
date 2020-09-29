@@ -17,7 +17,7 @@ import static core.util.Utils.asMap;
 public class VzbExceptionHandler {
     public static final String ERR_FILE_TOO_BIG = "FILE_TOO_BIG";
     public static final String ERR_USER_QUOTA_REACHED = "USER_QUOTA_REACHED";
-    public static final String ERR_FILE_EXTENSION_FORBIDDEN = "FILE_EXTENSION_FORBIDDEN";
+    public static final String ERR_FILE_FORBIDDEN = "FILE_FORBIDDEN";
     public static final String ERR_REQUESTED_COMBINATION_NOT_IN_RECORD = "ERR_REQUESTED_COMBINATION_NOT_IN_RECORD";
     public static final String ERR_NAME_ALREADY_EXISTS = "ERR_NAME_ALREADY_EXISTS";
 
@@ -40,12 +40,12 @@ public class VzbExceptionHandler {
                 .body(asMap("errorType", ERR_USER_QUOTA_REACHED, "errorMessage", e.getMessage()));
     }
 
-    @ExceptionHandler(ForbiddenFileExtensionException.class)
-    public ResponseEntity localAttachmentUploadExceptions(ForbiddenFileExtensionException e) {
+    @ExceptionHandler(ForbiddenFileException.class)
+    public ResponseEntity localAttachmentUploadExceptions(ForbiddenFileException e) {
         log.error("error caught: " + e.getMessage(), e);
         return ResponseEntity
                 .status(403)
-                .body(asMap("errorType", ERR_FILE_EXTENSION_FORBIDDEN, "errorMessage", e.getMessage()));
+                .body(asMap("errorType", ERR_FILE_FORBIDDEN, "errorMessage", e.getMessage()));
     }
 
     @ExceptionHandler(MissingDataInRecordException.class)
@@ -63,6 +63,12 @@ public class VzbExceptionHandler {
                 .status(409)
                 .body(asMap("errorType", ERR_NAME_ALREADY_EXISTS, "errorMessage", e.getMessage()));
     }
+
+    @ExceptionHandler(ContentLengthRequiredException.class)
+    public ResponseEntity contentLengthRequired(ContentLengthRequiredException e) {
+        return errorResponse(e, HttpStatus.LENGTH_REQUIRED);
+    }
+
 
     // private General constructor
     private ResponseEntity errorResponse(Throwable throwable, HttpStatus status) {

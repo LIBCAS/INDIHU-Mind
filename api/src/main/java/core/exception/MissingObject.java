@@ -1,5 +1,10 @@
 package core.exception;
 
+import core.rest.config.ResourceExceptionHandler;
+
+/**
+ * @see ResourceExceptionHandler#missingObject(core.exception.MissingObject)
+ */
 public class MissingObject extends GeneralException {
     private String type;
 

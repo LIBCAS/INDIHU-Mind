@@ -190,7 +190,7 @@
             </column>
         </createTable>
 
-        <createTable tableName="vzb_external_file">
+        <createTable tableName="vzb_external_file"> <!-- DELETED in change set #7-->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_external_file_pkey" nullable="false"/>
             </column>
@@ -227,7 +227,7 @@
             </column>
         </createTable>
 
-        <createTable tableName="vzb_local_attachment_file">
+        <createTable tableName="vzb_local_attachment_file"> <!-- DELETED in change set #7-->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_local_attachment_file_pkey" nullable="false"/>
             </column>
@@ -251,7 +251,7 @@
 
     <changeSet id="2" author="radvan">
         <!-- MARC RECORD (name, leader) -->
-        <createTable tableName="vzb_marc_record">
+        <createTable tableName="vzb_marc_record"> <!-- DELETED in change set #7-->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_marc_record_pkey" nullable="false"/>
             </column>
@@ -269,13 +269,12 @@
             <column name="leader" type="varchar(24)"/>
         </createTable>
 
-        <!-- Required constraint because of index on combination name,owner-->
+        <!-- Required constraint because of index on combination name,owner--> <!-- DELETED in change set #7-->
         <addUniqueConstraint constraintName="vzb_record_of_user_uniqueness" tableName="vzb_marc_record"
                              columnNames="name,owner_id"/>
 
-
         <!-- MARC DATAFIELD (tag, ind1, ind2) -->
-        <createTable tableName="vzb_marc_datafield">
+        <createTable tableName="vzb_marc_datafield"> <!-- DELETED in change set #7-->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_marc_datafield_pkey" nullable="false"/>
             </column>
@@ -289,7 +288,7 @@
         </createTable>
 
         <!-- MARC SUBFIELD (code, data) -->
-        <createTable tableName="vzb_marc_subfield">
+        <createTable tableName="vzb_marc_subfield"> <!-- DELETED in change set #7-->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_marc_subfield_pkey" nullable="false"/>
             </column>
@@ -302,7 +301,7 @@
         </createTable>
 
         <!-- TEMPLATE (name, stringTemplate) -->
-        <createTable tableName="vzb_reference_template">
+        <createTable tableName="vzb_reference_template"> <!-- DELETED in change set #6-->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_reference_template_pkey" nullable="false"/>
             </column>
@@ -316,13 +315,13 @@
             <column name="pattern" type="nvarchar(500)"/>
         </createTable>
 
-        <!-- Required constraint because of index on combination name,owner-->
+        <!-- Required constraint because of index on combination name,owner--> <!-- DELETED in change set #6-->
         <addUniqueConstraint constraintName="vzb_template_of_user_uniqueness" tableName="vzb_reference_template"
                              columnNames="name,owner_id"/>
 
 
         <!-- TEMPLATE CUSTOM FIELD (tag, code) -->
-        <createTable tableName="vzb_reference_custom_field">
+        <createTable tableName="vzb_reference_custom_field"> <!-- DELETED in change set #6-->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_reference_custom_field_pkey" nullable="false"/>
             </column>
@@ -337,13 +336,162 @@
         </createTable>
 
         <!-- CUSTOMIZATION ENUM TABLE-->
-        <createTable tableName="vzb_reference_customization">
+        <createTable tableName="vzb_reference_customization"> <!-- DELETED in change set #6-->
             <column name="custom_field_id" type="varchar(255)">
                 <constraints foreignKeyName="vzb_customization_custom_field_fk"
                              referencedTableName="vzb_reference_custom_field" referencedColumnNames="id"
                              deleteCascade="true"/>
             </column>
             <column name="customization" type="varchar(32)"/>
+        </createTable>
+
+        <!-- CARD-RECORD JOIN TABLE -->
+        <createTable tableName="vzb_card_record"> <!-- DELETED in change set #7-->
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_record_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_record_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="record_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_record_record_fk"
+                             referencedTableName="vzb_marc_record" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="3" author="radvan">
+        <addColumn tableName="vzb_reference_template"> <!-- DELETED in change set #6-->
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="4" author="radvan">
+        <createTable tableName="vzb_search_query">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_search_query_pkey" nullable="false"/>
+            </column>
+
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_search_query_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="indexed_class_name" type="nvarchar(255)"/>
+            <column name="parameters" type="nvarchar(4095)"/>
+
+
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5" author="radvan">
+        <createTable tableName="vzb_url_attachment_file"> <!-- DELETED in change set #7-->
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_url_attachment_file_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_url_attachment_file_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+
+            <column name="link" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="nvarchar(255)"/>
+            <column name="ordinal_number" type="int"/>
+            <column name="content_type" type="varchar(255)"/>
+            <column name="size" type="bigint"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="6" author="radvan">
+        <!-- DELETE OLD REFERENCE TEMPLATE TABLE -->
+        <dropForeignKeyConstraint baseTableName="vzb_reference_customization"
+                                  constraintName="vzb_customization_custom_field_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_reference_custom_field"
+                                  constraintName="vzb_custom_field_template_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_reference_template" constraintName="vzb_template_owner_fk"/>
+        <dropUniqueConstraint tableName="vzb_reference_template" constraintName="vzb_template_of_user_uniqueness"/>
+
+        <dropTable tableName="vzb_reference_custom_field" cascadeConstraints="true"/>
+        <dropTable tableName="vzb_reference_customization" cascadeConstraints="true"/>
+        <dropTable tableName="vzb_reference_template" cascadeConstraints="true"/>
+
+        <!-- CREATE NEW REFERENCE TEMPLATE TABLE AFTER REFACTOR 07/2020 -->
+        <!-- TEMPLATE (name, stringTemplate) -->
+        <createTable tableName="vzb_reference_template">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_reference_template_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_template_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fields" type="clob"/>
+        </createTable>
+
+        <!-- Required constraint because of index on combination name,owner-->
+        <addUniqueConstraint constraintName="vzb_template_of_user_uniqueness" tableName="vzb_reference_template"
+                             columnNames="name,owner_id"/>
+    </changeSet>
+
+    <changeSet id="7" author="radvan">
+        <!-- DELETE OLD RECORD TABLE -->
+        <dropForeignKeyConstraint baseTableName="vzb_marc_subfield"
+                                  constraintName="vzb_subfield_datafield_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_marc_datafield"
+                                  constraintName="vzb_datafield_record_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_marc_record"
+                                  constraintName="vzb_record_owner_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_card_record"
+                                  constraintName="vzb_card_record_card_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_card_record"
+                                  constraintName="vzb_card_record_record_fk"/>
+        <dropUniqueConstraint tableName="vzb_marc_record" constraintName="vzb_record_of_user_uniqueness"/>
+
+        <dropTable tableName="vzb_marc_subfield" cascadeConstraints="true"/>
+        <dropTable tableName="vzb_marc_datafield" cascadeConstraints="true"/>
+        <dropTable tableName="vzb_marc_record" cascadeConstraints="true"/>
+        <dropTable tableName="vzb_card_record" cascadeConstraints="true"/>
+
+        <!-- CREATE NEW RECORD and CARD-RECORD JOIN TABLES after refactor 07/2020 -->
+        <!-- MARC RECORD (name, datafields) -->
+        <createTable tableName="vzb_marc_record">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_marc_record_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_record_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_fields" type="clob"/>
         </createTable>
 
         <!-- CARD-RECORD JOIN TABLE -->
@@ -361,13 +509,198 @@
             </column>
         </createTable>
 
-    </changeSet>
+        <!-- Required constraint because of index on combination name,owner-->
+        <addUniqueConstraint constraintName="vzb_record_of_user_uniqueness" tableName="vzb_marc_record"
+                             columnNames="name,owner_id"/>
 
-    <changeSet id="3" author="radvan">
-        <addColumn tableName="vzb_reference_template">
+
+        <!-- DELETE OLD ATTACHMENT TABLES -->
+        <dropForeignKeyConstraint baseTableName="vzb_local_attachment_file"
+                                  constraintName="vzb_local_attachment_file_card_fk"/>
+
+        <dropTable tableName="vzb_local_attachment_file" cascadeConstraints="true"/>
+
+        <dropForeignKeyConstraint baseTableName="vzb_url_attachment_file"
+                                  constraintName="vzb_url_attachment_file_card_fk"/>
+
+        <dropTable tableName="vzb_url_attachment_file" cascadeConstraints="true"/>
+
+        <dropForeignKeyConstraint baseTableName="vzb_external_file"
+                                  constraintName="vzb_external_file_card_fk"/>
+
+        <dropTable tableName="vzb_external_file" cascadeConstraints="true"/>
+
+        <!-- CHANGED INHERITANCE STRATEGY TO `JOINED` 08/2020 -->
+        <createTable tableName="vzb_attachment_abstract">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_attachment_abstract_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_attachment_abstract_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
             <column name="created" type="datetime"/>
             <column name="updated" type="datetime"/>
             <column name="deleted" type="datetime"/>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="nvarchar(255)"/>
+            <column name="disc_type" type="nvarchar(31)"/>
+        </createTable>
+
+        <createTable tableName="vzb_attachment_external">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_external_attachment_pkey" nullable="false"/>
+            </column>
+            <column name="provider_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="link" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_id" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="vzb_attachment_local">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_attachment_local_pkey" nullable="false"/>
+            </column>
+            <column name="content_type" type="varchar(255)"/>
+            <column name="size" type="bigint"/>
+        </createTable>
+
+        <createTable tableName="vzb_attachment_url">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_attachment_url_pkey" nullable="false"/>
+            </column>
+            <column name="link" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="varchar(255)"/>
+            <column name="size" type="bigint"/>
+        </createTable>
+
+        <!-- CHANGED RELATION CARD-ATTACHMENT TO MANY-TO-MANY 08/2020 -->
+        <createTable tableName="vzb_card_attachment">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_attachment_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_attachment_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="attachment_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_attachment_attachment_fk"
+                             referencedTableName="vzb_attachment_abstract" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="8" author="radvan">
+        <addColumn tableName="vzb_marc_record">
+            <column name="document_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_record_attachment_fk"
+                             referencedTableName="vzb_attachment_abstract" referencedColumnNames="id"
+                             deleteCascade="false"/>
+            </column>
         </addColumn>
+    </changeSet>
+
+    <changeSet id="9" author="radvan">
+        <!-- DELETE OLD RECORD TABLE TO ALLOW INTRODUCTION OF CITATION (ABSTRACT CLASS) 09/2020 -->
+        <dropForeignKeyConstraint baseTableName="vzb_marc_record"
+                                  constraintName="vzb_record_owner_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_card_record"
+                                  constraintName="vzb_card_record_card_fk"/>
+        <dropForeignKeyConstraint baseTableName="vzb_card_record"
+                                  constraintName="vzb_card_record_record_fk"/>
+        <dropUniqueConstraint tableName="vzb_marc_record" constraintName="vzb_record_of_user_uniqueness"/>
+
+        <dropTable tableName="vzb_marc_record" cascadeConstraints="true"/>
+        <dropTable tableName="vzb_card_record" cascadeConstraints="true"/>
+
+        <!-- INTRODUCED `JOINED` INHERITANCE STRATEGY 09/2020 -->
+        <createTable tableName="vzb_marc_citation_abstract">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_citation_abstract_pkey" nullable="false"/>
+            </column>
+            <column name="owner_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_citation_abstract_owner_fk"
+                             referencedTableName="vzb_user" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="name" type="nvarchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="disc_type" type="nvarchar(31)"/>
+
+            <column name="document_id" type="varchar(255)"> <!-- REMOVED in change set #10  09/2020 -->
+                <constraints foreignKeyName="vzb_citation_attachment_fk"
+                             referencedTableName="vzb_attachment_abstract" referencedColumnNames="id"
+                             deleteCascade="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint constraintName="vzb_citation_of_user_uniqueness"
+                             tableName="vzb_marc_citation_abstract"
+                             columnNames="name,owner_id"/>
+
+        <createTable tableName="vzb_marc_record">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_marc_record_pkey" nullable="false"/>
+            </column>
+            <column name="data_fields" type="clob"/>
+        </createTable>
+
+        <createTable tableName="vzb_marc_brief_record">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_marc_brief_record_pkey" nullable="false"/>
+            </column>
+            <column name="content" type="clob"/>
+        </createTable>
+
+        <createTable tableName="vzb_card_citation">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_citation_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_citation_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="citation_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_citation_citation_fk"
+                             referencedTableName="vzb_marc_citation_abstract" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="10" author="radvan">
+        <!-- CHANGED RELATION CITATION-DOCUMENT TO MANY-TO-MANY 09/2020 -->
+        <dropForeignKeyConstraint baseTableName="vzb_marc_citation_abstract"
+                                  constraintName="vzb_citation_attachment_fk"/>
+        <dropColumn tableName="vzb_marc_citation_abstract" columnName="document_id"/>
+
+        <createTable tableName="vzb_citation_document">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="vzb_citation_document_pkey" nullable="false"/>
+            </column>
+            <column name="citation_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_citation_document_citation_fk"
+                             referencedTableName="vzb_marc_citation_abstract" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+            <column name="document_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_citation_document_document_fk"
+                             referencedTableName="vzb_attachment_abstract" referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+        </createTable>
     </changeSet>
 </databaseChangeLog>

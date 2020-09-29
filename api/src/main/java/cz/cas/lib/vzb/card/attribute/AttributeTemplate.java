@@ -13,15 +13,20 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "vzb_attribute_template")
 @Entity
-@AllArgsConstructor
 public class AttributeTemplate extends DomainObject {
+
     private int ordinalNumber;
+
     private String name;
+
     @ManyToOne
     @JsonIgnore
     private CardTemplate cardTemplate;
+
     @Enumerated(EnumType.STRING)
     private AttributeType type;
+
 }

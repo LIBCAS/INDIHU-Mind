@@ -41,7 +41,7 @@ export const changeData = (
       setLoading(false);
       setData(res);
     })
-    .catch(err => {
+    .catch((err: any) => {
       if (err.name === "AbortError") {
         // fetch aborted, do nothing
         return;

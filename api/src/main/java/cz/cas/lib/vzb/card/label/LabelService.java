@@ -49,10 +49,10 @@ public class LabelService {
             eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Label.class, newLabel.getId()));
 
         // enforce addUniqueConstraint `vzb_label_of_user_uniqueness` of columnNames="name,owner_id"
-        Label nameExists = store.findEqualNameDifferentId(newLabel);
-        isNull(nameExists, () -> new NameAlreadyExistsException(Label.class, nameExists.getId(), nameExists.getName()));
-
         newLabel.setOwner(userDelegate.getUser());
+        Label nameExists = store.findEqualNameDifferentId(newLabel);
+        isNull(nameExists, () -> new NameAlreadyExistsException(Label.class, nameExists.getId(), nameExists.getName(), nameExists.getOwner()));
+
         store.save(newLabel);
         if (fromDb != null && !StringUtils.equals(fromDb.getName(), newLabel.getName())) {
             List<Card> cardsOfLabel = cardStore.findCardsOfLabel(newLabel);

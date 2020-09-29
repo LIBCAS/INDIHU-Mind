@@ -15,6 +15,10 @@ export const useStyles = makeStyles((theme: Theme) => {
       fontSize: 14,
       marginRight: theme.spacing(1),
       cursor: "pointer",
+      padding: "0 4px 0 8px",
+      margin: "4px",
+      borderRadius: "5px",
+      backgroundColor: "#e0e0e0",
       transition: ".3s ease color",
       "& > div": {
         padding: `${theme.spacing(0.5)}px 0`,
@@ -37,14 +41,18 @@ export const useStyles = makeStyles((theme: Theme) => {
         }
       }
     },
+    removeCategory: {
+      "&:hover": {
+        color: theme.red
+      }
+    },
     label: {
       display: "inline-flex",
       alignItems: "center",
       color: theme.greyDark,
-      padding: theme.spacing(0.5),
-      // marginRight: theme.spacing(1.5),
-      background: theme.greyLightUltra,
-      borderRadius: "10px",
+      padding: "4px 0 4px 12px",
+      background: "#e0e0e0",
+      borderRadius: "15px",
       cursor: "pointer",
       transition: ".3s ease color",
       "& svg": {
@@ -94,13 +102,27 @@ export const useStyles = makeStyles((theme: Theme) => {
       display: "flex",
       flexDirection: "column",
       width: "100%",
-      padding: theme.spacing(2)
+      padding: theme.spacing(2),
+      paddingTop: 0
     },
     actionWrapper: {
       display: "flex",
       flexDirection: "row-reverse",
       justifyContent: "space-between",
       marginTop: theme.spacing(2)
+    },
+    titleTooltip: {
+      arrow: {
+        color: theme.palette.common.black
+      }
+    },
+    addLinkedCardWrapper: {
+      maxWidth: 400
     }
   };
 });
+export const useTooltipStyles = makeStyles((theme: Theme) => ({
+  arrow: {
+    width: "100%"
+  }
+}));

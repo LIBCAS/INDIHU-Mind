@@ -1,11 +1,12 @@
 package cz.cas.lib.vzb.card.template;
 
+import core.exception.BadArgument;
 import core.exception.ForbiddenObject;
-import core.rest.data.DelegateAdapter;
+import core.exception.MissingObject;
+import core.store.Transactional;
 import cz.cas.lib.vzb.card.attribute.AttributeTemplate;
 import cz.cas.lib.vzb.card.attribute.AttributeTemplateStore;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
-import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -14,25 +15,36 @@ import java.util.List;
 import java.util.Set;
 
 import static core.util.Utils.eq;
+import static core.util.Utils.notNull;
 
 @Service
-public class CardTemplateService implements DelegateAdapter<CardTemplate> {
-    @Getter
-    private CardTemplateStore delegate;
+public class CardTemplateService {
+
+    private CardTemplateStore store;
     private AttributeTemplateStore attributeTemplateStore;
     private UserDelegate userDelegate;
 
     public List<CardTemplate> findTemplates(String userId) {
-        return delegate.findTemplates(userId);
+        return store.findTemplates(userId);
     }
 
-    @Override
     public CardTemplate find(String id) {
-        return delegate.findAndFill(id);
+        return store.findAndFill(id);
     }
 
-    @Override
-    public CardTemplate save(CardTemplate newTemplate) {
+    @Transactional
+    public void delete(String id) {
+        CardTemplate entity = find(id);
+        notNull(entity, () -> new MissingObject(CardTemplate.class, id));
+        notNull(entity.getOwner(), () -> new ForbiddenObject(CardTemplate.class, id));
+        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(CardTemplate.class, id));
+        store.delete(entity);
+    }
+
+    @Transactional
+    public CardTemplate save(String id, CardTemplate newTemplate) {
+        eq(id, newTemplate.getId(), () -> new BadArgument("id"));
+
         newTemplate.setOwner(userDelegate.getUser());
         CardTemplate templateInDb = find(newTemplate.getId());
         if (templateInDb != null) {
@@ -43,21 +55,21 @@ public class CardTemplateService implements DelegateAdapter<CardTemplate> {
         }
         Set<AttributeTemplate> attributeTemplates = newTemplate.getAttributeTemplates();
         newTemplate.setAttributeTemplates(null);
-        delegate.save(newTemplate);
+        store.save(newTemplate);
         attributeTemplates.forEach(a -> a.setCardTemplate(newTemplate));
         attributeTemplateStore.save(attributeTemplates);
         newTemplate.setAttributeTemplates(attributeTemplates);
         return newTemplate;
     }
 
-    @Override
-    public Collection<? extends CardTemplate> save(Collection<? extends CardTemplate> entities) {
-        throw new UnsupportedOperationException();
+    public Collection<CardTemplate> findByUser(String id) {
+        return store.findByUser(id);
     }
 
+
     @Inject
-    public void setDelegate(CardTemplateStore delegate) {
-        this.delegate = delegate;
+    public void setStore(CardTemplateStore store) {
+        this.store = store;
     }
 
     @Inject
@@ -69,4 +81,5 @@ public class CardTemplateService implements DelegateAdapter<CardTemplate> {
     public void setUserDelegate(UserDelegate userDelegate) {
         this.userDelegate = userDelegate;
     }
+
 }

@@ -2,10 +2,8 @@ import React, { useState, useEffect } from "react";
 import { FormikProps, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
 
-import {
-  CardTemplateAttribute,
-  CardTemplateAttributeType
-} from "../../types/cardTemplate";
+import { CardTemplateAttribute } from "../../types/cardTemplate";
+import { AttributeTypeEnum } from "../../enums";
 import { notEmpty } from "../../utils/form/validate";
 
 import { Formik } from "../../components/form/Formik";
@@ -13,14 +11,9 @@ import { Select } from "../../components/form/Select";
 import { InputText } from "../../components/form/InputText";
 
 import { useStyles } from "./_templatesStyles";
-import { onSubmitAttribute } from "./_utils";
 
-const types: { value: CardTemplateAttributeType; label: string }[] = [
-  { value: "STRING", label: "Text" },
-  { value: "DOUBLE", label: "Číslo" },
-  { value: "BOOLEAN", label: "Boolean" },
-  { value: "DATETIME", label: "Datum" }
-];
+import { onSubmitAttribute } from "./_utils";
+import classNames from "classnames";
 
 interface TemplatesAddAttributeProps {
   formikBagParent: any;
@@ -34,6 +27,7 @@ export const TemplatesAddAttribute: React.FC<TemplatesAddAttributeProps> = ({
   previousAttribute
 }) => {
   const classes = useStyles();
+
   const [initValues, setInitValues] = useState({
     id: "",
     name: "",
@@ -60,7 +54,7 @@ export const TemplatesAddAttribute: React.FC<TemplatesAddAttributeProps> = ({
             formikBag.submitForm();
           }}
         >
-          <div className={classes.attributeWrapper}>
+          <div className={classNames(classes.attributeWrapper)}>
             <Field
               name="name"
               validate={notEmpty}
@@ -69,7 +63,7 @@ export const TemplatesAddAttribute: React.FC<TemplatesAddAttributeProps> = ({
                   field={field}
                   form={form}
                   label="Název"
-                  inputProps={{ autoFocus: true }}
+                  inputProps={{ autoFocus: false }}
                 />
               )}
             />
@@ -77,7 +71,12 @@ export const TemplatesAddAttribute: React.FC<TemplatesAddAttributeProps> = ({
               name="type"
               validate={notEmpty}
               render={({ field, form }: FieldProps<CardTemplateAttribute>) => (
-                <Select field={field} form={form} label="Typ" options={types} />
+                <Select
+                  field={field}
+                  form={form}
+                  label="Typ"
+                  options={AttributeTypeEnum}
+                />
               )}
             />
             <div className={classes.actionWrapper}>

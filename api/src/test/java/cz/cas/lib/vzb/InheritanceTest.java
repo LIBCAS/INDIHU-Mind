@@ -1,16 +1,12 @@
 package cz.cas.lib.vzb;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import cz.cas.lib.vzb.card.attachment.AttachmentFile;
-import cz.cas.lib.vzb.card.attachment.AttachmentFileProviderType;
-import cz.cas.lib.vzb.card.attachment.ExternalAttachmentFile;
-import cz.cas.lib.vzb.card.attachment.LocalAttachmentFile;
+import cz.cas.lib.vzb.attachment.*;
 import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class InheritanceTest {
 
@@ -18,21 +14,27 @@ public class InheritanceTest {
     public void attachmentTypeMapping() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 
-        LocalAttachmentFile local = new LocalAttachmentFile();
-        String json = mapper.writeValueAsString(local);
+        LocalAttachmentFile localFile = new LocalAttachmentFile();
+        String json = mapper.writeValueAsString(localFile);
         AttachmentFile deserialized = mapper.readValue(json, AttachmentFile.class);
-        assertThat(deserialized, instanceOf(LocalAttachmentFile.class));
+        assertThat(deserialized).isInstanceOf(LocalAttachmentFile.class);
 
-        ExternalAttachmentFile gdrive = new ExternalAttachmentFile();
-        gdrive.setProviderType(AttachmentFileProviderType.GOOGLE_DRIVE);
-        json = mapper.writeValueAsString(gdrive);
+        ExternalAttachmentFile googleDriveFile = new ExternalAttachmentFile();
+        googleDriveFile.setProviderType(AttachmentFileProviderType.GOOGLE_DRIVE);
+        json = mapper.writeValueAsString(googleDriveFile);
         deserialized = mapper.readValue(json, AttachmentFile.class);
-        assertThat(deserialized, instanceOf(ExternalAttachmentFile.class));
+        assertThat(deserialized).isInstanceOf(ExternalAttachmentFile.class);
 
-        ExternalAttachmentFile dropbox = new ExternalAttachmentFile();
-        dropbox.setProviderType(AttachmentFileProviderType.DROPBOX);
-        json = mapper.writeValueAsString(dropbox);
+        ExternalAttachmentFile dropboxFile = new ExternalAttachmentFile();
+        dropboxFile.setProviderType(AttachmentFileProviderType.DROPBOX);
+        json = mapper.writeValueAsString(dropboxFile);
         deserialized = mapper.readValue(json, AttachmentFile.class);
-        assertThat(deserialized, instanceOf(ExternalAttachmentFile.class));
+        assertThat(deserialized).isInstanceOf(ExternalAttachmentFile.class);
+
+        UrlAttachmentFile urlFile = new UrlAttachmentFile();
+        json = mapper.writeValueAsString(urlFile);
+        deserialized = mapper.readValue(json, AttachmentFile.class);
+        assertThat(deserialized).isInstanceOf(UrlAttachmentFile.class);
+
     }
 }

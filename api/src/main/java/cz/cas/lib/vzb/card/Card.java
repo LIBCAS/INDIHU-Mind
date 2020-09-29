@@ -4,22 +4,22 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import core.domain.NamedObject;
-import cz.cas.lib.vzb.card.attachment.AttachmentFile;
+import cz.cas.lib.vzb.attachment.AttachmentFile;
 import cz.cas.lib.vzb.card.category.Category;
-import cz.cas.lib.vzb.card.dto.CardSimpleConverter;
 import cz.cas.lib.vzb.card.label.Label;
-import cz.cas.lib.vzb.reference.marc.Record;
-import cz.cas.lib.vzb.reference.marc.RecordSimpleConverter;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
 import cz.cas.lib.vzb.security.user.User;
+import cz.cas.lib.vzb.util.converters.AttachmentFileSimpleConverter;
+import cz.cas.lib.vzb.util.converters.CardSimpleConverter;
+import cz.cas.lib.vzb.util.converters.CitationWithDocumentConverter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
-
-import static java.util.Objects.requireNonNull;
 
 @Getter
 @Setter
@@ -39,24 +39,21 @@ public class Card extends NamedObject {
     private String note;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "vzb_card_category", joinColumns = {
-            @JoinColumn(name = "card_id", nullable = false, updatable = false)},
-            inverseJoinColumns = {@JoinColumn(name = "category_id",
-                    nullable = false, updatable = false)})
+    @JoinTable(name = "vzb_card_category",
+            joinColumns =        {@JoinColumn(name = "card_id",     nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "category_id", nullable = false, updatable = false)})
     private Set<Category> categories = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "vzb_card_label", joinColumns = {
-            @JoinColumn(name = "card_id", nullable = false, updatable = false)},
-            inverseJoinColumns = {@JoinColumn(name = "label_id",
-                    nullable = false, updatable = false)})
+    @JoinTable(name = "vzb_card_label",
+            joinColumns =        {@JoinColumn(name = "card_id",  nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "label_id", nullable = false, updatable = false)})
     private Set<Label> labels = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "vzb_card_linked_card", joinColumns = {
-            @JoinColumn(name = "linking_card_id", nullable = false, updatable = false)},
-            inverseJoinColumns = {@JoinColumn(name = "linked_card_id",
-                    nullable = false, updatable = false)})
+    @JoinTable(name = "vzb_card_linked_card",
+            joinColumns =        {@JoinColumn(name = "linking_card_id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "linked_card_id",  nullable = false, updatable = false)})
     @JsonSerialize(contentConverter = CardSimpleConverter.class)
     private Set<Card> linkedCards = new HashSet<>();
 
@@ -64,45 +61,29 @@ public class Card extends NamedObject {
     @JsonSerialize(contentConverter = CardSimpleConverter.class)
     private Set<Card> linkingCards = new HashSet<>();
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "card")
-    @OrderBy("ordinalNumber")
-    private Set<AttachmentFile> files = new HashSet<>();
-
-    /**
-     * Use generated Lombok @Setter with caution. It does not sync {@link Record} side of relationship.
-     * In {@link CardService#createCard} and {@link CardService#updateCard} this setter is OK to use
-     * because it only persists the {@link Record ID} to DB but doesn't work with {@link Record} entity.
-     * <p>
-     * For synced work with entities use {@link #addRecord(Record)} and {@link #removeRecord(Record)}
-     */
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "vzb_card_record", joinColumns = {
-            @JoinColumn(name = "card_id", nullable = false, updatable = false)},
-            inverseJoinColumns = {@JoinColumn(name = "record_id", nullable = false, updatable = false)})
-    @JsonSerialize(contentConverter = RecordSimpleConverter.class)
-    private Set<Record> records = new HashSet<>();
+    @JoinTable(name = "vzb_card_attachment",
+            joinColumns =        {@JoinColumn(name = "card_id",       nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "attachment_id", nullable = false, updatable = false)})
+    @JsonSerialize(contentConverter = AttachmentFileSimpleConverter.class)
+    private Set<AttachmentFile> documents = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "vzb_card_citation",
+            joinColumns =        {@JoinColumn(name = "card_id",     nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "citation_id", nullable = false, updatable = false)})
+    @JsonSerialize(contentConverter = CitationWithDocumentConverter.class)
+    private Set<Citation> records = new HashSet<>();
 
 
-    public void addRecord(Record record) {
-        records.add(requireNonNull(record));
+    public void addCitation(@NonNull Citation record) {
+        records.add(record);
         record.getLinkedCards().add(this);
     }
 
-    public void removeRecord(Record record) {
-        records.remove(requireNonNull(record));
+    public void removeCitation(@NonNull Citation record) {
+        records.remove(record);
         record.getLinkedCards().remove(this);
-    }
-
-    public Card(long pid, String name, String note, User owner, Set<Category> categories, Set<Label> labels, Set<Card> linkedCards, Set<Card> linkingCards) {
-        super();
-        this.name = name;
-        this.note = note;
-        this.pid = pid;
-        this.owner = owner;
-        this.categories = categories;
-        this.labels = labels;
-        this.linkedCards = linkedCards;
-        this.linkingCards = linkingCards;
     }
 
     public Card(String id) {

@@ -1,13 +1,12 @@
 package cz.cas.lib.vzb.card.template;
 
-import core.exception.BadArgument;
-import core.exception.ForbiddenObject;
 import core.exception.MissingObject;
-import core.store.Transactional;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.Roles;
+import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import lombok.Getter;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,8 +14,9 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import java.util.Collection;
 
-import static core.util.Utils.eq;
 import static core.util.Utils.notNull;
+import static cz.cas.lib.vzb.util.ResponseContainer.LIST;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Slf4j
 @RestController
@@ -24,54 +24,54 @@ import static core.util.Utils.notNull;
 @RolesAllowed(Roles.USER)
 public class CardTemplateApi {
 
-    @Getter
-    private CardTemplateService adapter;
+    private CardTemplateService service;
     private UserDelegate userDelegate;
 
-    @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    @Transactional
+    @PutMapping(value = "/{id}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CardTemplate save(
-            @ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id,
-            @ApiParam(value = "Single instance", required = true) @RequestBody CardTemplate request
-    ) {
-        eq(id, request.getId(), () -> new BadArgument("id"));
-        return getAdapter().save(request);
+            @ApiParam(value = "ID of entity", required = true) @PathVariable("id") String id,
+            @ApiParam(value = "Single instance", required = true) @RequestBody CardTemplate entity) {
+        return service.save(id, entity);
     }
 
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    @Transactional
-    public void delete(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
-        CardTemplate entity = getAdapter().find(id);
-        notNull(entity, () -> new MissingObject(getAdapter().getType(), id));
-        notNull(entity.getOwner(), () -> new ForbiddenObject(getAdapter().getType(), id));
-        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(getAdapter().getType(), id));
-        getAdapter().delete(entity);
+    @DeleteMapping(value = "/{id}")
+    public void delete(@ApiParam(value = "ID of entity", required = true) @PathVariable("id") String id) {
+        service.delete(id);
     }
 
-
-    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    public CardTemplate get(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
-        CardTemplate entity = getAdapter().find(id);
-        notNull(entity, () -> new MissingObject(getAdapter().getType(), id));
+    @ApiOperation(value = "Find CardTemplate")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = CardTemplate.class),
+            @ApiResponse(code = 404, message = "Entity not found for given ID")
+    })
+    @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
+    public CardTemplate find(@ApiParam(value = "ID of entity", required = true) @PathVariable("id") String id) {
+        CardTemplate entity = service.find(id);
+        notNull(entity, () -> new MissingObject(CardTemplate.class, id));
         return entity;
     }
 
-
-    @RequestMapping(value = "/own", method = RequestMethod.GET)
+    @ApiOperation(value = "Retrieve all entities of user.")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = CardTemplate.class, responseContainer = LIST)})
+    @GetMapping(value = "/own")
     public Collection<CardTemplate> findAllOfUser() {
-        return getAdapter().findByUser(userDelegate.getId());
+        return service.findByUser(userDelegate.getId());
     }
 
-    @RequestMapping(value = "/all", method = RequestMethod.GET)
+    @ApiOperation(value = "Retrieve all entities of user + common entities.")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = CardTemplate.class, responseContainer = LIST)})
+    @GetMapping(value = "/all")
     public Collection<CardTemplate> findAllOfUserAndCommon() {
-        return getAdapter().findTemplates(userDelegate.getId());
+        return service.findTemplates(userDelegate.getId());
     }
 
-    @RequestMapping(value = "/common", method = RequestMethod.GET)
+    @ApiOperation(value = "Retrieve all common entities.")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = CardTemplate.class, responseContainer = LIST)})
+    @GetMapping(value = "/common")
     public Collection<CardTemplate> findCommon() {
-        return getAdapter().findTemplates(null);
+        return service.findTemplates(null);
     }
+
 
     @Inject
     public void setUserDelegate(UserDelegate userDelegate) {
@@ -79,7 +79,7 @@ public class CardTemplateApi {
     }
 
     @Inject
-    public void setAdapter(CardTemplateService adapter) {
-        this.adapter = adapter;
+    public void setService(CardTemplateService service) {
+        this.service = service;
     }
 }

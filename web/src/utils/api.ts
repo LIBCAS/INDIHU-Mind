@@ -15,7 +15,7 @@ export const api = (opts: ApiProps = {}, headers: any = {}) => {
     // throwHttpErrors: false,
     hooks: {
       beforeRequest: [
-        options => {
+        (options: any) => {
           // no headers in options
           // https://github.com/sindresorhus/ky/pull/115
           options.headers = {
@@ -35,7 +35,7 @@ export const api = (opts: ApiProps = {}, headers: any = {}) => {
         }
       ],
       afterResponse: [
-        async response => {
+        async (response: any) => {
           // If response contains bearer, save it as token
           if (response.headers.has("bearer")) {
             store.set("token", response.headers.get("bearer"));

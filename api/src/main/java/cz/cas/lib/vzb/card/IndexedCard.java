@@ -3,6 +3,9 @@ package cz.cas.lib.vzb.card;
 import core.index.IndexField;
 import core.index.IndexFieldType;
 import core.index.IndexQueryUtils;
+import cz.cas.lib.vzb.search.query.QueryType;
+import cz.cas.lib.vzb.search.searchable.AdvancedSearch;
+import cz.cas.lib.vzb.search.searchable.AdvancedSearchClass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,8 +23,8 @@ import java.util.Map;
 @NoArgsConstructor
 @Getter
 @Setter
-@SolrDocument
-public class IndexedCard implements Serializable {
+@SolrDocument(collection = "card")
+public class IndexedCard implements Serializable, AdvancedSearchClass {
 
     public static final String ATTRIBUTES = "attributes";
     public static final String ID = "id";
@@ -35,7 +38,7 @@ public class IndexedCard implements Serializable {
     public static final String CATEGORIES = "categories";
     public static final String CATEGORY_IDS = "category_ids";
     public static final String LABELS = "labels";
-    public static final String ATTACHMENT_FILES = "attachment_files";
+    public static final String ATTACHMENT_FILES_NAMES = "attachment_files";
 
     public static final String CONTENT_CREATED = "c_created";
     public static final String CONTENT_UPDATED = "c_updated";
@@ -50,10 +53,12 @@ public class IndexedCard implements Serializable {
 
     @Field(value = CREATED)
     @Indexed(type = IndexFieldType.DATE)
+    @AdvancedSearch(czech = "Datum vytvoření", type = QueryType.DATE)
     private Date created;
 
     @Field(value = UPDATED)
     @Indexed(type = IndexFieldType.DATE)
+    @AdvancedSearch(czech = "Datum poslední modifikace", type = QueryType.DATE)
     private Date updated;
 
     @Field(value = DELETED)
@@ -66,10 +71,12 @@ public class IndexedCard implements Serializable {
 
     @Field(value = NOTE)
     @Indexed(type = IndexFieldType.TEXT)
+    @AdvancedSearch(czech = "Poznámka", type = QueryType.STRING)
     private String note;
 
     @Field(value = NAME)
     @Indexed(type = IndexFieldType.TEXT, copyTo = {NAME + IndexField.SORT_SUFFIX})
+    @AdvancedSearch(czech = "Název", type = QueryType.STRING)
     private String name;
 
     @Field(value = USER_ID)
@@ -78,6 +85,7 @@ public class IndexedCard implements Serializable {
 
     @Field(value = CATEGORIES)
     @Indexed(type = IndexFieldType.TEXT)
+    @AdvancedSearch(czech = "Kategorie", type = QueryType.STRING)
     private List<String> categories;
 
     @Field(value = CATEGORY_IDS)
@@ -86,13 +94,15 @@ public class IndexedCard implements Serializable {
 
     @Field(value = ATTRIBUTES)
     @Indexed(type = IndexFieldType.TEXT)
+    @AdvancedSearch(czech = "Atributy", type = QueryType.STRING)
     private List<String> attributes;
 
     @Field(value = LABELS)
     @Indexed(type = IndexFieldType.TEXT)
+    @AdvancedSearch(czech = "Štítky", type = QueryType.STRING)
     private List<String> labels;
 
-    @Field(value = ATTACHMENT_FILES)
+    @Field(value = ATTACHMENT_FILES_NAMES)
     @Indexed(type = IndexFieldType.TEXT)
     private List<String> attachmentFiles;
 
@@ -110,4 +120,17 @@ public class IndexedCard implements Serializable {
     @Indexed
     @Dynamic
     private Map<String, Object> fields = new HashMap<>();
+
+
+    // ------------------------------------ ADVANCED SEARCH CLASS ------------------------------------
+    @Override
+    public String getUserIdField() {
+        return USER_ID;
+    }
+
+    @Override
+    public String getDeletedField() {
+        return DELETED;
+    }
+
 }

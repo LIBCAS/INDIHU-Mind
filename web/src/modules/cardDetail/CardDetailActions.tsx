@@ -11,9 +11,11 @@ import { onDeleteCard } from "../../utils/card";
 import { CardContentProps } from "../../types/card";
 import { Popconfirm } from "../../components/portal/Popconfirm";
 import { CardCreateRoot } from "../cardCreate/CardCreateRoot";
+import { CardPrint } from "./CardPrint";
 
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { useStyles } from "./_cardDetailStyles";
 
 interface CardDetailActionsProps {
@@ -29,6 +31,7 @@ export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
 }) => {
   const classes = useStyles();
   const classesLayout = useLayoutStyles();
+  const classesSpacing = useSpacingStyles();
   const classesText = useTextStyles();
   const [showModal, setShowModal] = useState(false);
   const context: any = useContext(GlobalContext);
@@ -49,19 +52,25 @@ export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
           <div className={classesText.normal}>Zpět</div>
         </IconButton>
       </div>
-      <Popconfirm
-        Button={() => (
-          <Tooltip title="Smazat">
-            <IconButton className={classes.iconSecondary}>
-              <Delete color="inherit" />
-            </IconButton>
-          </Tooltip>
-        )}
-        confirmText="Smazat kartu?"
-        onConfirmClick={() => {
-          handleDelete();
-        }}
-      />
+      <div className={classes.actions}>
+        <CardPrint
+          card={{ ...card.card, attributes: card.attributes }}
+          className={classesSpacing.ml1}
+        />
+        <Popconfirm
+          Button={
+            <Tooltip title="Smazat">
+              <IconButton className={classes.iconSecondary}>
+                <Delete color="inherit" />
+              </IconButton>
+            </Tooltip>
+          }
+          confirmText="Smazat kartu?"
+          onConfirmClick={() => {
+            handleDelete();
+          }}
+        />
+      </div>
       <CardCreateRoot
         showModal={showModal}
         setShowModal={setShowModal}

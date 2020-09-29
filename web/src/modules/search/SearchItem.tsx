@@ -19,7 +19,7 @@ export const SearchItem: React.FC<SearchItemProps> = ({
 }) => {
   const classes = useStyles();
   const onClick = () => {
-    history.push(`card/${searchCard.card.id}`);
+    history.push(`/card/${searchCard.card.id}`);
   };
   return (
     <div className={classes.card} onClick={onClick}>

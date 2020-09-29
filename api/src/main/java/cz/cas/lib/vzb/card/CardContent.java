@@ -18,23 +18,21 @@ import java.util.Set;
 @Table(name = "vzb_card_content")
 @Entity
 public class CardContent extends DatedObject {
+
     @OneToOne
     @JsonIgnore
     private CardContent origin;
+
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private boolean lastVersion;
+
     @ManyToOne
     private Card card;
+
     @OneToMany(mappedBy = "cardContent", fetch = FetchType.EAGER)
     @OrderBy("ordinalNumber")
     private Set<Attribute> attributes = new HashSet<>();
 
-    public CardContent(CardContent origin, boolean lastVersion, Card card) {
-        super();
-        this.origin = origin;
-        this.lastVersion = lastVersion;
-        this.card = card;
-    }
 
     public void addAttribute(Attribute attribute) {
         getAttributes().add(attribute);
@@ -45,4 +43,5 @@ public class CardContent extends DatedObject {
         getAttributes().remove(attribute);
         attribute.setCardContent(null);
     }
+
 }

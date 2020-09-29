@@ -57,7 +57,7 @@ export const TableGroupEdit: React.FC<TableGroupEditProps> = ({
     if (loading) return;
     actions.resetForm(initialValues);
     setLoading(true);
-    const request = api().post(`admin/set_allowance`, {
+    const request = api().post(`admin/set-allowance`, {
       json: {
         ids: checkboxRows.map(checkbox => checkbox.id),
         value: values.state

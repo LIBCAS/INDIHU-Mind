@@ -2,7 +2,6 @@ package core.mail;
 
 import core.Changed;
 import core.exception.GeneralException;
-import freemarker.template.TemplateException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,57 +12,59 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Central mailing component responsible for building up and sending mail messages from templates.
- *
- * <p>
- * Will be further refactored.
- * </p>
  */
 @ConditionalOnProperty(prefix = "mail", name = "excluded", havingValue = "false", matchIfMissing = true)
 @Slf4j
 @Component
-@Changed("bpm not supported")
+@Changed("bpm not supported, velocity replaced with freemarker")
 public class MailCenter {
 
+    /**
+     * Flag whether Mailing enabled in application properties.
+     */
     private Boolean enabled;
+    /**
+     * Flag whether log debug texts.
+     */
+    private Boolean debug;
 
     private AsyncMailSender sender;
-
     private Templater templater;
 
     private String senderEmail;
-
     private String senderName;
-
     private String appLogo;
-
-    protected String appName;
-
-    private String appLink;
-
+    private String appName;
     private String appUrl;
 
-//    private String pathTasks;
-//
-//    public void sendAssignment(String email, String businessKey, String taskId, String taskName, String taskKey, Instant created, Instant dueDate) {
-//        sendAssignmentInternal(email, businessKey, taskId, taskName, taskKey, created, dueDate, null, "templates/taskNotification.vm");
-//    }
-//
-//    public void sendPoolAssignment(String email, String businessKey, String taskId, String taskName, String taskKey, Instant created, Instant dueDate) {
-//        sendAssignmentInternal(email, businessKey, taskId, taskName, taskKey, created, dueDate, null, "templates/taskPoolNotification.vm");
-//    }
-//
-//    public void sendPoolAssignmentOther(String email, String businessKey, String taskId, String taskName, String taskKey, Instant created, Instant dueDate, String otherName) {
-//        sendAssignmentInternal(email, businessKey, taskId, taskName, taskKey, created, dueDate, otherName, "templates/taskPoolNotificationAssigned.vm");
-//    }
+    private Map<String, Object> generalArguments() {
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("appLogo", appLogo);
+        arguments.put("appName", appName);
+        arguments.put("appUrl", appUrl);
+        arguments.put("senderEmail", senderEmail);
+        return arguments;
+    }
 
-    protected MimeMessageHelper generalMessage(String emailTo, @Nullable String subject, boolean hasAttachment) throws MessagingException {
+    /**
+     * Creates message helper.
+     *
+     * The result is used during message transformation and sending.
+     *
+     * @param emailTo       Recipient email
+     * @param subject       Email subject
+     * @param hasAttachment Will the email have attachment
+     * @return Prepared message helper
+     */
+    public MimeMessageHelper generalMessage(String emailTo, @Nullable String subject, boolean hasAttachment) throws MessagingException {
         MimeMessage message = sender.create();
 
         // use the true flag to indicate you need a multipart message
@@ -87,30 +88,32 @@ public class MailCenter {
         return helper;
     }
 
-    protected Map<String, Object> generalArguments() {
-        Map<String, Object> arguments = new HashMap<>();
-        arguments.put("appLogo", appLogo);
-        arguments.put("appName", appName);
-        arguments.put("appLink", appLink);
-        arguments.put("senderEmail", senderEmail);
-        return arguments;
-    }
+    /**
+     * Transforms input template with provided data and prepared message and sends it.
+     *
+     * @param templateName FreeMaker template name (or rather path), e.g. mail/myEmail.ftl
+     * @param arguments    Data
+     * @param helper       Previously created message helper
+     */
+    public void transformAndSend(String templateName, Map<String, Object> arguments, MimeMessageHelper helper) throws MessagingException {
+        Map<String, Object> beans = mergeArgumentMaps(arguments, generalArguments());
 
-    protected void transformAndSend(String template, Map<String, Object> arguments, MimeMessageHelper helper)
-            throws MessagingException, IOException, TemplateException {
+        String text = templater.transform(templateName, beans);
+        helper.setText(text, true);
+
+        if (debug) {
+            log.info(text);
+        }
 
         if (!enabled) {
             log.warn("Mail message was silently consumed because mail system is disabled.");
             return;
         }
 
-        String text = templater.transform(template, arguments);
-        helper.setText(text, true);
-
         MimeMessage message = helper.getMimeMessage();
 
         if (message.getAllRecipients() != null && message.getAllRecipients().length > 0) {
-            sender.send(message);
+            sender.sendAsync(message);
         } else {
             log.warn("Mail message was silently consumed because there were no recipients.");
         }
@@ -123,52 +126,28 @@ public class MailCenter {
             Map<String, Object> params = generalArguments();
             params.put("content", description);
 
-            transformAndSend("templates/notification.vm", params, message);
+            String templatePath = "templates/notification.ftl";
+            transformAndSend(templatePath, params, message);
 
-        } catch (MessagingException | IOException | TemplateException ex) {
+        } catch (MessagingException ex) {
             throw new GeneralException(ex);
         }
     }
 
-//    private void sendAssignmentInternal(String email, String businessKey, String taskId, String taskName,
-//                                        String taskKey, Instant created, Instant dueDate, String otherName,
-//                                        String templateName) {
-//        try {
-//            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-//            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd. MM. yyyy");
-//
-//            MimeMessageHelper message = generalMessage(email, appName + " " + businessKey + ": " + taskName, false);
-//
-//            Map<String, Object> params = generalArguments();
-//            params.put("taskName", taskName);
-//            params.put("otherName", otherName);
-//            params.put("createdDate", extractDate(created).format(dateFormatter));
-//            params.put("createdTime", extractTime(created).format(timeFormatter));
-//
-//            if (dueDate != null) {
-//                params.put("dueDate", extractDate(dueDate).format(dateFormatter));
-//                params.put("dueTime", extractTime(dueDate).format(timeFormatter));
-//            }
-//
-//            params.put("serverUrl", taskUrl(taskId, taskKey));
-//
-//            transformAndSend(templateName, params, message);
-//        } catch (MessagingException | IOException | TemplateException ex) {
-//            throw new GeneralException(ex);
-//        }
-//    }
-
-    private String apUrl() {
-        return appUrl;
+    private Map<String, Object> mergeArgumentMaps(Map<String, Object> map1, Map<String, Object> map2) {
+        return Stream.of(map1, map2)
+                .flatMap(map -> map.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
-
-//    private String taskUrl(String id, String taskKey) {
-//        return apUrl() + pathTasks.replace("{id}", id).replace("{key}", taskKey);
-//    }
 
     @Inject
     public void setEnabled(@Value("${mail.enabled:false}") Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    @Inject
+    public void setDebug(@Value("${mail.debug:false}") Boolean debug) {
+        this.debug = debug;
     }
 
     @Inject
@@ -192,19 +171,9 @@ public class MailCenter {
     }
 
     @Inject
-    public void setAppLink(@Value("${mail.app.link}") String appLink) {
-        this.appLink = appLink;
-    }
-
-    @Inject
     public void setAppUrl(@Value("${mail.app.url}") String appUrl) {
         this.appUrl = appUrl;
     }
-
-//    @Inject
-//    public void setPathTasks(@Value("${mail.app.path.tasks}") String pathTasks) {
-//        this.pathTasks = pathTasks;
-//    }
 
     @Inject
     public void setSender(AsyncMailSender sender) {
@@ -215,4 +184,5 @@ public class MailCenter {
     public void setTemplater(Templater templater) {
         this.templater = templater;
     }
+
 }

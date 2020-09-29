@@ -6,17 +6,23 @@ import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles"
 import { InputText } from "../../components/form/InputText";
 import { Switch } from "../../components/form/Switch";
 import { DateTimePicker } from "../../components/form/DateTimePicker";
+import { GPSPicker } from "../../components/form/GPSPicker";
 import { AttributeProps } from "../../types/attribute";
-import { notEmpty } from "../../utils/form/validate";
+import { AttributeType } from "../../enums";
+import {
+  getAttributeTypeLabel,
+  validateAttributeType
+} from "../../utils/attribute";
 
 interface CardCreateAddAttributeValueProps {
   formikBag: any;
   previousAttribute?: AttributeProps;
 }
 
-export const CardCreateAddAttributeValue: React.FC<
-  CardCreateAddAttributeValueProps
-> = ({ formikBag, previousAttribute }) => {
+export const CardCreateAddAttributeValue: React.FC<CardCreateAddAttributeValueProps> = ({
+  formikBag,
+  previousAttribute
+}) => {
   const type = formikBag.values.type;
   const classesSpacing = useSpacingStyles();
   useEffect(() => {
@@ -31,31 +37,10 @@ export const CardCreateAddAttributeValue: React.FC<
       {type !== "" && (
         <Field
           name="value"
-          validate={(value: any) => {
-            let error;
-            const notEmptyTypes = ["STRING", "DOUBLE"];
-            if (notEmptyTypes.indexOf(type) !== -1) {
-              error = notEmpty(value);
-            }
-            return error;
-          }}
+          validate={validateAttributeType(type)}
           render={({ field, form }: FieldProps<AttributeProps>) => {
             switch (type) {
-              case "STRING":
-              case "DOUBLE":
-                return (
-                  <InputText
-                    field={field}
-                    form={form}
-                    label="Hodnota"
-                    type={type === "STRING" ? "text" : "number"}
-                    multiline={type === "STRING"}
-                    inputProps={{
-                      rows: type === "STRING" ? 4 : undefined
-                    }}
-                  />
-                );
-              case "BOOLEAN":
+              case AttributeType.BOOLEAN:
                 return (
                   <Switch
                     field={{
@@ -67,11 +52,32 @@ export const CardCreateAddAttributeValue: React.FC<
                     label={field.value ? "Ano" : "Ne"}
                   />
                 );
-              case "DATETIME":
+              case AttributeType.DATE:
+              case AttributeType.DATETIME:
                 return (
                   <div className={classNames(classesSpacing.mt2)}>
-                    <DateTimePicker field={field} form={form} label="Datum" />
+                    <DateTimePicker
+                      field={field}
+                      form={form}
+                      label={getAttributeTypeLabel(type)}
+                      dateOnly={type === AttributeType.DATE}
+                    />
                   </div>
+                );
+              case AttributeType.GEOLOCATION:
+                return <GPSPicker label="Hodnota" field={field} form={form} />;
+              default:
+                return (
+                  <InputText
+                    field={field}
+                    form={form}
+                    label="Hodnota"
+                    type={type === AttributeType.DOUBLE ? "number" : "text"}
+                    multiline={type === AttributeType.STRING}
+                    inputProps={{
+                      rows: type === AttributeType.STRING ? 4 : undefined
+                    }}
+                  />
                 );
             }
           }}

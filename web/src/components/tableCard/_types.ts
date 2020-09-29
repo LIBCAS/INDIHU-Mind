@@ -4,6 +4,7 @@ export interface ColumnProps {
   path: string;
   format?: Function;
   unsortable?: boolean;
+  printable?: boolean;
 }
 
 export interface OrderProps {

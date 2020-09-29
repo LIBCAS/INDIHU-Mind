@@ -1,7 +1,11 @@
 package core.exception;
 
 import core.domain.DomainObject;
+import core.rest.config.ResourceExceptionHandler;
 
+/**
+ * @see ResourceExceptionHandler#invalidAttribute(InvalidAttribute)
+ */
 public class InvalidAttribute extends GeneralException {
     private DomainObject object;
 
