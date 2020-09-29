@@ -1,0 +1,18 @@
+# INDIHU-Mind - virtuální znalostní báze
+
+Shromažďování informací, podkladů, nejrůznějších materiálů a spojování informací v nové myšlenky či články je podstatou vědecké práce. Existují nástroje, které řeší jednotlivé části tohoto souhrnného problému – např. shromažďování cizích zdrojů, práce s citacemi. INDIHU Mind, představuje komplexní řešení, které je dostatečně otevřené pro nejrůznější způsoby použití a zároveň dobře strukturované, pro potřeby třídění a vyhledávání. 
+
+INDIHU Mind je virtuální znalostní báze umožňující vědeckým a odborným pracovníkům zejména z humanitních oborů shromažďovat informace a znalosti. V praxi by tato aplikace měla nahradit lístkové excerpční kartotéky, které v minulosti sloužily k tomuto účelu.
+Uložené informace budou obsahovat údaje o zdroji, aby byly  kdykoliv v budoucnosti zpětně vyhledatelné. Využití nástroje IndihuMind by mělo být dlouhodobé, ale lze ho použít i krátkodobě pro realizaci časově omezených projektů. Výhodou je možnost sdílení s dalšími spolupracovníky. Uložená data mohou být zabezpečena proti neautorizovanému použití.
+
+Základ tvoří databáze karet obsahujících krátké texty včetně tabulek a grafů ale součástí mohou být též obrazové a zvukové dokumenty a krátké videosekvence připojené ke kartám jako příloha. Každá karta může být vybavena dalšími funkčními prvky jako budou kategorie, atributy, štítky a přílohy, které mohou uživatelé vytvářet podle vlastní potřeby. Možnost využití rozsáhlého podpůrného aparátu umožňuje třídit a řadit informace podle různých kritérií a zejména umožňuje různé způsoby vyhledávání a jejich vzájemné kombinace. Pomocí kategorií lze např. budovat i strukturovaný hierarchický systém. Tyto vlastnosti budou užitečné zejména v případě dlouhodobého používání nástroje v horizontu více let a velkému množství shromážděných informací zachycených na kartách. Uživatelé nejsou limitováni předem danými strukturami nebo předepsanými prvky a mohou tak nástroj přizpůsobit charakteru sbíraných informací/znalosti a tvůrčím způsobem ho využívat. Nástroj umožní uchovat i kritické připomínky nebo vlastní texty a nápady.
+
+Aplikace umožňuje práci s kartami, jejich vytváření, editaci, zrušení a opatřování kategoriemi a atributy podle vlastní volby. Každá karta je identifikována názvem a jedinečným identifikátorem. Při uložení je karta označena datem vzniku. Z nástrojové lišty je možné volit operace s kartami, kategoriemi, citacemi, správou uživatelů a vyhledávací okno umožňuje vyhledávání v textových atributech a obsahu karet. Vzhledem k tomu, že se jedná o otevřený systém (open source) s volným zdrojovým kódem, je možné systém i v budoucnosti rozvíjet a obohacovat o další funkční komponenty.
+
+Online verze: https://mind.indihu.cz/
+
+Projekt je součástí platformy INDIHU
+---
+Jedním z viditelných trendů v oblasti sociálních a humanitních věd je digitalizace sbírek v paměťových institucích i na vědeckých pracovištích. Otázky, které jsou spojené s dostupností digitálních sbírek pro badatele a studenty a s jejich dalším využitím pro badatelské využití řeší vznikající platforma INDIHU, která je vyvíjena v rámci projektu financovaného z programu MK ČR NAKI II. V jednotném online webovém vyhledávacím rozhraní budou dostupné doposud izolované digitální sbírky institucí zapojených do projektu. Badatelé tak budou moci jednoduše procházet sbírkami archeologů, etnografů, sbírkami umění apod. Součástí portálu budou také další nástroje, které vznikají v rámci projektu INDIHU umožňující vytváření virtuálních výstav, osobní znalostní bázi a provádění OCR ve webovém rozhraní.
+
+Více informací naleznete na stránce projektu: https://indihu.cz/
