@@ -4,7 +4,6 @@ import { FileProps } from "../../types/file";
 import { FileItem } from "../../components/file/FileItem";
 
 import { useStyles } from "./_cardCreateStyles";
-import { FileType } from "../../enums";
 
 interface CardCreateFileProps {
   formikBag: any;
@@ -15,22 +14,21 @@ export const CardCreateFile: React.FC<CardCreateFileProps> = ({
 }) => {
   const classes = useStyles();
   const onDelete = (file: FileProps) => {
-    const newDocuments = formikBag.values.documents.filter(
+    const newFiles = formikBag.values.files.filter(
       (f: FileProps) => f.id !== file.id
     );
-    formikBag.setFieldValue("documents", newDocuments);
+    formikBag.setFieldValue("files", newFiles);
   };
   return (
-    <div className={classes.fileItemsContainer}>
-      {formikBag.values.documents &&
-        formikBag.values.documents.map((file: FileProps) => (
-          <div key={file.id} className={classes.fileItemWrapper}>
-            <FileItem
-              file={file}
-              onDelete={onDelete}
-              disableDownload={file.providerType === FileType.LOCAL}
-            />
-          </div>
+    <div className={classes.wrapperHalfItems}>
+      {formikBag.values.files &&
+        formikBag.values.files.map((file: FileProps) => (
+          <FileItem
+            key={file.id}
+            file={file}
+            onDelete={onDelete}
+            disableDownload={file.providerType === "LOCAL"}
+          />
         ))}
     </div>
   );

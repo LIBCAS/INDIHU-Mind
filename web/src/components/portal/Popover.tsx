@@ -17,7 +17,6 @@ interface PopoverProps {
   cancelButton?: boolean;
   width?: number;
   overflowVisible?: boolean;
-  anchorReference?: "anchorEl" | "none" | "anchorPosition";
 }
 
 export const Popover: React.FC<PopoverProps> = ({
@@ -28,8 +27,7 @@ export const Popover: React.FC<PopoverProps> = ({
   autoWidth,
   cancelButton,
   width,
-  overflowVisible,
-  anchorReference = "anchorEl"
+  overflowVisible
 }) => {
   const classes = useStyles();
   const onResize = () => {
@@ -41,11 +39,6 @@ export const Popover: React.FC<PopoverProps> = ({
       open={open}
       anchorEl={anchorEl}
       onClose={() => setOpen(false)}
-      anchorReference={anchorReference}
-      anchorPosition={{
-        top: window.innerHeight / 2 - 16,
-        left: window.innerWidth / 2
-      }}
       // classes={cancelButton ? { paper: classes.popoverPaper } : {}}
       classes={{
         paper: classNames({
@@ -63,7 +56,7 @@ export const Popover: React.FC<PopoverProps> = ({
         horizontal: "center"
       }}
       transformOrigin={{
-        vertical: "bottom",
+        vertical: "top",
         horizontal: "center"
       }}
     >

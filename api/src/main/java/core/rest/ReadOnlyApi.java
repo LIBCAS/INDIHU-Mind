@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.notNull;
 
 /**
@@ -45,7 +46,7 @@ public interface ReadOnlyApi<T extends DomainObject> {
     @Transactional
     default T get(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
         T entity = getAdapter().find(id);
-        notNull(entity, () -> new MissingObject(getAdapter().getType(), id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, getAdapter().getType(), id));
 
         return entity;
     }

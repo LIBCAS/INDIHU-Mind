@@ -37,50 +37,6 @@ export const useStyles = makeStyles((theme: Theme) => {
       "&:hover $recordTemplateItemIcon": {
         opacity: 1
       }
-    },
-    recordTemplateForm: {
-      width: "85vw",
-      height: "85vh",
-      display: "flex"
-    },
-    recordTemplateFormLeftPanel: {
-      height: "100%",
-      minHeight: "100%",
-      maxHeight: "100%",
-      overflowY: "auto",
-      width: "calc(50% - 1px)",
-      borderRight: `1px solid ${theme.palette.grey[300]}`,
-      padding: "20px",
-      [theme.breakpoints.up("md")]: {
-        width: "calc(30% - 1px)"
-      }
-    },
-    recordTemplateFormRightPanel: {
-      height: "100%",
-      minHeight: "100%",
-      width: "50%",
-      [theme.breakpoints.up("md")]: {
-        width: "70%"
-      }
-    },
-    recordTemplateFormMainPanel: {
-      height: "calc(100% - 60px - 1px)", // 1px divider
-      width: "100%",
-      padding: "20px",
-      overflowY: "auto"
-    },
-    recordTemplateFormButtonsPanel: {
-      height: 60,
-      width: "100%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center"
-    },
-    preview: {
-      border: `1px solid ${theme.palette.grey[300]}`,
-      padding: ".5rem 1rem",
-      borderRadius: 4,
-      wordWrap: "break-word"
     }
   };
 });

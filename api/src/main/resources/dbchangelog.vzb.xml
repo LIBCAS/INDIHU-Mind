@@ -624,7 +624,7 @@
         <dropTable tableName="vzb_card_record" cascadeConstraints="true"/>
 
         <!-- INTRODUCED `JOINED` INHERITANCE STRATEGY 09/2020 -->
-        <createTable tableName="vzb_marc_citation_abstract">
+        <createTable tableName="vzb_marc_citation_abstract"> <!-- RENAMED in change set #12  10/2020 -->
             <column name="id" type="varchar(255)">
                 <constraints primaryKey="true" primaryKeyName="vzb_citation_abstract_pkey" nullable="false"/>
             </column>
@@ -638,7 +638,7 @@
             <column name="name" type="nvarchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="disc_type" type="nvarchar(31)"/>
+            <column name="disc_type" type="nvarchar(31)"/> <!-- REMOVED in change set #12  10/2020 -->
 
             <column name="document_id" type="varchar(255)"> <!-- REMOVED in change set #10  09/2020 -->
                 <constraints foreignKeyName="vzb_citation_attachment_fk"
@@ -702,5 +702,22 @@
                              deleteCascade="true"/>
             </column>
         </createTable>
+    </changeSet>
+
+    <changeSet id="11" author="radvan">
+        <addColumn tableName="vzb_attachment_url">
+            <column name="location" type="nvarchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="12" author="radvan">
+        <dropTable tableName="vzb_marc_record"/>
+        <dropTable tableName="vzb_marc_brief_record"/>
+        <dropColumn tableName="vzb_marc_citation_abstract" columnName="disc_type"/>
+        <addColumn tableName="vzb_marc_citation_abstract">
+            <column name="data_fields" type="clob"/>
+            <column name="content" type="clob"/>
+        </addColumn>
+        <renameTable oldTableName="vzb_marc_citation_abstract" newTableName="vzb_marc_citation"/>
     </changeSet>
 </databaseChangeLog>

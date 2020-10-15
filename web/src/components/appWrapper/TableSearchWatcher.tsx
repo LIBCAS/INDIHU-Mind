@@ -80,7 +80,7 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
             {
               field: "labels",
               value: labelActive.name,
-              operation: "CONTAINS"
+              operation: "EQ"
             }
           ]
         },

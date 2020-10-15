@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useHistory } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -16,8 +15,8 @@ import DesktopMenu from "./DesktopMenu";
 import MenuIcon from "@material-ui/icons/Menu";
 
 export interface NavbarProps {
-  setLeftPanelOpen?: any;
-  setOpenModalInfo?: any;
+  setLeftPanelOpen: any;
+  setOpenModalInfo: any;
 }
 
 const Navbar: React.SFC<NavbarProps> = ({
@@ -27,16 +26,12 @@ const Navbar: React.SFC<NavbarProps> = ({
   const theme: Theme = useTheme();
   const classes = useStyles();
   const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
-  const history = useHistory();
 
   return (
-    <AppBar position="sticky" className={classes.header}>
+    <AppBar position="static" className={classes.header}>
       <Toolbar>
         <div className={classes.titleWrapper}>
-          <div
-            className={classes.titleWrapperChild}
-            onClick={() => history.push("/")}
-          >
+          <div className={classes.titleWrapperChild}>
             <IconButton
               className={classes.logo}
               color="inherit"
@@ -55,21 +50,17 @@ const Navbar: React.SFC<NavbarProps> = ({
             </Typography>
           </div>
         </div>
-        {setOpenModalInfo && (
-          <div className={classes.desktopMenu}>
-            <DesktopMenu setOpenModalInfo={setOpenModalInfo} />
-          </div>
-        )}
-        {setLeftPanelOpen && (
-          <div
-            className={classes.mobileMenuToogle}
-            onClick={() => setLeftPanelOpen((prev: boolean) => !prev)}
-          >
-            <IconButton color="inherit" aria-label="Menu">
-              <MenuIcon />
-            </IconButton>
-          </div>
-        )}
+        <div className={classes.desktopMenu}>
+          <DesktopMenu setOpenModalInfo={setOpenModalInfo} />
+        </div>
+        <div
+          className={classes.mobileMenuToogle}
+          onClick={() => setLeftPanelOpen((prev: boolean) => !prev)}
+        >
+          <IconButton color="inherit" aria-label="Menu">
+            <MenuIcon />
+          </IconButton>
+        </div>
       </Toolbar>
     </AppBar>
   );

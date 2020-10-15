@@ -35,8 +35,8 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
   const classesText = useTextStyles();
   const theme: Theme = useTheme();
   const matchesSmall = useMediaQuery("(max-width:400px)");
-  const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
   const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
+  const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
@@ -87,15 +87,15 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               noWrap
               style={{ marginRight: "25px" }}
             >
-              {matchesMd ? "indihu-mind" : "IM"}
+              {matchesLg ? "indihu-mind" : "IM"}
             </Typography>
           </div>
         </div>
-        <NavbarItems matchesMd={matchesLg} />
+        <NavbarItems matchesMd={matchesMd} />
         <div
           className={classNames({
             [classes.searchWrapper]: true,
-            [classes.searchWrapperFullWidth]: showSearch && !matchesLg
+            [classes.searchWrapperFullWidth]: showSearch && !matchesMd
           })}
         >
           <div
@@ -108,7 +108,7 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
             }}
           >
             {showSearch ? (
-              <Fade in={showSearch} timeout={500}>
+              <Fade in={showSearch} timeout={2000}>
                 <Cancel
                   color="secondary"
                   style={{
@@ -125,12 +125,11 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               />
             )}
           </div>
-          <Fade in={showSearch || matchesLg} mountOnEnter unmountOnExit>
+          <Fade in={showSearch || matchesMd} mountOnEnter unmountOnExit>
             <div className={classNames(classes.search, classesText.textGrey)}>
               <form style={{ position: "relative" }} onSubmit={onSubmit}>
                 <InputBase
-                  className={classes.searchInput}
-                  onFocus={() => setShowSearchIcon(true)}
+                  onFocus={() => setShowSearchIcon(false)}
                   onBlur={() => setShowSearchIcon(true)}
                   inputRef={searchRef}
                   value={search}
@@ -141,7 +140,7 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
                     input: classes.inputInput
                   }}
                 />
-                {matchesLg && (
+                {matchesMd && (
                   <SearchIcon
                     color="inherit"
                     className={classNames({
@@ -155,14 +154,13 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
                       right: "10px",
                       cursor: "pointer"
                     }}
-                    onClick={onSubmit}
                   />
                 )}
               </form>
             </div>
           </Fade>
-          {!(showSearch && !matchesLg) && <NavbarUser matchesMd={matchesLg} />}
-          {matchesLg && <DeleteCards />}
+          {!(showSearch && !matchesMd) && <NavbarUser matchesMd={matchesMd} />}
+          {matchesMd && <DeleteCards />}
         </div>
       </Toolbar>
     </AppBar>

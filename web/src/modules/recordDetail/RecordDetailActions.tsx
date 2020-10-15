@@ -20,13 +20,13 @@ import { onDeleteRecord } from "../records/_utils";
 interface RecordDetailActionsProps {
   record: RecordProps;
   history: any;
-  refresh: () => void;
+  loadRecord: () => void;
 }
 
 export const RecordDetailActions: React.FC<RecordDetailActionsProps> = ({
   record,
   history,
-  refresh
+  loadRecord
 }) => {
   const classes = useStyles();
   const classesLayout = useLayoutStyles();
@@ -60,13 +60,13 @@ export const RecordDetailActions: React.FC<RecordDetailActionsProps> = ({
         </IconButton>
       </Tooltip>
       <Popconfirm
-        Button={
+        Button={() => (
           <Tooltip title="Smazat">
             <IconButton className={classes.iconSecondary}>
               <Delete color="inherit" />
             </IconButton>
           </Tooltip>
-        }
+        )}
         confirmText="Smazat?"
         onConfirmClick={() => {
           handleDelete();
@@ -79,10 +79,9 @@ export const RecordDetailActions: React.FC<RecordDetailActionsProps> = ({
           <RecordsForm
             setShowModal={setShowModal}
             record={record}
-            afterEdit={refresh}
+            afterEdit={loadRecord}
           />
         }
-        fullSize={true}
       />
     </div>
   );

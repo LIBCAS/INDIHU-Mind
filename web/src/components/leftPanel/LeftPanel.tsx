@@ -11,20 +11,18 @@ import { LeftPanelContent } from "./LeftPanelContent";
 interface LeftPanelProps {
   leftPanelOpen: boolean;
   setLeftPanelOpen: any;
-  enableCards: boolean;
 }
 
 export const LeftPanel: React.FC<LeftPanelProps> = ({
   leftPanelOpen,
-  setLeftPanelOpen,
-  enableCards
+  setLeftPanelOpen
 }) => {
   const classes = useStyles();
   const theme: Theme = useTheme();
-  const matchesMd = useMediaQuery(theme.breakpoints.up("lg"));
+  const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
   return (
     <>
-      {matchesMd && enableCards ? (
+      {matchesMd ? (
         <>
           <div className={classes.drawerPlaceholder} />
           <Drawer
@@ -48,10 +46,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
           PaperProps={{ className: classes.paper }}
           // classes={{root: classes.drawerRoot}}
         >
-          <LeftPanelContent
-            setLeftPanelOpen={setLeftPanelOpen}
-            enableCards={enableCards}
-          />
+          <LeftPanelContent setLeftPanelOpen={setLeftPanelOpen} />
         </SwipeableDrawer>
       )}
     </>

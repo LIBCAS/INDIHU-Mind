@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static core.exception.BadArgument.ErrorCode.UNEXPECTED_ARGUMENT;
+
 @Service
 public class AdvancedSearchLocator {
 
@@ -30,7 +32,7 @@ public class AdvancedSearchLocator {
     public static <U extends AdvancedSearchClass> Class<U> getClassFromName(String name) {
         Pair<Class<? extends AdvancedSearchClass>, String> classWithCollectionName = SOLR_DOCUMENT_CLASSES.get(name);
         if (classWithCollectionName == null) {
-            throw new BadArgument("There is no AdvancedSearch class mapping for such name: " + name);
+            throw new BadArgument(UNEXPECTED_ARGUMENT, "There is no AdvancedSearch class mapping for such name: " + name);
         }
 
         @SuppressWarnings("unchecked")

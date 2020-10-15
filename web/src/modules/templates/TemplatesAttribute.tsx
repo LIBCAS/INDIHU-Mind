@@ -4,7 +4,6 @@ import Typography from "@material-ui/core/Typography";
 
 import { CardTemplateAttribute } from "../../types/cardTemplate";
 import { Popover } from "../../components/portal/Popover";
-import { getAttributeTypeLabel } from "../../utils/attribute";
 
 import { useStyles } from "./_templatesStyles";
 import { TemplatesAddAttribute } from "./TemplatesAddAttribute";
@@ -38,7 +37,12 @@ export const TemplatesAttribute: React.FC<TemplatesAttributeProps> = ({
                   attribute={attribute}
                   formikBag={formikBag}
                 />
-                <Typography>Typ: {getAttributeTypeLabel(type)}</Typography>
+                <Typography>
+                  Typ: {type === "STRING" && "Text"}
+                  {type === "DOUBLE" && "Číslo"}
+                  {type === "BOOLEAN" && "Boolean"}
+                  {type === "DATETIME" && "Datum"}
+                </Typography>
               </>
             );
           }}

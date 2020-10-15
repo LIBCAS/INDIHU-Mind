@@ -106,7 +106,8 @@ export const TabContentView: React.FC<TabContentProps &
               classesText.textGreyLight,
               classesText.textUppercase,
               classesText.cursor,
-              classesText.small
+              classesText.small,
+              classesSpacing.mt2
             )}
             onClick={() => setShowCards(prev => !prev)}
           >

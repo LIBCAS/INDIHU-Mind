@@ -1,10 +1,11 @@
 import React, { useState, useRef } from "react";
+import Add from "@material-ui/icons/Add";
 import { CardContentProps } from "../../../types/card";
-import MuiTooltip from "@material-ui/core/Tooltip";
-import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
-import MuiIconButton from "@material-ui/core/IconButton";
+import { ButtonGrey } from "../../../components/control/ButtonGrey";
+
 import { CardDetailContentAddLabelForm } from "./CardDetailContentAddLabelForm";
-import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+
+// import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
 
 interface CardDetailContentAddLabelProps {
   card: CardContentProps;
@@ -14,35 +15,22 @@ interface CardDetailContentAddLabelProps {
   >;
 }
 
-export const CardDetailContentAddLabel: React.FC<CardDetailContentAddLabelProps> = ({
-  card,
-  cardContent,
-  setCardContent
-}) => {
-  const classesSpacing = useSpacingStyles();
-
+export const CardDetailContentAddLabel: React.FC<
+  CardDetailContentAddLabelProps
+> = ({ card, cardContent, setCardContent }) => {
+  // const classesSpacing = useSpacingStyles();
   const [openForm, setOpenForm] = useState(false);
-
   const anchorEl = useRef(null);
-
-  const handleAddLabel = () => {
-    setOpenForm(prev => !prev);
-  };
-
   return (
-    <React.Fragment>
-      <div className={classesSpacing.mt1} ref={anchorEl}>
-        <MuiTooltip title="Přidat štítek" arrow={true}>
-          <MuiIconButton
-            style={{ marginTop: "8px" }}
-            color="primary"
-            aria-label="add-label"
-            component="span"
-            onClick={handleAddLabel}
-          >
-            <MuiAddCircleIcon fontSize="default" />
-          </MuiIconButton>
-        </MuiTooltip>
+    <>
+      <div ref={anchorEl}>
+        <ButtonGrey
+          text="Přidat štítek"
+          onClick={() => setOpenForm(prev => !prev)}
+          bold
+          inline
+          Icon={<Add fontSize="small" />}
+        />
       </div>
       {openForm && (
         <CardDetailContentAddLabelForm
@@ -54,6 +42,6 @@ export const CardDetailContentAddLabel: React.FC<CardDetailContentAddLabelProps>
           anchorEl={anchorEl}
         />
       )}
-    </React.Fragment>
+    </>
   );
 };

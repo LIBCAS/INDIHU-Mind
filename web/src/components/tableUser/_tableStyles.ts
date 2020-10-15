@@ -137,7 +137,6 @@ export const useStyles = makeStyles((theme: Theme) => ({
   },
   groupTitle: {
     marginRight: theme.spacing(1),
-    minWidth: 190,
     ["@media (min-width:1200px)"]: {
       width: "auto"
     }

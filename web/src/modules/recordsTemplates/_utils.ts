@@ -1,18 +1,13 @@
 import uuid from "uuid/v4";
-import { get, find } from "lodash";
+import { get } from "lodash";
 
 import {
   STATUS_ERROR_TEXT_SET,
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_LOADING_COUNT_CHANGE
 } from "./../../context/reducers/status";
-import {
-  RecordTemplateProps,
-  FieldsEntity
-} from "./../../types/recordTemplate";
+import { RecordTemplateProps } from "./../../types/recordTemplate";
 import { api } from "./../../utils/api";
-import { MarcEntity } from "../../types/record";
-import { specialTags, punctuation, otherTags } from "./_enums";
 
 export const onSubmitRecordTemplate = (
   values: RecordTemplateProps,
@@ -73,151 +68,83 @@ export const onDeleteRecordTemplate = (
     });
 };
 
-export const isCreator = (tag?: string) =>
-  tag === "100" || tag === "110" || tag === "700" || tag === "710";
-
-export const isIndicatorEmpty = (indicator?: string) =>
-  !indicator || indicator === "#";
-
-export const compareIndicators = (indicator1?: string, indicator2?: string) =>
-  (isIndicatorEmpty(indicator1) && isIndicatorEmpty(indicator2)) ||
-  indicator1 === indicator2;
-
-export const findMarc = (
-  fieldEntity: Omit<FieldsEntity, "type">,
-  marcFields: MarcEntity[]
-) =>
-  find(
-    marcFields,
-    ({ tag, code, indicator1, indicator2 }) =>
-      tag === fieldEntity.tag &&
-      code === fieldEntity.code &&
-      compareIndicators(indicator1, fieldEntity.indicator1) &&
-      compareIndicators(indicator2, fieldEntity.indicator2)
-  );
-
-export const getCreatorLabel = (isCorporate: boolean, code: string) => {
-  let text;
-
-  switch (code) {
-    case "e":
-      text = "Editor";
-      break;
-    default:
-      text = "Autor";
-      break;
+function indexes(source: string, find: string) {
+  if (!source) {
+    return [];
   }
+  let result = [];
 
-  return `${text}${isCorporate ? " (Název společnosti)" : ""}`;
-};
-
-export const getCreatorLabelByTag = (tag: string, code: string) =>
-  getCreatorLabel(tag === "110" || tag === "710", code);
-
-export const formatIndicator = (indicator1?: string, indicator2?: string) =>
-  !isIndicatorEmpty(indicator1)
-    ? ` ${indicator1}`
-    : !isIndicatorEmpty(indicator2)
-    ? " #"
-    : "";
-
-export const createMarcLabel = ({
-  tag,
-  code,
-  indicator1,
-  indicator2
-}: {
-  tag: string;
-  code?: string;
-  indicator1?: string;
-  indicator2?: string;
-}) =>
-  `${tag} ${code}${formatIndicator(indicator1, indicator2)}${formatIndicator(
-    indicator2,
-    indicator1
-  )}`;
-
-export const isCorporate = (value: string) => /^_/.test(value);
-
-export const clearCreatorValue = (value: string) => value.replace(/_/, "");
-
-export const clearAuthorData = (data?: string) =>
-  data ? data.replace(/#&&#/, " ") : data;
-
-export const getMarcLabel = (
-  fieldEntity: Omit<FieldsEntity, "type">,
-  marcFields: MarcEntity[]
-) => {
-  const { tag, code } = fieldEntity;
-  if (tag && code && isCreator(tag)) {
-    return getCreatorLabelByTag(tag, code);
+  for (let i = 0; i < source.length; ++i) {
+    if (source.substring(i, i + find.length) == find) {
+      result.push(i);
+    }
   }
-  return get(findMarc(fieldEntity, marcFields), "czech", "Neznámé");
-};
+  return result;
+}
 
-export const createMarcId = (m: Partial<MarcEntity>) =>
-  `MARC-${m.tag}-${m.code}${
-    !isIndicatorEmpty(m.indicator1) ? `-${m.indicator1}` : ""
-  }${!isIndicatorEmpty(m.indicator2) ? `-${m.indicator2}` : ""}`;
-
-export const parseTemplate = (
-  recordTemplate: RecordTemplateProps,
-  marcFields: MarcEntity[]
-) => {
+export const parseTemplate = (recordTemplate: RecordTemplateProps) => {
   let counts: any = {};
   let cardsInit: any[] = [];
   if (recordTemplate.fields) {
-    recordTemplate.fields.forEach(({ type, ...f }) => {
-      const isMarc = type === "MARC";
-      const id = isMarc ? createMarcId(f) : type;
-      counts[id] = get(counts, id, -1) + 1;
+    recordTemplate.fields.forEach(f => {
+      const { tag, code, customizations } = f;
+      counts[tag] = get(counts, tag, -1) + 1;
       cardsInit.push({
-        ...f,
-        id,
-        count: counts[id],
-        text: isMarc
-          ? get(findMarc(f, marcFields), "czech", "Neznámé")
-          : get(
-              find(
-                [...specialTags, ...punctuation, ...otherTags],
-                ({ id }) => id === type
-              ),
-              "text",
-              "Neznámé"
-            )
+        id: tag,
+        count: counts[tag],
+        text: tag,
+        code,
+        customizations
       });
     });
   }
 
+  const { pattern } = recordTemplate;
+  const text = pattern.split("${?}");
+  let count = 0;
+  let cardIndex = -1;
+  let isPrevTag = false;
+  let isPrevText = false;
+  let isFirst = true;
+  text.forEach((t, i) => {
+    if (t === "") {
+      isPrevTag = true;
+      cardIndex += 1;
+      isPrevText = false;
+    } else {
+      if (isFirst && isPrevTag) {
+        cardIndex -= 1;
+      }
+      isFirst = false;
+      if (isPrevText) {
+        cardIndex += 1;
+      }
+      if (isPrevTag) {
+        cardIndex += 1;
+      }
+      isPrevTag = false;
+      isPrevText = true;
+      cardIndex += 1;
+      cardsInit.splice(cardIndex, 0, {
+        id: "customizations",
+        text: t,
+        count
+      });
+      count += 1;
+    }
+  });
   let initValuesParsed: any = {};
-  cardsInit.forEach(c =>
-    [
-      "customizations",
-      ...(c.id === "AUTHOR"
-        ? ["firstNameFormat", "multipleAuthorsFormat", "orderFormat"]
-        : [])
-    ].map(path => {
-      initValuesParsed[c.id + c.count + path] = get(c, path);
-    })
-  );
+  cardsInit.forEach(c => {
+    if (c.id === "customizations") {
+      initValuesParsed[c.id + c.count] = c.text;
+    } else {
+      initValuesParsed[c.id + c.count + "code"] = c.code;
+      initValuesParsed[c.id + c.count + "customizations"] = c.customizations;
+    }
+  });
   initValuesParsed.name = recordTemplate.name;
-
   return {
     cardsInit,
     initValuesParsed
   };
 };
-
-export const createStyle = (customizations: string[], style = {}) =>
-  ({
-    ...style,
-    ...(customizations.includes("BOLD") && {
-      fontWeight: 600
-    }),
-    ...(customizations.includes("ITALIC") && {
-      fontStyle: "italic"
-    }),
-    ...(customizations.includes("UPPERCASE") && {
-      textTransform: "uppercase"
-    })
-  } as any);

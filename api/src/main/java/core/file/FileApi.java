@@ -1,7 +1,6 @@
 package core.file;
 
 import core.Changed;
-import core.exception.BadArgument;
 import core.exception.MissingObject;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +15,9 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.notNull;
 
 /**
@@ -25,7 +26,7 @@ import static core.util.Utils.notNull;
 @Slf4j
 @RestController
 @ApiIgnore("Not used in the project")
-@Api(value = "file", description = "Api for accessing and storing files")
+@Api(value = "File Api for accessing and storing files")
 @RequestMapping("/api/files")
 @Changed("content extraction and indexation not supported")
 public class FileApi {
@@ -53,7 +54,7 @@ public class FileApi {
                                                         @PathVariable("id") String id) {
 
         FileRef file = repository.get(id);
-        notNull(file, () -> new MissingObject(FileRef.class, id));
+        notNull(file, () -> new MissingObject(ENTITY_IS_NULL, FileRef.class, id));
 
         return ResponseEntity
                 .ok()
@@ -94,7 +95,7 @@ public class FileApi {
             return repository.create(stream, filename, contentType);
 
         } catch (IOException e) {
-            throw new BadArgument("file");
+            throw new UncheckedIOException(e);
         }
     }
 

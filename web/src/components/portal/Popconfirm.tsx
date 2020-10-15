@@ -1,16 +1,20 @@
 import React, { useRef, useState } from "react";
-import MuiTooltip from "@material-ui/core/Tooltip";
+import Tooltip from "@material-ui/core/Tooltip";
+import MaterialButton from "@material-ui/core/Button";
+import Typography from "@material-ui/core/Typography";
+import classNames from "classnames";
 
-import { Popoverconfirm } from "./Popoverconfirm";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+
+import { Popover } from "./Popover";
 
 interface PopconfirmProps {
-  Button: React.ReactNode;
+  Button: any;
   confirmText: string;
   onConfirmClick: any;
   tooltip?: string;
   acceptText?: string;
   cancelText?: string;
-  onOpenCallback?: Function;
 }
 
 export const Popconfirm: React.FC<PopconfirmProps> = ({
@@ -19,42 +23,76 @@ export const Popconfirm: React.FC<PopconfirmProps> = ({
   confirmText,
   acceptText,
   cancelText,
-  onConfirmClick,
-  onOpenCallback
+  onConfirmClick
 }) => {
+  const classesLayout = useLayoutStyles();
   const [open, setOpen] = useState(false);
-
-  const ref = useRef(null);
-
+  const buttonRef = useRef(null);
   return (
-    <React.Fragment>
+    <>
       <span
         style={{ display: "flex", alignItems: "center" }}
-        ref={ref}
+        ref={buttonRef}
         onClick={e => {
           e.stopPropagation();
           setOpen(prev => !prev);
-          onOpenCallback && onOpenCallback();
         }}
       >
-        {(tooltip && (
-          <MuiTooltip title={tooltip}>
-            <div>{Button}</div>
-          </MuiTooltip>
-        )) || <React.Fragment>{Button}</React.Fragment>}
+        {tooltip ? (
+          <Tooltip title={tooltip}>
+            <div>
+              <Button />
+            </div>
+          </Tooltip>
+        ) : (
+          <Button />
+        )}
       </span>
 
-      <Popoverconfirm
-        {...{
-          ref,
-          open,
-          setOpen,
-          confirmText,
-          acceptText,
-          cancelText,
-          onConfirmClick
-        }}
+      <Popover
+        open={open}
+        setOpen={setOpen}
+        anchorEl={buttonRef.current}
+        autoWidth
+        content={
+          <div style={{ padding: "5px" }}>
+            <Typography
+              style={{ marginTop: "5px" }}
+              align="center"
+              gutterBottom
+            >
+              {confirmText}
+            </Typography>
+            <div
+              className={classNames(
+                classesLayout.flex,
+                classesLayout.justifyCenter,
+                classesLayout.halfItems
+              )}
+            >
+              <MaterialButton
+                color="secondary"
+                onClick={e => {
+                  setOpen(false);
+                  onConfirmClick(e);
+                }}
+                size="small"
+              >
+                {acceptText ? acceptText : "Smazat"}
+              </MaterialButton>
+              <MaterialButton
+                onClick={e => {
+                  e.stopPropagation();
+                  setOpen(false);
+                }}
+                size="small"
+              >
+                {cancelText ? cancelText : "Zrušit"}
+              </MaterialButton>
+            </div>
+          </div>
+        }
       />
-    </React.Fragment>
+    </>
   );
 };

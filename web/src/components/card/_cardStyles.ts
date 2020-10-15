@@ -3,22 +3,6 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 
 export const useStyles = makeStyles((theme: Theme) => {
   return {
-    customScrollbar: {
-      "& *": {
-        "&::-webkit-scrollbar": {
-          width: "6px",
-          height: "6px",
-          backgroundColor: "#F5F5F5"
-        },
-        "&::-webkit-scrollbar-track": {
-          "-webkit-box-shadow": "inset 0 0 6px rgba(0,0,0,0.3)",
-          backgroundColor: "#F5F5F5"
-        },
-        "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "#093d77"
-        }
-      }
-    },
     category: {
       display: "inline-block",
       fontWeight: 800,
@@ -31,10 +15,13 @@ export const useStyles = makeStyles((theme: Theme) => {
       }
     },
     label: {
+      display: "inline-flex",
+      alignItems: "center",
       color: theme.greyDark,
-      background: theme.palette.grey[300],
-      padding: "4px 8px",
-      borderRadius: 14,
+      padding: theme.spacing(0.5),
+      marginRight: theme.spacing(1.5),
+      background: theme.greyLightUltra,
+      borderRadius: "10px",
       cursor: "pointer"
     },
     labelText: {
@@ -55,15 +42,13 @@ export const useStyles = makeStyles((theme: Theme) => {
     cardLinked: {
       height: "140px",
       width: "100%",
+      marginTop: theme.spacing(1.5),
       borderTop: `1px solid ${theme.greyLight}`,
       borderLeft: `1px solid ${theme.greyLight}`,
       borderRight: `1px solid ${theme.greyLight}`,
       borderTopLeftRadius: "5px",
       borderTopRightRadius: "5px",
-      padding: theme.spacing(2),
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between"
+      padding: "12px 8px"
     },
 
     cardLinkedNote: {
@@ -71,7 +56,8 @@ export const useStyles = makeStyles((theme: Theme) => {
       background:
         "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 100%)",
       backgroundClip: "text",
-      "-webkit-background-clip": "text"
+      "-webkit-background-clip": "text",
+      color: "transparent"
     },
     cardLinkedButton: {
       borderTop: `1px solid ${theme.greyLight}`,
@@ -85,22 +71,6 @@ export const useStyles = makeStyles((theme: Theme) => {
       borderTopRightRadius: "0",
       borderBottomLeftRadius: "5px",
       borderBottomRightRadius: "5px"
-    },
-    cardTileLabelsContainer: {
-      overflow: "auto",
-      flexShrink: 0,
-      whiteSpace: "nowrap"
-    },
-    cardTileTitle: {
-      width: "100%",
-      overflow: "auto",
-      minHeight: "20%",
-      maxHeight: "80%",
-      flexShrink: 1
-    },
-    cardTileNote: {
-      minHeight: "20%",
-      flexShrink: 1
     }
   };
 });

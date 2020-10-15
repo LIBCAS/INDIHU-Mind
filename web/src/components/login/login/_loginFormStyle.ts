@@ -4,20 +4,14 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 export const useStyles = makeStyles((theme: Theme) => {
   return {
     form: {
-      marginBottom: 10
+      marginBottom: "10px"
     },
     field: {
-      marginBottom: 15
+      marginBottom: "15px"
     },
-    buttons: {
-      marginTop: 15,
-      display: "flex",
-      alignItems: "center"
-    },
-    link: {
-      marginLeft: 15,
-      textDecoration: "underline",
-      cursor: "pointer"
+    submit: {
+      marginTop: "15px",
+      borderRadius: "0"
     }
   };
 });

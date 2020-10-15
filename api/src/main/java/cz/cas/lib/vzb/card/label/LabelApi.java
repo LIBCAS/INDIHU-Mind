@@ -18,6 +18,9 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import java.util.Collection;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_FAILED_COMPARISON;
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.eq;
 import static core.util.Utils.notNull;
 import static cz.cas.lib.vzb.util.ResponseContainer.LIST;
@@ -37,7 +40,7 @@ public class LabelApi {
     public Label save(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id,
                       @ApiParam(value = "Single instance", required = true)
                       @RequestBody Label request) {
-        eq(id, request.getId(), () -> new BadArgument("id"));
+        eq(id, request.getId(), () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "id != dto.id"));
         return service.save(request);
     }
 
@@ -46,8 +49,8 @@ public class LabelApi {
     @DeleteMapping(value = "/{id}")
     public void delete(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
         Label entity = service.find(id);
-        notNull(entity, () -> new MissingObject(Label.class, id));
-        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Label.class, id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, Label.class, id));
+        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Label.class, id));
         service.delete(entity);
     }
 
@@ -55,7 +58,7 @@ public class LabelApi {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Label get(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
         Label entity = service.find(id);
-        notNull(entity, () -> new MissingObject(Label.class, id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, Label.class, id));
 
         return entity;
     }

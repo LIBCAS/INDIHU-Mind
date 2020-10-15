@@ -1,8 +1,8 @@
 package cz.cas.lib.vzb;
 
 import core.exception.GeneralException;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
 import cz.cas.lib.vzb.reference.marc.record.Datafield;
-import cz.cas.lib.vzb.reference.marc.record.MarcRecord;
 import cz.cas.lib.vzb.reference.marc.template.field.FieldAuthor;
 import cz.cas.lib.vzb.reference.marc.template.field.author.FirstNameFormat;
 import cz.cas.lib.vzb.reference.marc.template.field.author.HumanAuthor;
@@ -181,7 +181,7 @@ public class FieldAuthorTest {
         Datafield f100 = new Datafield("100", 'a', "Doe" + AUTHOR_NAME_ENCODING + "John");
         Datafield f700_3 = new Datafield("700", 'a', "Novák" + AUTHOR_NAME_ENCODING + "Josef");
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Two human authors");
         record.setDataFields(asList(f100, f700_3));
 
@@ -200,7 +200,7 @@ public class FieldAuthorTest {
         Datafield f100 = new Datafield("100", 'a', "Doe" + AUTHOR_NAME_ENCODING + "John");
         Datafield f700_3 = new Datafield("700", 'a', "Novák" + AUTHOR_NAME_ENCODING + "Josef");
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Two human authors");
         record.setDataFields(asList(f100, f700_3));
 
@@ -219,7 +219,7 @@ public class FieldAuthorTest {
         Datafield f100 = new Datafield("100", 'a', "Doe" + AUTHOR_NAME_ENCODING + "John");
         Datafield f700_3 = new Datafield("700", 'a', "Novák" + AUTHOR_NAME_ENCODING + "Josef");
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Two human authors");
         record.setDataFields(asList(f100, f700_3));
 
@@ -238,7 +238,7 @@ public class FieldAuthorTest {
         Datafield f100 = new Datafield("100", 'a', "Doe" + AUTHOR_NAME_ENCODING + "John");
         Datafield f700_3 = new Datafield("700", 'a', "Novák" + AUTHOR_NAME_ENCODING + "Josef");
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Two human authors");
         record.setDataFields(asList(f100, f700_3));
 
@@ -257,7 +257,7 @@ public class FieldAuthorTest {
         Datafield f110 = new Datafield("110", 'a', "inQool");
         Datafield f710_1 = new Datafield("710", 'a', "Ghostronics");
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Two company authors");
         record.setDataFields(asList(f110, f710_1));
 
@@ -277,7 +277,7 @@ public class FieldAuthorTest {
         Datafield f100 = new Datafield("100", 'a', "Doe" + AUTHOR_NAME_ENCODING + "John");
         Datafield f710 = new Datafield("710", 'a', "inQool");
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Primary Human, other company");
         record.setDataFields(asList(f100, f710));
 
@@ -296,7 +296,7 @@ public class FieldAuthorTest {
         Datafield f110 = new Datafield("110", 'a', "inQool");
         Datafield f700 = new Datafield("700", 'a', "Novák" + AUTHOR_NAME_ENCODING + "Josef");
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Priamry company, other human");
         record.setDataFields(asList(f110, f700));
 
@@ -312,7 +312,7 @@ public class FieldAuthorTest {
 
 
     private FieldAuthor setupAuthorField(boolean primaryHuman, FirstNameFormat firstNameFormat, MultipleAuthorsFormat multipleAuthorsFormat, OrderFormat orderFormat) {
-        MarcRecord record;
+        Citation record;
         if (primaryHuman) record = recordWithHumanPrimaryAuthor();
         else record = recordWithCompanyPrimaryAuthor();
 
@@ -325,7 +325,7 @@ public class FieldAuthorTest {
         return fieldAuthor;
     }
 
-    private MarcRecord recordWithHumanPrimaryAuthor() {
+    private Citation recordWithHumanPrimaryAuthor() {
         Datafield f100 = new Datafield("100", 'a', "Doe" + AUTHOR_NAME_ENCODING + "John");
 
         Datafield f700_1 = new Datafield("700", 'a', "Marković" + AUTHOR_NAME_ENCODING + "Marko");
@@ -337,13 +337,13 @@ public class FieldAuthorTest {
         Datafield f710_3 = new Datafield("710", 'a', "Javazo");
 
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Primary Author: Human");
         record.setDataFields(asList(f100, f700_1, f700_2, f700_3, f710_1, f710_2, f710_3));
         return record;
     }
 
-    private MarcRecord recordWithCompanyPrimaryAuthor() {
+    private Citation recordWithCompanyPrimaryAuthor() {
         Datafield f110 = new Datafield("110", 'a', "inQool");
 
         Datafield f700_1 = new Datafield("700", 'a', "Marković" + AUTHOR_NAME_ENCODING + "Marko");
@@ -355,7 +355,7 @@ public class FieldAuthorTest {
         Datafield f710_3 = new Datafield("710", 'a', "Javazo");
 
 
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setName("Primary Author: Comapny");
         record.setDataFields(asList(f110, f700_1, f700_2, f700_3, f710_1, f710_2, f710_3));
         return record;

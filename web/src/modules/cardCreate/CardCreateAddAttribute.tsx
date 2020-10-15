@@ -2,8 +2,7 @@ import React from "react";
 import { FormikProps, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
 
-import { AttributeProps } from "../../types/attribute";
-import { AttributeTypeEnum } from "../../enums";
+import { AttributeProps, AttributeTypeProps } from "../../types/attribute";
 import { notEmpty } from "../../utils/form/validate";
 
 import { Formik } from "../../components/form/Formik";
@@ -21,6 +20,13 @@ const initialValues = {
   value: "",
   ordinalNumber: 0
 };
+
+const types: { value: AttributeTypeProps; label: string }[] = [
+  { value: "STRING", label: "Text" },
+  { value: "DOUBLE", label: "Číslo" },
+  { value: "BOOLEAN", label: "Boolean" },
+  { value: "DATETIME", label: "Datum" }
+];
 
 interface CardCreateAddAttributeProp {
   formikBagParent: any;
@@ -59,7 +65,7 @@ export const CardCreateAddAttribute: React.FC<CardCreateAddAttributeProp> = ({
                   field={field}
                   form={form}
                   label="Název"
-                  inputProps={{ autoFocus: false }}
+                  inputProps={{ autoFocus: true }}
                 />
               )}
             />
@@ -70,9 +76,9 @@ export const CardCreateAddAttribute: React.FC<CardCreateAddAttributeProp> = ({
                 <Select
                   field={field}
                   form={form}
-                  onChange={(value: any) => onChangeType(formikBag, value)}
+                  onChange={(e: any) => onChangeType(formikBag, e)}
                   label="Typ"
-                  options={AttributeTypeEnum}
+                  options={types}
                 />
               )}
             />

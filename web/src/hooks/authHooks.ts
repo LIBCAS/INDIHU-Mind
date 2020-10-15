@@ -46,7 +46,7 @@ export const useTokenRefresh = () => {
   const hasToken = token !== null;
   const handleRefreshToken = useCallback(async () => {
     if (hasToken) {
-      renewToken().then((newToken: any) => {
+      renewToken().then(newToken => {
         if (newToken === null) {
           // TODO: handle no refresh token, new token is handled by api
         }

@@ -5,10 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.InputStream;
 
@@ -47,4 +44,22 @@ public class UrlAttachmentFile extends AttachmentFile implements DownloadableAtt
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long size;
 
+    /**
+     * Defines choice of user whether to store URL file or only keep a link to the document.
+     */
+    @Enumerated(value = EnumType.STRING)
+    UrlDocumentLocation location = UrlDocumentLocation.WEB;
+
+
+    @Override
+    public boolean shouldBeInServerStorage() {
+        return location == UrlDocumentLocation.SERVER;
+    }
+
+    public enum UrlDocumentLocation {
+        /** URL file is downloaded to storage; download action in FE should transfer file */
+        SERVER,
+        /** URL file is only referenced by link and not stored in server's storage; FE only opens a link in browser */
+        WEB
+    }
 }

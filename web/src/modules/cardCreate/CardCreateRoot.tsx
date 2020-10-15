@@ -7,14 +7,13 @@ import IconButton from "@material-ui/core/IconButton";
 import { templateGet } from "../../context/actions/template";
 import { GlobalContext, StateProps } from "../../context/Context";
 import { CardTemplateAttribute } from "../../types/cardTemplate";
-import { CardProps } from "../../types/card";
 import { Modal } from "../../components/portal/Modal";
 import { api } from "../../utils/api";
-import { getAttributeTypeDefaultValue } from "../../utils/attribute";
+import { CardProps } from "../../types/card";
 
 import { CardCreateForm, InitValuesProps } from "./CardCreateForm";
 import { CardCreateTemplate } from "./CardCreateTemplate";
-import { parseLabel, flattenCategory } from "./_utils";
+import { defaultValue, parseLabel, flattenCategory } from "./_utils";
 
 import { useStyles as useEffectStyles } from "../../theme/styles/effectStyles";
 import { useStyles } from "./_cardCreateStyles";
@@ -26,7 +25,6 @@ interface CardCreateRootProps {
   selectedRow?: CardProps;
   edit?: boolean;
   afterEdit?: Function;
-  attributeTemplates?: CardTemplateAttribute[];
 }
 
 export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
@@ -34,8 +32,7 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
   setShowModal,
   selectedRow,
   edit,
-  afterEdit,
-  attributeTemplates
+  afterEdit
 }) => {
   const classes = useStyles();
 
@@ -63,46 +60,25 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
     templateGet(dispatch);
   };
 
-  const setAttributes = (attributes: CardTemplateAttribute[]) => {
-    const transformed = attributes.map(a => ({
-      ...a,
-      value: getAttributeTypeDefaultValue(a.type)
-    }));
-    setInitValues(() => ({
-      id: "",
-      name: "",
-      note: "",
-      categories: [],
-      labels: [],
-      attributes: transformed,
-      linkedCards: [],
-      records: []
-    }));
-    setType("create");
-  };
-
   const loadCardContent = () => {
-    if (selectedRow) {
-      api()
-        .get(`card/${selectedRow.id}/content`)
-        .json()
-        .then((res: any) => {
-          if (res.length > 0 && res[0].card) {
-            const card = res[0].card;
-            const init = {
-              ...card,
-              attributes: res[0].attributes,
-              labels: card.labels.map(parseLabel),
-              categories: flattenCategory(card.categories),
-              cardContentId: res[0].id
-            };
-            setInitValues(init);
-          }
-          return;
-        });
-    } else if (attributeTemplates && attributeTemplates.length) {
-      setAttributes(attributeTemplates);
-    }
+    if (!selectedRow) return;
+    api()
+      .get(`card/${selectedRow.id}/content`)
+      .json()
+      .then((res: any) => {
+        if (res.length > 0 && res[0].card) {
+          const card = res[0].card;
+          const init = {
+            ...card,
+            attributes: res[0].attributes,
+            labels: card.labels.map(parseLabel),
+            categories: flattenCategory(card.categories),
+            cardContentId: res[0].id
+          };
+          setInitValues(init);
+        }
+        return;
+      });
   };
 
   // common template has no owner
@@ -123,6 +99,24 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
     }
   }, [selectedRow, showModal]);
 
+  const setAttributes = (attributes: CardTemplateAttribute[]) => {
+    const transformed = attributes.map(a => ({
+      ...a,
+      value: defaultValue(a.type)
+    }));
+    setInitValues(() => ({
+      id: "",
+      name: "",
+      note: "",
+      categories: [],
+      labels: [],
+      attributes: transformed,
+      linkedCards: [],
+      records: []
+    }));
+    setType("create");
+  };
+
   /**
    * It handles modal closing. If the truth is returned, the modal closes and vice versa
    * @returns boolean
@@ -139,7 +133,7 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
    */
   const handleConfirmModalClose = () => {
     setShowCloseConfirmModal(false);
-    return true;
+    return false;
   };
 
   /**
@@ -167,8 +161,6 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
         open={showModal}
         setOpen={setShowModal}
         onClose={handleModalClose}
-        disableEnforceFocus={true}
-        fullSize={true}
         content={
           <React.Fragment>
             {type === "create" && (

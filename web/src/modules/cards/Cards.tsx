@@ -20,7 +20,6 @@ import { Table } from "../../components/tableCard/Table";
 import { CardsTableDetail } from "../cardsTableDetail/CardsTableDetail";
 
 import { CardCreateRoot } from "../cardCreate/CardCreateRoot";
-import { CardCreateButton } from "../cardCreate/CardCreateButton";
 import { useStyles as useEffectStyles } from "../../theme/styles/effectStyles";
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
@@ -31,21 +30,13 @@ import { CardsTile } from "./CardsTile";
 import { onDeleteCard } from "../../utils/card";
 import { getPathToCategory } from "./_utils";
 import { columns } from "./_utils";
-import * as store from "../../utils/store";
-import _ from "lodash";
 
 const baseUrl = "card/parametrized";
-const storeViewPath = "cards-view";
-
-enum ViewType {
-  TILE = "TILE",
-  TABLE = "TABLE"
-}
 
 export const Cards: React.FC<RouteComponentProps> = () => {
   const theme: Theme = useTheme();
 
-  const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
+  const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
 
   const matches1400 = useMediaQuery("(min-width:1400px)");
 
@@ -67,18 +58,7 @@ export const Cards: React.FC<RouteComponentProps> = () => {
 
   const dispatch: Function = context.dispatch;
 
-  const storedView = store.get(storeViewPath);
-
-  const [view, setView] = useState<ViewType>(
-    storedView === ViewType.TILE || storedView === ViewType.TABLE
-      ? storedView
-      : ViewType.TABLE
-  );
-
-  const changeView = (value: ViewType) => {
-    store.set(storeViewPath, value);
-    setView(value);
-  };
+  const [view, setView] = useState<"tile" | "table">("table");
 
   const [query, setQuery] = useState<any>({});
 
@@ -98,10 +78,6 @@ export const Cards: React.FC<RouteComponentProps> = () => {
     }
     setQuery(query);
   }, [state.search.category, state.search.label]);
-
-  const isTable = view === ViewType.TABLE;
-  const Icon = isTable ? ViewModule : ViewHeadline;
-
   return (
     <Fade in>
       <Grid container spacing={0}>
@@ -110,8 +86,7 @@ export const Cards: React.FC<RouteComponentProps> = () => {
           style={{
             flexGrow: 1,
             maxWidth: "100%",
-            width: selectedCard ? (matchesLg ? "55%" : "auto") : "auto",
-            overflowX: "hidden"
+            width: selectedCard ? (matchesMd ? "55%" : "auto") : "auto"
           }}
         >
           <div
@@ -164,22 +139,36 @@ export const Cards: React.FC<RouteComponentProps> = () => {
                 classesText.textGrey
               )}
             >
-              <Tooltip title={isTable ? "Dlaždice" : "Tabulka"}>
+              <Tooltip title="Dlaždice">
                 <IconButton
-                  style={{ color: theme.blackIconColor }}
+                  className={classNames({
+                    [classesText.textGrey]: view === "tile",
+                    [classesText.textGreyLight]: view !== "tile"
+                  })}
                   onClick={() => {
-                    changeView(isTable ? ViewType.TILE : ViewType.TABLE);
+                    setSelectedCard(undefined);
+                    setView("tile");
                   }}
                 >
-                  <Icon fontSize="large" color="inherit" />
+                  <ViewModule fontSize="large" color="inherit" />
                 </IconButton>
               </Tooltip>
-              <div className={classesSpacing.ml1} />
-              <CardCreateButton />
-              <div className={classesSpacing.ml1} />
+              <Tooltip title="Tabulka">
+                <IconButton
+                  onClick={() => {
+                    setView("table");
+                  }}
+                  className={classNames({
+                    [classesText.textGrey]: view === "table",
+                    [classesText.textGreyLight]: view !== "table"
+                  })}
+                >
+                  <ViewHeadline fontSize="large" color="inherit" />
+                </IconButton>
+              </Tooltip>
             </div>
           </div>
-          {isTable ? (
+          {view === "table" && (
             <Table
               baseUrl={baseUrl}
               query={query}
@@ -189,9 +178,8 @@ export const Cards: React.FC<RouteComponentProps> = () => {
               handleDelete={handleDelete}
               Menu={CardCreateRoot}
             />
-          ) : (
-            <CardsTile query={query} />
           )}
+          {view === "tile" && <CardsTile />}
         </Grid>
         {selectedCard && matches1400 && (
           <Grid

@@ -62,4 +62,13 @@ public interface DownloadableAttachment {
      */
     void setSize(Long size);
 
+    /**
+     * Verifying check whether to initialize a download from server's storage.
+     *
+     * @return true if document is present in server's filesystem
+     */
+    default boolean shouldBeInServerStorage() {
+        return true;
+    }
+
 }

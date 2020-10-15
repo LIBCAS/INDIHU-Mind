@@ -56,39 +56,12 @@ export const useStyles = makeStyles((theme: Theme) => {
         maxHeight: "95vh"
       }
     },
-    modalContentWrapperFull: {
-      maxHeight: "90vh",
-      minHeight: "90vh",
-      maxWidth: "90vw",
-      minWidth: "90vw",
-      [theme.breakpoints.up("md")]: {
-        maxHeight: "85vh",
-        minHeight: "85vh",
-        maxWidth: "85vw",
-        minWidth: "85vw"
-      }
-    },
     modalContent: {
       position: "relative",
       // overflowX: "visible",
       overflowX: "hidden",
       overflowY: "auto",
       background: "#fff"
-    },
-    modalContentFull: {
-      maxHeight: "90vh",
-      minHeight: "90vh",
-      maxWidth: "90vw",
-      minWidth: "90vw",
-      [theme.breakpoints.up("md")]: {
-        maxHeight: "85vh",
-        minHeight: "85vh",
-        maxWidth: "85vw",
-        minWidth: "85vw"
-      }
-    },
-    modalWithPadding: {
-      padding: theme.spacing(2)
     }
   };
 });

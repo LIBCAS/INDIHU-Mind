@@ -32,6 +32,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static core.exception.MissingObject.ErrorCode.FILE_IS_MISSING;
+
 public class Utils {
     public static <T, U> List<U> map(List<T> objects, Function<T, U> func) {
         if (objects != null) {
@@ -66,8 +68,25 @@ public class Utils {
         return map;
     }
 
+    public static <T, U> Map<T, U> asMap(T key1, U value1, T key2, U value2, T key3, U value3) {
+        Map<T, U> map = new LinkedHashMap<>();
+        map.put(key1, value1);
+        map.put(key2, value2);
+        map.put(key3, value3);
+        return map;
+    }
+
+    public static <T, U> Map<T, U> asMap(T key1, U value1, T key2, U value2, T key3, U value3, T key4, U value4) {
+        Map<T, U> map = new LinkedHashMap<>();
+        map.put(key1, value1);
+        map.put(key2, value2);
+        map.put(key3, value3);
+        map.put(key4, value4);
+        return map;
+    }
+
     public static <T> List<T> asList(Collection<T> a) {
-        return a.stream().collect(Collectors.toList());
+        return new ArrayList<>(a);
     }
 
     public static <T> List<T> asList(T... a) {
@@ -323,7 +342,7 @@ public class Utils {
             ByteSource source = Resources.asByteSource(url);
             return source.openStream();
         } catch (IllegalArgumentException ex) {
-            throw new MissingObject("template", path);
+            throw new MissingObject(FILE_IS_MISSING, "template");
         }
     }
 
@@ -332,7 +351,7 @@ public class Utils {
             URL url = Resources.getResource(path);
             return Resources.toByteArray(url);
         } catch (IllegalArgumentException ex) {
-            throw new MissingObject("template", path);
+            throw new MissingObject(FILE_IS_MISSING, "template");
         }
     }
 
@@ -341,7 +360,7 @@ public class Utils {
             URL url = Resources.getResource(path);
             return Resources.toString(url, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException ex) {
-            throw new MissingObject("template", path);
+            throw new MissingObject(FILE_IS_MISSING, "template");
         }
     }
 

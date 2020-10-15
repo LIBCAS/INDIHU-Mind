@@ -1,17 +1,28 @@
 import { api } from "../../utils/api";
+import { OrderProps } from "./_types";
 // import { UserProps } from "../../types/user";
 
-interface RequestProps {
-  page: number;
-  pageSize: number;
-  sorting?: any[];
-}
+export const changeRequest = (
+  setRequest: Function,
+  baseUrl: string,
+  order: OrderProps,
+  page: number,
+  rowsPerPage: number
+) => {
+  // page++;
+  let baseQuery = `page=${page}&pageSize=${rowsPerPage}`;
+  if (order.column !== "") {
+    baseQuery += `&sorting[0].order=${order.direction}&sorting[0].sort=${order.column}`;
+  }
+  baseQuery = encodeURI(baseQuery);
+  const newRequest = baseUrl + baseQuery;
+  setRequest(newRequest);
+};
 
 let controller = new AbortController();
 
 export const changeData = (
-  url: string,
-  request: RequestProps,
+  request: string,
   setData: Function,
   loading: boolean,
   setLoading: Function
@@ -23,14 +34,14 @@ export const changeData = (
   // setLoading(false);
   // setData(sample);
   api()
-    .post(url, { signal: controller.signal, json: request })
+    .get(request, { signal: controller.signal })
     .json()
     .then((res: any) => {
       setLoading(false);
       setData(res);
     })
     // TODO error
-    .catch((err: any) => {
+    .catch(err => {
       if (err.name === "AbortError") {
         // fetch aborted, do nothing
         return;

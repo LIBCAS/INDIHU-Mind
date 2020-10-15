@@ -4,7 +4,6 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import * as Yup from "yup";
 import uuid from "uuid/v4";
-import { get } from "lodash";
 
 import { GlobalContext } from "../../context/Context";
 import {
@@ -54,7 +53,7 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
     cardsCount: 0
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<boolean | string>(false);
+  const [error, setError] = useState(false);
   useEffect(() => {
     if (name) {
       setInitialValues({
@@ -95,7 +94,7 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
         json: request
       })
       .json<CategoryProps>()
-      .then((res: any) => {
+      .then(res => {
         setLoading(false);
         dispatch({
           type: STATUS_ERROR_TEXT_SET,
@@ -105,19 +104,16 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
         loadCategories(res);
         setOpen(false);
       })
-      .catch(err => {
+      .catch(() => {
         setLoading(false);
-        setError(
-          get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
-            ? "Kategorie se zvoleným názvem již existuje."
-            : true
-        );
+        setError(true);
+        setOpen(false);
       });
   };
   return (
     <>
       <Loader loading={loading} />
-      {error && <MessageSnackbar setVisible={setError} message={error} />}
+      {error && <MessageSnackbar setVisible={setError} />}
       <Formik
         initialValues={initialValues}
         enableReinitialize
@@ -161,7 +157,7 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
                     label="Název"
                     field={field}
                     form={form}
-                    autoFocus={false}
+                    autoFocus
                   />
                 )}
               />

@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import classNames from "classnames";
-import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
-import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
 import KeyboardArrowUp from "@material-ui/icons/KeyboardArrowUp";
+import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
 import Collapse from "@material-ui/core/Collapse";
 
 import { CategoryProps } from "../../types/category";
@@ -12,20 +11,17 @@ import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles"
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 
 import { CategoriesPopover } from "./CategoriesPopover";
-import Paper from "@material-ui/core/Paper";
-import { theme } from "../../theme/theme";
-import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 interface CategoriesItemProps {
   category: CategoryProps;
   loadCategories: Function;
-  isSubCategory?: boolean;
+  isLast?: boolean;
 }
 
 export const CategoriesItem: React.FC<CategoriesItemProps> = ({
   category,
-  loadCategories,
-  isSubCategory
+  isLast,
+  loadCategories
 }) => {
   const { name, subCategories } = category;
   const [open, setOpen] = useState(false);
@@ -33,10 +29,8 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
   const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
   const classesText = useTextStyles();
-
   const hasSubCategories =
     category.subCategories && category.subCategories.length > 0;
-  const matchesSm = useMediaQuery(theme.breakpoints.up("sm"));
 
   const handleOpen = () => {
     if (hasSubCategories) {
@@ -45,58 +39,20 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
   };
   return (
     <>
-      <Paper
+      <div
         className={classNames(classes.categoryItem, {
           [classesText.cursor]: hasSubCategories,
-          [classes.subCategoryItem]: isSubCategory,
-          [classes.categoryItemFullWidth]: open || isSubCategory,
-          [classes.categoryItemOpened]: open
+          [classes.categoryItemLast]: isLast && !open
         })}
         onClick={handleOpen}
       >
-        {" "}
-        {(open || isSubCategory) &&
-          matchesSm &&
-          subCategories &&
-          subCategories.length > 0 && (
-            <div
-              className={classNames(
-                classesSpacing.ml1,
-                classesText.icon,
-                classesText.iconBig,
-                {
-                  [classesText.iconChangedBg]: open
-                }
-              )}
-            >
-              {!open ? (
-                <KeyboardArrowRight fontSize="inherit" />
-              ) : (
-                <KeyboardArrowDown fontSize="inherit" />
-              )}
-            </div>
-          )}
-        <div
-          className={classNames(classes.categoryName, {
-            [classes.categoryNameClosed]:
-              (!open && !isSubCategory) || !matchesSm
-          })}
-        >
-          {name}
-          {(!open && !isSubCategory) || !matchesSm ? (
-            <CategoriesPopover
-              iconBgChange={open}
-              category={category}
-              loadCategories={loadCategories}
-            />
-          ) : null}
-        </div>
+        <div className={classes.categoryName}>{name}</div>
         <div>
           <div
             className={classNames(
               classesLayout.flex,
               classesLayout.flexWrap,
-              classes.countersContainer
+              classesLayout.justifyCenter
             )}
           >
             <div
@@ -104,20 +60,11 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
                 classesLayout.flex,
                 classesLayout.directionColumn,
                 classesLayout.alignCenter,
-                classes.counter,
-                { [classes.counterFullWidth]: true || open || isSubCategory }
+                classes.counter
               )}
             >
-              <div
-                className={classNames(classesText.textGrey, {
-                  [classesText.textGreyDark]: open || isSubCategory
-                })}
-              >
-                POČET SUBKATEGORIÍ
-              </div>
-              <div
-                className={classNames(classesText.text600, classes.countText)}
-              >
+              <div className={classesText.subtitle}>POČET SUBKATEGORIÍ</div>
+              <div>
                 {category.subCategories && category.subCategories.length}
               </div>
             </div>
@@ -126,22 +73,11 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
                 classesLayout.flex,
                 classesLayout.directionColumn,
                 classesLayout.alignCenter,
-                classes.counter,
-                { [classes.counterFullWidth]: true || open || isSubCategory }
+                classes.counter
               )}
             >
-              <div
-                className={classNames(classesText.textGrey, {
-                  [classesText.textGreyDark]: open || isSubCategory
-                })}
-              >
-                POČET KARET
-              </div>
-              <div
-                className={classNames(classesText.text600, classes.countText)}
-              >
-                {category.cardsCount}
-              </div>
+              <div className={classesText.subtitle}>POČET KARET</div>
+              <div>{category.cardsCount}</div>
             </div>
           </div>
         </div>
@@ -152,46 +88,34 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
             classes.iconsWrapper
           )}
         >
-          {(open || isSubCategory) && matchesSm ? (
-            <CategoriesPopover
-              iconBgChange={open}
-              category={category}
-              loadCategories={loadCategories}
-            />
-          ) : null}
-          {(!matchesSm || !(open || isSubCategory)) &&
-            subCategories &&
-            subCategories.length > 0 && (
-              <div
-                className={classNames(
-                  classesSpacing.ml1,
-                  classesText.icon,
-                  classesText.iconBig,
-                  {
-                    [classesText.iconChangedBg]: open
-                  }
-                )}
-              >
-                {open ? (
-                  <KeyboardArrowUp fontSize="inherit" />
-                ) : (
-                  <KeyboardArrowDown fontSize="inherit" />
-                )}
-              </div>
-            )}
+          <CategoriesPopover
+            category={category}
+            loadCategories={loadCategories}
+          />
+
+          {subCategories && subCategories.length > 0 && (
+            <div
+              className={classNames(
+                classesSpacing.ml1,
+                classesText.icon,
+                classesText.iconBig
+              )}
+            >
+              {open ? (
+                <KeyboardArrowUp fontSize="inherit" />
+              ) : (
+                <KeyboardArrowDown fontSize="inherit" />
+              )}
+            </div>
+          )}
         </div>
-      </Paper>
-      <div></div>
+      </div>
       {subCategories && subCategories.length > 0 && (
-        <Collapse
-          in={open}
-          className={classNames(classes.subCategoriesCollapse, {
-            [classes.subCategoriesCollapseRoot]: !isSubCategory
-          })}
-        >
+        <Collapse in={open}>
           <div
             className={classNames(classes.subCategoryWrapper, {
-              [classes.subCategoryLine]: subCategories.length > 0
+              [classes.subCategoryLine]: subCategories.length > 0,
+              [classes.subCategoryNotLast]: !isLast
             })}
           >
             {subCategories.map((cat, i) => (
@@ -199,7 +123,7 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
                 key={cat.id}
                 category={cat}
                 loadCategories={loadCategories}
-                isSubCategory={true}
+                isLast={subCategories.length === i + 1}
               />
             ))}
           </div>

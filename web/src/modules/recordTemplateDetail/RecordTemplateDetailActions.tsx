@@ -24,11 +24,9 @@ interface RecordTemplateDetailActionsProps {
   loadRecordTemplate: () => void;
 }
 
-export const RecordTemplateDetailActions: React.FC<RecordTemplateDetailActionsProps> = ({
-  recordTemplate,
-  history,
-  loadRecordTemplate
-}) => {
+export const RecordTemplateDetailActions: React.FC<
+  RecordTemplateDetailActionsProps
+> = ({ recordTemplate, history, loadRecordTemplate }) => {
   const classes = useStyles();
   const classesLayout = useLayoutStyles();
   const classesText = useTextStyles();
@@ -63,13 +61,13 @@ export const RecordTemplateDetailActions: React.FC<RecordTemplateDetailActionsPr
         </IconButton>
       </Tooltip>
       <Popconfirm
-        Button={
+        Button={() => (
           <Tooltip title="Smazat">
             <IconButton className={classes.iconSecondary}>
               <Delete color="inherit" />
             </IconButton>
           </Tooltip>
-        }
+        )}
         confirmText="Smazat?"
         onConfirmClick={() => {
           handleDelete();
@@ -85,7 +83,6 @@ export const RecordTemplateDetailActions: React.FC<RecordTemplateDetailActionsPr
             afterEdit={loadRecordTemplate}
           />
         }
-        fullSize={true}
       />
     </div>
   );

@@ -1,20 +1,39 @@
 package core.index;
 
-public class UnsupportedSearchParameterException extends RuntimeException {
+import core.exception.RestGeneralException;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-    public UnsupportedSearchParameterException() {
-        super();
+import java.util.Map;
+
+public class UnsupportedSearchParameterException extends RestGeneralException {
+
+    public UnsupportedSearchParameterException(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    public UnsupportedSearchParameterException(String message) {
-        super(message);
+    public UnsupportedSearchParameterException(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
     }
 
-    public UnsupportedSearchParameterException(Throwable cause) {
-        super(cause);
+    public UnsupportedSearchParameterException(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
     }
 
-    protected UnsupportedSearchParameterException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    public UnsupportedSearchParameterException(Class<?> clazz, String objectId, RestErrorCodeEnum code) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
+    }
+
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        UNSUPPORTED_PARAMETER("Nepodporovaný parametr");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
+        }
     }
 }

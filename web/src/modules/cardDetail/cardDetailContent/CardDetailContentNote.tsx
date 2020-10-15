@@ -15,7 +15,6 @@ import { CardContentProps } from "../../../types/card";
 import { onEditCard } from "./_utils";
 import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
-import { formatMultiline } from "../../../utils";
 
 interface CardDetailContentNoteProps {
   card: CardContentProps;
@@ -70,7 +69,7 @@ export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
                         <InputText
                           field={field}
                           form={form}
-                          inputProps={{ autoFocus: false, rows: 4 }}
+                          inputProps={{ autoFocus: true, rows: 4 }}
                           multiline={true}
                         />
                       )}
@@ -105,10 +104,10 @@ export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
           variant="body1"
           className={classNames(classesSpacing.mt2, classesText.cursor)}
         >
-          {formatMultiline(note)}
+          {note}
         </Typography>
       ) : card.lastVersion ? (
-        <div className={classesSpacing.mt1}>
+        <div className={classNames(classesSpacing.mt2)}>
           <ButtonGrey
             text="Přidat popis"
             onClick={() => setEdit(true)}

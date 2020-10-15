@@ -21,7 +21,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.*;
+import static cz.cas.lib.vzb.exception.NameAlreadyExistsException.ErrorCode.NAME_ALREADY_EXISTS;
 
 @Service
 @Slf4j
@@ -35,8 +38,8 @@ public class CitationService {
 
     public Citation find(String id) {
         Citation marcRecord = store.find(id);
-        notNull(marcRecord, () -> new MissingObject(Citation.class, id));
-        eq(marcRecord.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(Citation.class, id));
+        notNull(marcRecord, () -> new MissingObject(ENTITY_IS_NULL, Citation.class, id));
+        eq(marcRecord.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Citation.class, id));
 
         return marcRecord;
     }
@@ -45,25 +48,15 @@ public class CitationService {
     public Citation create(CreateCitationDto dto) {
         marcFieldsValidator.validate(dto.getDataFields());
 
-        Citation citation;
-        switch (dto.getType()) {
-            case MARC:
-                citation = new MarcRecord();
-                ((MarcRecord) citation).setDataFields(dto.getDataFields());
-                break;
-            case BRIEF:
-                citation = new BriefRecord();
-                ((BriefRecord) citation).setContent(dto.getContent());
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + dto.getType());
-        }
+        Citation citation = new Citation();
         citation.setOwner(userDelegate.getUser());
         citation.setName(dto.getName());
+        citation.setDataFields(dto.getDataFields());
+        citation.setContent(dto.getContent());
 
         // enforce addUniqueConstraint `vzb_record_of_user_uniqueness` of columnNames="name,owner_id"
         Citation nameExists = store.findEqualNameDifferentId(citation);
-        isNull(nameExists, () -> new NameAlreadyExistsException(Citation.class, nameExists.getId(), nameExists.getName(), nameExists.getOwner()));
+        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Citation.class, nameExists.getId(), nameExists.getOwner()));
 
         citation.setDocuments(asSet(documentStore.findAllInList(dto.getDocuments())));
         Citation savedRecord = store.save(citation);
@@ -82,21 +75,13 @@ public class CitationService {
         marcFieldsValidator.validate(dto.getDataFields());
 
         Citation citation = find(dto.getId());
-        switch (citation.getType()) {
-            case MARC:
-                ((MarcRecord) citation).setDataFields(dto.getDataFields());
-                break;
-            case BRIEF:
-                ((BriefRecord) citation).setContent(dto.getContent());
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + citation.getType());
-        }
         citation.setName(dto.getName());
+        citation.setDataFields(dto.getDataFields());
+        citation.setContent(dto.getContent());
 
         // enforce addUniqueConstraint `vzb_record_of_user_uniqueness` of columnNames="name,owner_id"
         Citation nameExists = store.findEqualNameDifferentId(citation);
-        isNull(nameExists, () -> new NameAlreadyExistsException(Citation.class, nameExists.getId(), nameExists.getName(), nameExists.getOwner()));
+        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Citation.class, nameExists.getId(), nameExists.getOwner()));
 
         citation.setDocuments(asSet(documentStore.findAllInList(dto.getDocuments())));
 

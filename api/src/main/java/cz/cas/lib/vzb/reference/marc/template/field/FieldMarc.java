@@ -1,7 +1,7 @@
 package cz.cas.lib.vzb.reference.marc.template.field;
 
 import core.util.Utils;
-import cz.cas.lib.vzb.reference.marc.record.MarcRecord;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
 import cz.cas.lib.vzb.reference.marc.template.Typeface;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +31,7 @@ public class FieldMarc extends TemplateField {
         this.customizations = Utils.asSet(customizations);
     }
 
-    public void initializeDataForTagAndCode(MarcRecord record, String errorMessage) {
+    public void initializeDataForTagAndCode(Citation record, String errorMessage) {
         String dataForTagAndCode = record.getDataByTagAndCode(getTag(), getCode());
         this.data = dataForTagAndCode;
 

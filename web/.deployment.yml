@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vzb-web
+  labels:
+    name: vzb-web
+    app: vzb-web
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: vzb-web
+  template:
+    metadata:
+      labels:
+        name: vzb-web
+        app: vzb-web
+    spec:
+      containers:
+        - name: vzb-web
+          image: eu.gcr.io/inqool-1301/cz.inqool.vzb/web:latest
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "32Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vzb-web
+  labels:
+    name: vzb-web
+    app: vzb-web
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    name: vzb-web
+  clusterIP:

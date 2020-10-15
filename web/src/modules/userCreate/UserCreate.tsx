@@ -19,18 +19,16 @@ export const UserCreate: React.FC = () => {
   const classesSpacing = useSpacingStyles();
 
   const [open, setOpen] = useState(false);
-  const [selctedUser, setSelectedUser] = useState<UserProps | undefined>(
+  const [seelctedUser, setSelectedUser] = useState<UserProps | undefined>(
     undefined
   );
 
   return (
     <>
-      <UserCreateModal open={open} setOpen={setOpen} />
       <div
         className={classNames(
           classesLayout.flex,
           classesLayout.alignCenter,
-          classesLayout.spaceBetween,
           classesLayout.flexWrap,
           classesSpacing.mb2,
           classesSpacing.mt1
@@ -45,16 +43,17 @@ export const UserCreate: React.FC = () => {
         <Button
           className={classes.createUserButton}
           color="primary"
-          variant="contained"
+          variant="outlined"
           onClick={() => setOpen(prev => !prev)}
         >
           Vytvořit nového uživatele
         </Button>
+        <UserCreateModal open={open} setOpen={setOpen} />
       </div>
       <TableUser
-        baseUrl="admin/users"
+        baseUrl="admin/users?"
         columns={columns}
-        selectedRow={selctedUser}
+        selectedRow={seelctedUser}
         setSelectedRow={setSelectedUser}
       />
     </>

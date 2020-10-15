@@ -19,6 +19,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.*;
 
 /**
@@ -152,8 +154,8 @@ public class NotificationService {
     @Transactional
     public void readNotification(String notificationId) {
         Notification notification = store.find(notificationId);
-        notNull(notification, () -> new MissingObject(Notification.class, notificationId));
-        eq(notification.getRecipientId(), userDetails.getId(), () -> new ForbiddenObject(notification));
+        notNull(notification, () -> new MissingObject(ENTITY_IS_NULL, Notification.class, notificationId));
+        eq(notification.getRecipientId(), userDetails.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Notification.class, notificationId));
 
         notification.setRead(true);
         this.save(notification);

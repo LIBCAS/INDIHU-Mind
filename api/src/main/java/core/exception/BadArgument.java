@@ -1,50 +1,44 @@
 package core.exception;
 
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-import core.domain.DomainObject;
-import core.rest.config.ResourceExceptionHandler;
+import java.util.Map;
 
-/**
- * @see ResourceExceptionHandler#badArgument(BadArgument)
- */
-public class BadArgument extends GeneralException {
-    private Object argument;
 
-    public BadArgument() {
-        super();
+public class BadArgument extends RestGeneralException {
+
+    public BadArgument(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    public BadArgument(Object argument) {
-        super();
-        this.argument = argument;
+    public BadArgument(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
     }
 
-    public BadArgument(Class<?> clazz, String objectId) {
-        super();
-        try {
-            this.argument = clazz.newInstance();
+    public BadArgument(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
+    }
 
-            if (DomainObject.class.isAssignableFrom(clazz)) {
-                ((DomainObject) this.argument).setId(objectId);
-            }
+    public BadArgument(RestErrorCodeEnum code, Class<?> clazz, String objectId) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
+    }
 
-        } catch (Exception e) {
-            // ignore
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        ARGUMENT_IS_NULL("Argument je NULL"),
+        ARGUMENT_FAILED_COMPARISON("Argument chyboval ve srovnání"),
+        INVALID_UUID("Neplatné UUID"),
+        UNEXPECTED_ARGUMENT("Neočekávaný argument"),
+        UNSUPPORTED_URL_FORMAT("URL odkaz není v podporovaném formátu"),
+        WRONG_MARC_FORMAT("Špatný formát MARC");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
         }
-    }
-
-    @Override
-    public String toString() {
-        if (argument != null) {
-            return "BadArgument{" +
-                    "argument=" + argument +
-                    '}';
-        } else {
-            return "BadArgument{argument not specified}";
-        }
-    }
-
-    public Object getArgument() {
-        return argument;
     }
 }

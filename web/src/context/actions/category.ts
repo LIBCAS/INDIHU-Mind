@@ -12,7 +12,7 @@ export const categoryGet = (dispatch: any) => {
   api()
     .get("category")
     .json()
-    .then((res: any) => {
+    .then(res => {
       dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: -1 });
       dispatch({ type: CATEGORY_GET, payload: res });
     })

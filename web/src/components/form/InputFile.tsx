@@ -8,17 +8,12 @@ import { FormikProps } from "formik";
 //   STATUS_ERROR_TEXT_SET
 // } from "../../context/reducers/status";
 import { FileProps } from "../../types/file";
-import { FileType } from "../../enums";
 
 interface InputFileProps {
   formikBag: FormikProps<FileProps>;
-  setFormStage: Function;
 }
 
-export const InputFile: React.FC<InputFileProps> = ({
-  formikBag,
-  setFormStage
-}) => {
+export const InputFile: React.FC<InputFileProps> = ({ formikBag }) => {
   // const context: any = useContext(GlobalContext);
   // const dispatch: Function = context.dispatch;
   const { setFieldValue } = formikBag;
@@ -27,7 +22,7 @@ export const InputFile: React.FC<InputFileProps> = ({
     if (target && target.files) {
       const files = Array.from(target.files);
       files.forEach(f => {
-        // USER_QUOTA_REACHED, FILE_TOO_BIG, FILE_FORBIDDEN
+        // USER_QUOTA_REACHED, FILE_TOO_BIG, FILE_EXTENSION_FORBIDDEN
         //  check max 10 MB & check forbidden extensions (.exe etc.)
         // const filesize = f.size / 1024 / 1024;
         // if (filesize > 10) {
@@ -40,32 +35,25 @@ export const InputFile: React.FC<InputFileProps> = ({
         // }
         const name = f.name.substr(0, f.name.lastIndexOf("."));
         setFieldValue("name", name);
-        setFieldValue("providerType", FileType.LOCAL);
+        setFieldValue("providerType", "LOCAL");
         const extension = f.name.slice(
           ((f.name.lastIndexOf(".") - 1) >>> 0) + 2
         );
         setFieldValue("type", extension);
         setFieldValue("content", f);
       });
-      setFormStage("file-selected");
     }
   };
   return (
     <>
       <input
-        disabled={formikBag.isSubmitting}
         style={{ display: "none" }}
         id="raised-button-file"
         type="file"
         onChange={onChange}
       />
       <label style={{ width: "100%" }} htmlFor="raised-button-file">
-        <Button
-          fullWidth
-          variant="outlined"
-          component="span"
-          disabled={formikBag.isSubmitting}
-        >
+        <Button fullWidth component="span">
           Nahrát lokální soubor
         </Button>
       </label>

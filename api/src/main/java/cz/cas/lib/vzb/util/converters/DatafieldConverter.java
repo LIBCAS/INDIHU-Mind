@@ -8,6 +8,7 @@ import cz.cas.lib.vzb.reference.marc.record.Datafield;
 
 import javax.persistence.AttributeConverter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class DatafieldConverter implements AttributeConverter<List<Datafield>, S
 
     @Override
     public String convertToDatabaseColumn(List<Datafield> attribute) {
+        if (attribute == null) return null;
         try {
             ObjectMapper objectMapper = ApplicationContextUtils.getBean(ObjectMapper.class);
             objectMapper.disable(SerializationFeature.INDENT_OUTPUT);
@@ -28,6 +30,7 @@ public class DatafieldConverter implements AttributeConverter<List<Datafield>, S
 
     @Override
     public List<Datafield> convertToEntityAttribute(String dbData) {
+        if (dbData == null) return new ArrayList<>();
         try {
             ObjectMapper objectMapper = ApplicationContextUtils.getBean(ObjectMapper.class);
             Datafield[] fields = objectMapper.readValue(dbData, Datafield[].class);

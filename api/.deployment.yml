@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vzb-api
+  labels:
+    name: vzb-api
+    app: vzb-api
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: vzb-api
+  template:
+    metadata:
+      labels:
+        name: vzb-api
+        app: vzb-api
+    spec:
+      containers:
+        - name: vzb-api
+          image: eu.gcr.io/inqool-1301/cz.inqool.vzb/api:latest
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "32Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1124Mi"
+          env:
+            - name: SPRING_PROFILE
+              value: "docker"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: console
+              containerPort: 8081
+              protocol: TCP
+            - name: debug
+              containerPort: 5005
+              protocol: TCP
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /usr/solr/server/solr/uas
+              subPath: vzb-api/solr/uas
+            - name: shared-storage
+              mountPath: /usr/solr/server/solr/card
+              subPath: vzb-api/solr/card
+
+        - name: solr
+          image: solr:7.7.1-alpine
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "32Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1048Mi"
+          env:
+            - name: "SOLR_JAVA_MEM"
+              value: "-Xms512m -Xmx1000m"
+          ports:
+            - name: solr
+              containerPort: 8983
+              protocol: TCP
+          volumeMounts:
+            - name: shared-storage
+              mountPath: /opt/solr/server/solr/uas
+              subPath: vzb-api/solr/uas
+            - name: shared-storage
+              mountPath: /opt/solr/server/solr/card
+              subPath: vzb-api/solr/card
+
+      volumes:
+        - name: shared-storage
+          persistentVolumeClaim:
+            claimName: shared-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vzb-api
+  labels:
+    name: vzb-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+    - port: 8081
+      targetPort: 8081
+      protocol: TCP
+      name: console
+    - port: 5005
+      targetPort: 5005
+      protocol: TCP
+      name: debug
+    - port: 8983
+      targetPort: 8983
+      protocol: TCP
+      name: solr
+  selector:
+    name: vzb-api
+  clusterIP:

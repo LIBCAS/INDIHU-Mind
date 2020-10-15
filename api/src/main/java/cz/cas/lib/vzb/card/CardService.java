@@ -1,6 +1,9 @@
 package cz.cas.lib.vzb.card;
 
-import core.exception.*;
+import core.exception.BadArgument;
+import core.exception.ForbiddenObject;
+import core.exception.ForbiddenOperation;
+import core.exception.MissingObject;
 import core.index.dto.*;
 import core.sequence.Generator;
 import core.store.Transactional;
@@ -15,6 +18,7 @@ import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.card.template.CardTemplate;
 import cz.cas.lib.vzb.card.template.CardTemplateStore;
 import cz.cas.lib.vzb.dto.BulkFlagSetDto;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
 import cz.cas.lib.vzb.reference.marc.record.CitationStore;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.User;
@@ -31,6 +35,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.ForbiddenOperation.ErrorCode.ARGUMENT_IS_NULL;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.index.IndexQueryUtils.phrase;
 import static core.util.Utils.*;
 
@@ -51,7 +58,6 @@ public class CardService {
 
     @Transactional
     public CardContent createCard(CreateCardDto dto) {
-        isNull(store.find(dto.getId()), () -> new ConflictObject(CreateCardDto.class, dto.getId()));
         User loggedInUser = userDelegate.getUser();
 
         Card card = new Card();
@@ -63,7 +69,7 @@ public class CardService {
         card.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
         card.setLinkedCards(dto.getLinkedCards().stream().map(Card::new).collect(Collectors.toSet()));
         card.setPid(generator.generatePlain(getPidSequenceId(loggedInUser.getId())));
-        card.setRecords(asSet(citationStore.findAllInList(dto.getRecords())));
+        card.setRecords(dto.getRecords().stream().map(Citation::new).collect(Collectors.toSet()));
         card.setDocuments(asSet(fileStore.findAllInList(dto.getFiles()))); // TODO add to tests
         store.save(card);
 
@@ -85,15 +91,15 @@ public class CardService {
     @Transactional
     public CardContent updateCard(String cardId, UpdateCardDto dto) {
         Card fromDb = store.find(cardId);
-        notNull(fromDb, () -> new MissingObject(Card.class, cardId));
-        eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Card.class, cardId));
+        notNull(fromDb, () -> new MissingObject(ENTITY_IS_NULL, Card.class, cardId));
+        eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, cardId));
 
         fromDb.setName(dto.getName());
         fromDb.setNote(dto.getNote());
         fromDb.setCategories(dto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
         fromDb.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
         fromDb.setLinkedCards(dto.getLinkedCards().stream().map(Card::new).collect(Collectors.toSet()));
-        fromDb.setRecords(asSet(citationStore.findAllInList(dto.getRecords())));
+        fromDb.setRecords(dto.getRecords().stream().map(Citation::new).collect(Collectors.toSet()));
         fromDb.setDocuments(asSet(fileStore.findAllInList(dto.getFiles())));
 
         if (IndihuMindUtils.isCollectionModified(fromDb.getLinkingCards(), dto.getLinkingCards())) {
@@ -117,8 +123,8 @@ public class CardService {
     @Transactional
     public CardContent updateCardContent(String cardId, UpdateCardContentDto dto) {
         Card fromDb = store.find(cardId);
-        notNull(fromDb, () -> new MissingObject(Card.class, cardId));
-        eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Card.class, cardId));
+        notNull(fromDb, () -> new MissingObject(ENTITY_IS_NULL, Card.class, cardId));
+        eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, cardId));
 
         CardContent lastContentVersion = cardContentStore.findLastVersionOfCard(cardId);
         if (dto.isNewVersion()) {
@@ -167,7 +173,7 @@ public class CardService {
     @Transactional
     public void eraseSingleCardFromTrashBin(String cardId) {
         Card card = find(cardId);
-        notNull(card.getDeleted(), () -> new ForbiddenOperation(Card.class, cardId));
+        notNull(card.getDeleted(), () -> new ForbiddenOperation(ForbiddenOperation.ErrorCode.ARGUMENT_IS_NULL, Card.class, cardId)); //fixme change to MissingObject, tell FE
 
         store.hardDelete(card);
     }
@@ -176,7 +182,7 @@ public class CardService {
     @Transactional
     public CardTemplate createTemplateFromCardVersion(String cardContentId) {
         CardContent cardContent = cardContentStore.find(cardContentId);
-        notNull(cardContent, () -> new MissingObject(CardContent.class, cardContentId));
+        notNull(cardContent, () -> new MissingObject(ENTITY_IS_NULL, CardContent.class, cardContentId));
 
         CardTemplate template = new CardTemplate();
         template.setOwner(cardContent.getCard().getOwner());
@@ -215,7 +221,7 @@ public class CardService {
     }
 
     public Result<CardSearchResultDto> simpleSearch(String queryString, String userId, int pageSize, int pageNumber) {
-        notNull(queryString, () -> new BadArgument("query string cant be empty"));
+        notNull(queryString, () -> new BadArgument(ARGUMENT_IS_NULL, "query string cant be empty"));
         Criteria cardQuery;
         float cardNameBoost = 4;
         float catAndLabelBoost = 1;
@@ -256,8 +262,8 @@ public class CardService {
 
     public Card find(String id) {
         Card card = store.find(id);
-        notNull(card, () -> new MissingObject(Card.class, id));
-        eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Card.class, id));
+        notNull(card, () -> new MissingObject(ENTITY_IS_NULL, Card.class, id));
+        eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, id));
 
         return card;
     }

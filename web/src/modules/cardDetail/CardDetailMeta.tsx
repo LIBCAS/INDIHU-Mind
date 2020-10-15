@@ -49,7 +49,7 @@ export const CardDetailMeta: React.FC<CardDetailMetaProps> = ({
           gutterBottom
           key={c.id}
         >
-          {moment(c.created).format("D. M. YYYY - HH:mm")}
+          {moment(c.created).format("D. M. YYYY - hh:mm")}
         </Typography>
       ))}
     </div>

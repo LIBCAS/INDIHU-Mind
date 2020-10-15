@@ -1,15 +1,16 @@
 package cz.cas.lib.vzb.util;
 
-import com.google.common.net.HttpHeaders;
 import core.domain.DomainObject;
 import core.exception.BadArgument;
 import core.exception.GeneralException;
-import cz.cas.lib.vzb.attachment.validation.ForbiddenFile;
+import cz.cas.lib.vzb.attachment.validation.ForbiddenFileResolver;
 import cz.cas.lib.vzb.exception.ContentLengthRequiredException;
 import cz.cas.lib.vzb.exception.ForbiddenFileException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -23,6 +24,10 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import static core.exception.BadArgument.ErrorCode.UNSUPPORTED_URL_FORMAT;
+import static cz.cas.lib.vzb.exception.ContentLengthRequiredException.ErrorCode.CONTENT_LENGTH_HEADER_MISSING;
+import static cz.cas.lib.vzb.exception.ForbiddenFileException.ErrorCode.FILE_FORBIDDEN;
+
 /**
  * Fragment methods used by services to hide low-level handling from core @Service classes.
  */
@@ -35,6 +40,20 @@ public class IndihuMindUtils {
      * single String. This encoding is then used to parse single value into two.
      */
     public static final String AUTHOR_NAME_ENCODING = "#&&#";
+
+    public static HttpHeaders jsonApplicationHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
+
+    public static Throwable obtainLastCause(@NonNull Throwable exception) {
+        Throwable cause = exception;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        return cause;
+    }
 
     /**
      * Determines whether entities from two collections are the same (comparing by ID).
@@ -56,18 +75,18 @@ public class IndihuMindUtils {
         try {
             return new URL(link);
         } catch (MalformedURLException e) {
-            throw new BadArgument(URL.class, "Provided URL link can not be parsed.");
+            throw new BadArgument(UNSUPPORTED_URL_FORMAT, "Provided URL link can not be parsed.");
         }
     }
 
-    public static int getSizeFromUrlFile(URL fileUrl) {
-        int sizeBytes;
+    public static long getSizeFromUrlFile(URL fileUrl) {
+        long sizeBytes;
         try {
             URLConnection urlConnection = fileUrl.openConnection();
-            sizeBytes = urlConnection.getContentLength();
+            sizeBytes = urlConnection.getContentLengthLong();
             urlConnection.getInputStream().close();
             if (sizeBytes < 0)
-                throw new ContentLengthRequiredException("URL file's content-length header not available.");
+                throw new ContentLengthRequiredException(CONTENT_LENGTH_HEADER_MISSING, "URL file's content-length header not available.");
         } catch (IOException e) {
             throw new GeneralException("File stream has malfunctioned.");
         }
@@ -79,13 +98,13 @@ public class IndihuMindUtils {
             String fileNameFromUrl = Paths.get(url.getPath()).getFileName().toString();
             checkFileExtensionFromName(fileNameFromUrl);
         } catch (InvalidPathException e) {
-            throw new BadArgument(URL.class, "File name and its extension can not be parsed from URL's path");
+            throw new BadArgument(UNSUPPORTED_URL_FORMAT, "File name and its extension can not be parsed from URL's path");
         }
     }
 
     public static void checkFileExtensionFromName(String fullFileName) {
-        if (ForbiddenFile.isFileExtensionForbidden(fullFileName))
-            throw new ForbiddenFileException(fullFileName);
+        if (ForbiddenFileResolver.isFileExtensionForbidden(fullFileName))
+            throw new ForbiddenFileException(FILE_FORBIDDEN, fullFileName);
     }
 
     public static ResponseEntity<InputStreamResource> createResponseEntityPdfFile(InputStream generatedPdfFile, String fileName) {

@@ -2,7 +2,7 @@ package helper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import core.rest.config.ResourceExceptionHandler;
+import core.rest.config.RestExceptionDispatcher;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.User;
 import lombok.Getter;
@@ -69,7 +69,7 @@ public abstract class ApiTest implements AlterSolrCollection {
 
     protected MockMvc mvc(Object controller) {
         return standaloneSetup(controller)
-                .setControllerAdvice(new ResourceExceptionHandler())
+                .setControllerAdvice(new RestExceptionDispatcher())
                 .build();
     }
 

@@ -59,6 +59,7 @@ public class AttachmentFileTestData implements TestDataRemovable {
     public AttachmentFile urlFile1(User owner) {
         UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder()
                 .name("NKP Logo")
+                .location(UrlAttachmentFile.UrlDocumentLocation.WEB)
                 .owner(owner)
                 .size(29647L)
                 .link("https://kramerius5.nkp.cz/logo.png")
@@ -79,6 +80,7 @@ public class AttachmentFileTestData implements TestDataRemovable {
     public AttachmentFile adminUrlFile(User owner) {
         UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder()
                 .name("adminUrlFile")
+                .location(UrlAttachmentFile.UrlDocumentLocation.SERVER)
                 .owner(owner)
                 .size(29647L)
                 .link("https://kramerius5.nkp.cz/logo.png")

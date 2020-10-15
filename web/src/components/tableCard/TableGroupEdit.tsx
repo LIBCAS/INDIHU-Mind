@@ -13,7 +13,7 @@ import {
 import { api } from "../../utils/api";
 import { notEmpty } from "../../utils/form/validate";
 import { CardProps } from "../../types/card";
-import { OptionType } from "../select/_types";
+import { OptionType } from "../form/reactSelect/_reactSelectTypes";
 import { Formik } from "../form/Formik";
 import { Select } from "../form/Select";
 

@@ -1,34 +1,32 @@
 import React, { useRef, useState } from "react";
 import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
-import { XYCoord } from "dnd-core";
-import {
-  Tooltip
-  // ClickAwayListener
-} from "@material-ui/core";
-import classNames from "classnames";
-import { get, filter } from "lodash";
-import FormatBoldIcon from "@material-ui/icons/FormatBold";
-import FormatItalicIcon from "@material-ui/icons/FormatItalic";
-import FormatSizeIcon from "@material-ui/icons/FormatSize";
-import DeleteIcon from "@material-ui/icons/Delete";
-import { FieldProps, Field } from "formik";
-
-import { createStyle } from "../_utils";
-import { Select } from "../../../components/form/Select";
-import { useStyles } from "./_dndStyles";
 import { ItemTypes, Item } from "./_types";
-import { FirstNameFormat, MultipleAuthorsFormat, OrderFormat } from "../_enums";
+import { XYCoord } from "dnd-core";
+import { useStyles } from "./_dndStyles";
+import { TextField, ClickAwayListener } from "@material-ui/core";
+import classNames from "classnames";
+import { get } from "lodash";
+import Input from "@material-ui/core/Input";
+import InputLabel from "@material-ui/core/InputLabel";
+import MenuItem from "@material-ui/core/MenuItem";
+import MaterialSelect from "@material-ui/core/Select";
+import Typography from "@material-ui/core/Typography";
+
+import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { useStyles as useFormStyles } from "../../../components/form/_formStyles";
+
+import { Field, FieldProps } from "formik";
+import { notEmpty } from "../../../utils/form/validate";
 
 export interface CardProps {
   id: any;
   text: string;
   index: number;
   moveCard: (dragIndex: number, hoverIndex: number, item: DragItem) => void;
+  setCards: React.Dispatch<React.SetStateAction<Item[]>>;
   formikBag: any;
   count: number;
-  removeCard: () => void;
-  active: boolean;
-  toggleActive: () => void;
+  recordTemplate: any;
 }
 
 export interface DragItem {
@@ -36,24 +34,36 @@ export interface DragItem {
   id: string;
   type: string;
 }
-
-const createCardId = (id: string, index: number) =>
-  `records-templates-dnd-card-${id}-${index}`;
-
-let recordsTemplateDndCardTimestamp: number;
+// CONCAT_COMMA, CONCAT_SPACE
+const options = [
+  {
+    value: "BOLD",
+    label: "Tučně"
+  },
+  {
+    value: "ITALIC",
+    label: "Kurzíva"
+  },
+  {
+    value: "UPPERCASE",
+    label: "Velká písmena"
+  }
+];
 
 const Card: React.FC<CardProps> = ({
   id,
   text,
   index,
   moveCard,
+  setCards,
   formikBag,
   count,
-  removeCard,
-  active,
-  toggleActive
+  recordTemplate
 }) => {
   const classes = useStyles();
+  const classesForm = useFormStyles();
+  const classesSpacing = useSpacingStyles();
+  const [active, setActive] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const [, drop] = useDrop({
     accept: ItemTypes.CARD,
@@ -61,7 +71,6 @@ const Card: React.FC<CardProps> = ({
       if (!ref.current) {
         return;
       }
-
       const dragIndex = item.index;
       const hoverIndex = index;
 
@@ -70,54 +79,23 @@ const Card: React.FC<CardProps> = ({
         return;
       }
 
-      if (Math.abs(dragIndex - hoverIndex) === 1) {
-        const currentTime = new Date().getTime();
-
-        if (
-          recordsTemplateDndCardTimestamp &&
-          recordsTemplateDndCardTimestamp + 1000 > currentTime
-        ) {
-          return;
-        }
-
-        recordsTemplateDndCardTimestamp = currentTime;
-      }
-
       // Determine rectangle on screen
       const hoverBoundingRect = ref.current
         ? ref.current.getBoundingClientRect()
-        : { bottom: 0, top: 0, left: 0, right: 0, width: 0 };
+        : { bottom: 0, top: 0, left: 0, right: 0 };
 
       // Get top
-      const hoverTop = hoverBoundingRect.top;
+      const hoverTopY = hoverBoundingRect.top;
       // Get left
-      const hoverLeft = hoverBoundingRect.left;
-
-      const hoverWidth = hoverBoundingRect.width;
-
-      const dragElement = document.getElementById(
-        createCardId(item.id, item.index)
-      );
-
-      const dragElementRect = dragElement
-        ? dragElement.getBoundingClientRect()
-        : null;
+      const hoverLeftX = hoverBoundingRect.left;
 
       // Determine mouse position
       const clientOffset = monitor.getClientOffset();
 
       // Get pixels to the top
-      const hoverClientTop =
-        (clientOffset as XYCoord).y - hoverBoundingRect.top;
+      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
       // Get pixels to the left
-      const hoverClientLeft =
-        (clientOffset as XYCoord).x - hoverBoundingRect.left;
-
-      const safeDistance = dragElementRect
-        ? dragElementRect.left > hoverLeft &&
-          dragElementRect.left <
-            hoverLeft + Math.min(hoverWidth, dragElementRect.width) / 2
-        : hoverClientLeft > 30 || hoverClientLeft < -30;
+      const hoverClientX = (clientOffset as XYCoord).x - hoverBoundingRect.left;
 
       // Only perform the move when the mouse has crossed half of the items height
       // When dragging downwards, only move when the cursor is below 50%
@@ -126,9 +104,8 @@ const Card: React.FC<CardProps> = ({
       // Dragging downwards
       if (
         dragIndex < hoverIndex &&
-        hoverClientTop < hoverTop &&
-        hoverClientLeft >= hoverLeft &&
-        safeDistance
+        hoverClientY < hoverTopY &&
+        hoverClientX >= hoverLeftX
       ) {
         return;
       }
@@ -136,9 +113,8 @@ const Card: React.FC<CardProps> = ({
       // Dragging upwards
       if (
         dragIndex > hoverIndex &&
-        hoverClientTop > hoverTop &&
-        hoverClientLeft <= hoverLeft &&
-        safeDistance
+        hoverClientY > hoverTopY &&
+        hoverClientX <= hoverLeftX
       ) {
         return;
       }
@@ -165,157 +141,196 @@ const Card: React.FC<CardProps> = ({
   const opacity = isDragging ? 0 : 1;
   drag(drop(ref));
 
-  const isAuthor = id === "AUTHOR";
-
-  // const handleClickAway = () => {
-  //   if (!isAuthor) {
-  //     toggleActive();
-  //   }
-  // };
-
-  const customizations = get(
-    formikBag,
-    `values.${id + count}customizations`,
-    []
-  );
-
-  const isBold = customizations.includes("BOLD");
-  const isItalic = customizations.includes("ITALIC");
-  const isUppercase = customizations.includes("UPPERCASE");
-
-  const cardElement = document.getElementById(createCardId(id, index));
-
+  const handleClickAway = () => {
+    // setActive(false);
+  };
   return (
-    // <ClickAwayListener onClickAway={handleClickAway}>
-    <div className={classes.cardContainer} style={{ opacity }}>
-      {active && (
-        <div
-          className={classNames(
-            classes.cardMenu,
-            cardElement &&
-              cardElement.getBoundingClientRect().left >
-                2 * (window.innerWidth / 3)
-              ? classes.cardMenuRight
-              : null,
-            isAuthor && classes.cardMenuBottom
-          )}
-        >
-          <div className={classes.cardMenuIcons}>
-            {[
-              {
-                Icon: FormatBoldIcon,
-                value: "BOLD",
-                title: "Tučně",
-                selected: isBold
-              },
-              {
-                Icon: FormatItalicIcon,
-                value: "ITALIC",
-                title: "Kurzíva",
-                selected: isItalic
-              },
-              {
-                Icon: FormatSizeIcon,
-                value: "UPPERCASE",
-                title: "Velká písmena",
-                selected: isUppercase
-              },
-              {
-                Icon: DeleteIcon,
-                value: "DELETE",
-                title: "Odstranit"
-              }
-            ].map(({ Icon, value, title, selected }) => (
-              <Tooltip key={value} title={title}>
-                <Icon
-                  onClick={() => {
-                    if (value === "DELETE") {
-                      toggleActive();
-                      removeCard();
-                    } else {
-                      formikBag.setFieldValue(
-                        id + count + "customizations",
-                        selected
-                          ? filter(customizations, c => c !== value)
-                          : [...customizations, value]
-                      );
-                    }
+    <>
+      {id === "customizations" ? (
+        <Field
+          name={id + count}
+          validate={notEmpty}
+          render={({ field, form }: FieldProps<any>) => (
+            <>
+              <div
+                ref={ref}
+                style={{
+                  width:
+                    get(field, "value.length") > 3
+                      ? `${get(field, "value.length") / 1.3}rem`
+                      : "3rem",
+                  marginRight: ".5rem",
+                  marginBottom: ".5rem",
+                  opacity
+                }}
+              >
+                <TextField
+                  type="text"
+                  InputProps={{
+                    autoComplete: "off",
+                    disableUnderline: true
                   }}
-                  className={classNames(selected && classes.iconSelected)}
+                  autoFocus={recordTemplate ? false : true}
+                  inputProps={{
+                    className: classNames(classesForm.default, {
+                      [classesForm.errorBorder]:
+                        form.touched[field.name] && form.errors[field.name]
+                    })
+                  }}
+                  {...field}
                 />
-              </Tooltip>
-            ))}
-          </div>
-          {isAuthor && (
-            <div className={classes.creatorSelects}>
-              {[
-                {
-                  name: "firstNameFormat",
-                  placeholder: "Podoba jména",
-                  options: [
-                    { value: FirstNameFormat.FULL, label: "Celé jméno" },
-                    { value: FirstNameFormat.INITIAL, label: "Zkrácené jméno" }
-                  ]
-                },
-                {
-                  name: "multipleAuthorsFormat",
-                  placeholder: "Formát u více tvůrců",
-                  options: [
-                    { value: MultipleAuthorsFormat.FULL, label: "Úplný výpis" },
-                    {
-                      value: MultipleAuthorsFormat.ETAL,
-                      label: "Zkrácený výpis (et al.)"
-                    }
-                  ]
-                },
-                {
-                  name: "orderFormat",
-                  placeholder: "Pořadí",
-                  options: [
-                    {
-                      value: OrderFormat.FIRSTNAME_FIRST,
-                      label: "Křestní jméno první"
-                    },
-                    {
-                      value: OrderFormat.LASTNAME_FIRST,
-                      label: "Příjmení první"
-                    }
-                  ]
-                }
-              ].map(({ name, ...rest }) => (
-                <div
-                  key={name}
-                  onClick={e => e.stopPropagation()}
-                  className={classes.creatorSelect}
+              </div>
+              {form.touched[field.name] && form.errors[field.name] && (
+                <Typography
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "0.5rem",
+                    marginRight: "0.5rem"
+                  }}
+                  color="error"
                 >
-                  <Field
-                    name={`${id}${count}${name}`}
-                    render={({ field, form }: FieldProps<any>) => (
-                      <Select {...rest} field={field} form={form} />
-                    )}
-                  />
-                </div>
-              ))}
-            </div>
+                  {form.touched[field.name] &&
+                    form.errors[field.name] &&
+                    form.errors[field.name]}
+                </Typography>
+              )}
+            </>
           )}
-        </div>
+        />
+      ) : (
+        <ClickAwayListener onClickAway={handleClickAway}>
+          <div style={{ display: "flex" }}>
+            <div
+              ref={ref}
+              className={classes.card}
+              style={{
+                opacity,
+                ...(active && { border: `2px solid grey` }),
+                ...(get(
+                  formikBag,
+                  `values.${id + count}customizations`,
+                  []
+                ).includes("BOLD") && {
+                  fontWeight: 600
+                }),
+                ...(get(
+                  formikBag,
+                  `values.${id + count}customizations`,
+                  []
+                ).includes("ITALIC") && {
+                  fontStyle: "italic"
+                }),
+                ...(get(
+                  formikBag,
+                  `values.${id + count}customizations`,
+                  []
+                ).includes("UPPERCASE") && {
+                  textTransform: "uppercase"
+                })
+              }}
+              onClick={() => {
+                setActive(prev => !prev);
+              }}
+            >
+              {`${text} ${get(formikBag, `values.${id + count}code`, "")}`}
+            </div>
+            <div
+              style={{
+                display:
+                  active ||
+                  (get(formikBag, `errors.${id + count}code`, false) &&
+                    get(formikBag, `touched.${id + count}code`, false))
+                    ? "flex"
+                    : "none",
+                alignItems: "center"
+              }}
+            >
+              <Field
+                name={id + count + "code"}
+                validate={notEmpty}
+                render={({ field, form }: FieldProps<any>) => (
+                  <>
+                    <TextField
+                      type="text"
+                      InputProps={{
+                        autoComplete: "off",
+                        disableUnderline: true
+                      }}
+                      style={{
+                        marginRight: ".5rem",
+                        marginBottom: "0.5rem",
+                        width: "3.5rem"
+                      }}
+                      autoFocus={!formikBag.initialValues}
+                      placeholder="Code"
+                      inputProps={{
+                        className: classNames(
+                          classesForm.default,
+                          classesForm.active,
+                          {
+                            [classesForm.errorBorder]:
+                              form.touched[field.name] &&
+                              form.errors[field.name]
+                          }
+                        )
+                      }}
+                      {...field}
+                    />
+                    {form.touched[field.name] && form.errors[field.name] && (
+                      <Typography
+                        style={{
+                          marginRight: ".5rem",
+                          marginBottom: "0.5rem"
+                        }}
+                        color="error"
+                      >
+                        {form.touched[field.name] &&
+                          form.errors[field.name] &&
+                          form.errors[field.name]}
+                      </Typography>
+                    )}
+                  </>
+                )}
+              />
+              <Field
+                name={id + count + "customizations"}
+                render={({ field, form }: FieldProps<any>) => (
+                  <MaterialSelect
+                    displayEmpty
+                    multiple
+                    {...field}
+                    input={
+                      <Input
+                        disableUnderline
+                        style={{
+                          marginRight: ".5rem",
+                          marginBottom: "0.5rem"
+                        }}
+                        placeholder="Vyberte"
+                        inputProps={{
+                          className: classNames(
+                            classesForm.default,
+                            classesForm.select,
+                            classesForm.active
+                          )
+                        }}
+                      />
+                    }
+                  >
+                    {options.map((opt, i) => (
+                      <MenuItem key={i} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
+                    ))}
+                  </MaterialSelect>
+                )}
+              />
+            </div>
+          </div>
+        </ClickAwayListener>
       )}
-      <div
-        id={createCardId(id, index)}
-        ref={ref}
-        className={classes.card}
-        style={createStyle(
-          customizations,
-          active ? { border: `1px solid grey` } : {}
-        )}
-        onClick={() => {
-          toggleActive();
-        }}
-      >
-        {text}
-      </div>
-    </div>
-    // </ClickAwayListener>
+    </>
   );
 };
 

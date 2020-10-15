@@ -25,6 +25,9 @@ import javax.inject.Inject;
 import javax.validation.constraints.Email;
 import java.util.*;
 
+import static core.exception.ConflictObject.ErrorCode.EMAIL_TAKEN;
+import static core.exception.ForbiddenOperation.ErrorCode.INVALID_TOKEN;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.*;
 import static cz.cas.lib.vzb.card.CardService.getPidSequenceId;
 
@@ -42,7 +45,7 @@ public class UserService {
     @Transactional
     public void register(String email, @Nullable String password) {
         User emailTaken = store.findByEmail(email);
-        isNull(emailTaken, () -> new ConflictObject(User.class, email));
+        isNull(emailTaken, () -> new ConflictObject(EMAIL_TAKEN, User.class, email));
 
         if (password == null) password = goodPasswordGenerator.generate();
 
@@ -85,7 +88,7 @@ public class UserService {
         List<User> affectedUsers = new ArrayList<>();
         dto.getIds().forEach(userId -> {
             User user = store.find(userId);
-            notNull(user, () -> new MissingObject(User.class, userId));
+            notNull(user, () -> new MissingObject(ENTITY_IS_NULL, User.class, userId));
             user.setAllowed(dto.getValue());
             affectedUsers.add(user);
         });
@@ -95,7 +98,7 @@ public class UserService {
     @Transactional
     public void resetPassword(@Email String email) {
         User user = store.findByEmail(email);
-        notNull(user, () -> new MissingObject(User.class, email));
+        notNull(user, () -> new MissingObject(ENTITY_IS_NULL, User.class, email));
 
         PasswordToken passwordToken = tokenService.generateNewToken(email);
         mailService.sendResetPasswordEmail(email, passwordToken.getId());
@@ -104,7 +107,7 @@ public class UserService {
     @Transactional
     public void setNewPassword(String tokenId, String newPlainPassword) {
         PasswordToken token = tokenService.find(tokenId);
-        eq(Boolean.TRUE, tokenService.isTokenValid(token), () -> new ForbiddenOperation(PasswordToken.class, tokenId));
+        eq(Boolean.TRUE, tokenService.isTokenValid(token), () -> new ForbiddenOperation(INVALID_TOKEN, PasswordToken.class, tokenId));
         User user = token.getOwner();
         user.setPassword(passwordEncoder.encode(newPlainPassword));
         tokenService.utilizeToken(token);

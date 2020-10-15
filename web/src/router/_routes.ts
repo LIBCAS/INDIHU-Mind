@@ -8,9 +8,7 @@ import { Records } from "../modules/records/Records";
 import { Templates } from "../modules/templates/Templates";
 import { Categories } from "../modules/categories/Categories";
 import { Search } from "../modules/search/Search";
-import { ResetPassword } from "../modules/resetPassword/ResetPassword";
 import { UserCreate } from "../modules/userCreate/UserCreate";
-import { Attachments } from "../modules/attachments/Attachments";
 
 export interface RoutesProps {
   path: string;
@@ -48,12 +46,6 @@ export const routesTabs: RoutesProps[] = [
     path: "/records-templates",
     label: "Citační šablony",
     component: RecordsTemplates,
-    exact: true
-  },
-  {
-    path: "/attachments",
-    label: "Dokumenty",
-    component: Attachments,
     exact: true
   }
 ];
@@ -96,12 +88,6 @@ export const routes: RoutesProps[] = [
     path: "/search",
     label: "Vyhledávání",
     component: Search,
-    exact: true
-  },
-  {
-    path: "/reset-password",
-    label: "Reset hesla",
-    component: ResetPassword,
     exact: true
   },
   ...routesTabs

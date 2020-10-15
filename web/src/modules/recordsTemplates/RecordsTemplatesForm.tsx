@@ -1,35 +1,35 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import HTML5Backend from "react-dnd-html5-backend";
 import classNames from "classnames";
+import { groupBy, set, get, omit, sortBy, pick } from "lodash";
 import { withRouter, RouteComponentProps } from "react-router-dom";
-import { get, find, filter } from "lodash";
-import { Typography } from "@material-ui/core";
-import { Button } from "@material-ui/core";
-import { Formik, Form, FormikProps, Field, FieldProps } from "formik";
-import uuid from "uuid/v4";
-import { DndProvider } from "react-dnd";
 
 import { GlobalContext, StateProps } from "../../context/Context";
 import { Loader } from "../../components/loader/Loader";
 import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
 
+import { useStyles } from "./_recordsTemplatesStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 
 import { RecordTemplateProps } from "../../types/recordTemplate";
 import DnD from "./dnd/DnD";
+import { DndProvider } from "react-dnd";
 import { DnDSelection } from "./dnd/DnDSelection";
 import { Item } from "./dnd/_types";
+import { Formik, Form, FormikProps, Field, FieldProps } from "formik";
 import { notEmpty } from "../../utils/form/validate";
 import { InputText } from "../../components/form/InputText";
 import { Divider } from "../../components/divider/Divider";
+import { Button } from "@material-ui/core";
+import uuid from "uuid/v4";
 import { api } from "../../utils/api";
 import {
   STATUS_ERROR_TEXT_SET,
   STATUS_ERROR_COUNT_CHANGE
 } from "../../context/reducers/status";
-import { parseTemplate, createStyle, createMarcId, isCreator } from "./_utils";
-import { useStyles } from "./_recordsTemplatesStyles";
-import { specialTags, punctuation, otherTags } from "./_enums";
+import { parseTemplate } from "./_utils";
 
 type RecordsTemplatesFormValues = RecordTemplateProps;
 
@@ -39,22 +39,23 @@ interface RecordsTemplatesFormProps {
   afterEdit?: () => void;
 }
 
-const RecordsTemplatesFormView: React.FC<RecordsTemplatesFormProps &
-  RouteComponentProps> = ({
-  setShowModal,
-  recordTemplate,
-  afterEdit,
-  history
-}) => {
-  const classesSpacing = useSpacingStyles();
+const RecordsTemplatesFormView: React.FC<
+  RecordsTemplatesFormProps & RouteComponentProps
+> = ({ setShowModal, recordTemplate, afterEdit, history }) => {
   const classes = useStyles();
+  const classesText = useTextStyles();
+  const classesSpacing = useSpacingStyles();
+  const classesLayout = useLayoutStyles();
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
   const state: StateProps = context.state;
-  const { marc } = state.record;
-
+  const marc = state.record.marc;
+  let fields: any;
+  if (marc) {
+    fields = state.record.marc.fields;
+  }
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<boolean | string>(false);
+  const [error, setError] = useState<boolean>(false);
   const [
     initValues,
     setInitValues
@@ -69,35 +70,31 @@ const RecordsTemplatesFormView: React.FC<RecordsTemplatesFormProps &
 
   useEffect(() => {
     if (recordTemplate) {
-      const { cardsInit, initValuesParsed } = parseTemplate(
-        recordTemplate,
-        marc
-      );
+      const { cardsInit, initValuesParsed } = parseTemplate(recordTemplate);
       setInitValues(initValuesParsed as any);
       setCardsInit(cardsInit);
     }
   }, [recordTemplate]);
 
-  const tags = useMemo(
+  const initCards = useMemo(
     () =>
-      marc
+      fields
         ? [
-            ...specialTags,
-            ...filter(marc, ({ tag }) => !isCreator(tag)).map(
-              ({ czech, ...m }: any) => {
-                return {
-                  ...m,
-                  id: createMarcId(m),
-                  text: czech
-                };
-              }
-            )
+            ...Object.keys(fields)
+              .filter(key => key !== "LDR")
+              .map((key, i) => {
+                const card = fields[key];
+                return { id: card.tag, text: card.tag, count: 0 };
+              }),
+            {
+              id: "customizations",
+              text: "Vlastní text",
+              count: 0
+            }
           ]
         : [],
-    [marc]
+    [fields]
   );
-
-  const initCards = [...tags, ...punctuation, ...otherTags];
 
   return (
     <>
@@ -108,35 +105,42 @@ const RecordsTemplatesFormView: React.FC<RecordsTemplatesFormProps &
         onSubmit={(values: any) => {
           if (loading) return false;
           setLoading(true);
-
-          const fields = cards.map(({ id, text, count, ...c }: any) => {
-            const getValue = (path: string) => values[id + count + path];
-            const customizations = getValue("customizations");
-            return {
-              ...(/^MARC/.test(id) ? { type: "MARC", ...c } : { type: id }),
-              ...(customizations.length ? { customizations } : {}),
-              ...(id === "AUTHOR"
-                ? {
-                    firstNameFormat: getValue("firstNameFormat"),
-                    multipleAuthorsFormat: getValue("multipleAuthorsFormat"),
-                    orderFormat: getValue("orderFormat")
-                  }
-                : {})
-            };
+          const fields = cards.map(c => {
+            if (c.id === "customizations") {
+              return {
+                tag: c.id,
+                text: values[c.id + c.count]
+              };
+            } else {
+              return {
+                tag: c.id,
+                code: values[c.id + c.count + "code"],
+                customizations: values[c.id + c.count + "customizations"]
+              };
+            }
           });
+          let pattern = ``;
+          fields.forEach(f => {
+            const value = f.tag === "customizations" ? f.text : `\${?}`;
+            pattern += value;
+          });
+          const fieldsFiltered = fields.filter(f => f.tag !== "customizations");
 
-          const payload = {
-            id: recordTemplate ? recordTemplate.id : uuid(),
+          const id = recordTemplate ? recordTemplate.id : uuid();
+          let payload = {
+            id,
             name: values.name,
-            fields
+            pattern,
+            fields: fieldsFiltered
           };
 
           api()
-            .put(`template/${payload.id}`, {
+            .put(`template/${id}`, {
               json: payload
             })
+
             .json<any[]>()
-            .then((res: any) => {
+            .then(res => {
               dispatch({
                 type: STATUS_ERROR_TEXT_SET,
                 payload: recordTemplate
@@ -148,130 +152,65 @@ const RecordsTemplatesFormView: React.FC<RecordsTemplatesFormProps &
               if (afterEdit) {
                 afterEdit();
               }
-              history.push(`/template/${payload.id}`);
+              history.push(`/template/${id}`);
               setShowModal(false);
             })
-            .catch(err => {
+            .catch(() => {
+              setError(true);
               setLoading(false);
-              setError(
-                get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
-                  ? "Citační šablona se zvoleným názvem již existuje."
-                  : true
-              );
             });
         }}
         render={(formikBag: FormikProps<any>) => (
-          <Form className={classes.recordTemplateForm}>
-            <DndProvider backend={HTML5Backend}>
-              <Loader loading={loading} />
-              {error && (
-                <MessageSnackbar setVisible={setError} message={error} />
+          <Form className={classNames(classesSpacing.p1)}>
+            <Loader loading={loading} />
+            {error && <MessageSnackbar setVisible={setError} />}
+            <Field
+              name="name"
+              validate={notEmpty}
+              render={({ field, form }: FieldProps<any>) => (
+                <InputText
+                  label="Název"
+                  type="text"
+                  field={field}
+                  form={form}
+                  autoFocus={recordTemplate ? false : true}
+                />
               )}
-              <div className={classes.recordTemplateFormLeftPanel}>
-                {[
-                  { initCards: tags },
-                  { initCards: punctuation, label: "Interpunkce" },
-                  { initCards: otherTags, label: "Ostatní" }
-                ].map((c, i) => (
-                  <DnDSelection
-                    key={`${c.label}${i}`}
-                    {...c}
-                    cards={cards}
-                    setCards={setCards}
-                    formikBag={formikBag}
-                  />
-                ))}
-              </div>
-              <div className={classes.recordTemplateFormRightPanel}>
-                <div className={classes.recordTemplateFormMainPanel}>
-                  <Field
-                    name="name"
-                    validate={notEmpty}
-                    render={({ field, form }: FieldProps<any>) => (
-                      <InputText
-                        label="Název"
-                        type="text"
-                        field={field}
-                        form={form}
-                        autoFocus={false}
-                      />
-                    )}
-                  />
-                  <div className={classesSpacing.mt3} />
-                  <DnD
-                    initCards={initCards}
-                    cards={cards}
-                    setCards={setCards}
-                    formikBag={formikBag}
-                  />
-                  <div className={classNames(classesSpacing.mb2)} />
-                  {cards.length ? (
-                    <div>
-                      <Typography variant="subtitle1" gutterBottom>
-                        Citace
-                      </Typography>
-                      <div className={classes.preview}>
-                        {cards.map(({ id, text, count }, i) => {
-                          const customizations =
-                            formikBag.values[id + count + "customizations"];
-
-                          return (
-                            <span
-                              key={`${id}${i}`}
-                              style={createStyle(customizations)}
-                            >
-                              {(() => {
-                                const type = id.replace(/-.*$/, "");
-
-                                if (type === "MARC") {
-                                  return text;
-                                }
-
-                                const otherType = find(
-                                  otherTags,
-                                  o => o.id === type
-                                );
-
-                                if (otherType) {
-                                  return get(otherType, "text");
-                                }
-
-                                switch (type) {
-                                  case "AUTHOR":
-                                    return "Tvůrce";
-                                  case "PERIOD":
-                                    return ".";
-                                  case "COLON":
-                                    return ":";
-                                  case "COMMA":
-                                    return ",";
-                                  case "SEMICOLON":
-                                    return ";";
-                                  case "SPACE":
-                                    return " ";
-                                  default:
-                                    return "";
-                                }
-                              })()}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-                <Divider />
-                <div className={classes.recordTemplateFormButtonsPanel}>
-                  <Button variant="contained" color="primary" type="submit">
-                    {recordTemplate
-                      ? "Změnit citační šablonu"
-                      : "Vytvořit citační šablonu"}
-                  </Button>
-                </div>
-              </div>
+            />
+            <div className={classNames(classesSpacing.mb1)} />
+            <DndProvider backend={HTML5Backend}>
+              <DnDSelection
+                initCards={initCards}
+                cards={cards}
+                setCards={setCards}
+              />
+              <DnD
+                recordTemplate={recordTemplate}
+                initCards={initCards}
+                cards={cards}
+                setCards={setCards}
+                formikBag={formikBag}
+              />
             </DndProvider>
+            <Divider className={classesSpacing.mt3} />
+            <div
+              className={classNames(
+                classesLayout.flex,
+                classesLayout.justifyCenter,
+                classesSpacing.mb1
+              )}
+            >
+              <Button
+                className={classesSpacing.mt3}
+                variant="contained"
+                color="primary"
+                type="submit"
+              >
+                {recordTemplate
+                  ? "Změnit citační šablonu"
+                  : "Vytvořit citační šablonu"}
+              </Button>
+            </div>
           </Form>
         )}
       />

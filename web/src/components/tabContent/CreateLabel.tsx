@@ -4,7 +4,6 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import * as Yup from "yup";
 import uuid from "uuid/v4";
-import { get } from "lodash";
 
 import { GlobalContext } from "../../context/Context";
 import {
@@ -48,7 +47,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<boolean | string>(false);
+  const [error, setError] = useState(false);
   const [initialValues, setInitialValues] = useState({
     id: uuid(),
     name: name ? name : "",
@@ -82,7 +81,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
       })
 
       .json<any[]>()
-      .then((res: any) => {
+      .then(res => {
         dispatch({
           type: STATUS_ERROR_TEXT_SET,
           payload: previousLabel
@@ -94,20 +93,17 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
         loadLabels(res);
         setOpen(false);
       })
-      .catch(err => {
+      .catch(() => {
+        setError(true);
         setLoading(false);
-        setError(
-          get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
-            ? "Štítek se zvoleným názvem již existuje."
-            : true
-        );
+        setOpen(false);
       });
   };
 
   return (
     <>
       <Loader loading={loading} />
-      {error && <MessageSnackbar setVisible={setError} message={error} />}
+      {error && <MessageSnackbar setVisible={setError} />}
       <Formik
         initialValues={initialValues}
         enableReinitialize
@@ -139,7 +135,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
                     field={field}
                     form={form}
                     label="Název"
-                    autoFocus={false}
+                    autoFocus
                   />
                 )}
               />

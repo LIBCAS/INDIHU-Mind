@@ -7,12 +7,9 @@ import Button from "@material-ui/core/Button";
 import MoreVert from "@material-ui/icons/MoreVert";
 import Edit from "@material-ui/icons/Edit";
 import Delete from "@material-ui/icons/Delete";
-import Add from "@material-ui/icons/Add";
-import ArrowForward from "@material-ui/icons/ArrowForward";
 import classNames from "classnames";
 
 import { GlobalContext } from "../../context/Context";
-import { categoryActiveSet } from "../../context/actions/category";
 import {
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_ERROR_TEXT_SET
@@ -28,28 +25,20 @@ import { Popover } from "../../components/portal/Popover";
 import { CategoryProps } from "../../types/category";
 
 import { CategoriesRename } from "./CategoriesRename";
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { CreateCategory } from "../../components/tabContent/CreateCategory";
 
 interface CategoriesPopoverProps {
   category: CategoryProps;
   loadCategories: Function;
-  iconBgChange?: boolean;
 }
 
-const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
-  RouteComponentProps> = ({
+export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
   category,
-  loadCategories,
-  history,
-  iconBgChange
+  loadCategories
 }) => {
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
   const [open, setOpen] = useState(false);
-  const [content, setContent] = useState<
-    "menu" | "rename" | "delete" | "addSubcategory"
-  >("menu");
+  const [content, setContent] = useState<"menu" | "rename" | "delete">("menu");
   const [errorShow, setErrorShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const menuRef = useRef(null);
@@ -60,11 +49,6 @@ const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
   const handleOpen = (open: boolean) => {
     setContent("menu");
     setOpen(open);
-  };
-
-  const showCardsOfCategory = (category?: CategoryProps) => {
-    categoryActiveSet(dispatch, category);
-    history.push("/cards");
   };
 
   const handleDelete = () => {
@@ -98,9 +82,7 @@ const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
           e.stopPropagation();
           handleOpen(!open);
         }}
-        className={classNames(classesText.icon, classesText.iconBig, {
-          [classesText.iconChangedBg]: iconBgChange
-        })}
+        className={classNames(classesText.icon, classesText.iconBig)}
       >
         <MoreVert fontSize="inherit" />
       </div>
@@ -113,22 +95,6 @@ const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
           <div onClick={(e: any) => e.stopPropagation()}>
             {content === "menu" && (
               <MenuList>
-                <MenuItem onClick={() => showCardsOfCategory(category)}>
-                  <ListItemIcon>
-                    <ArrowForward />
-                  </ListItemIcon>
-                  <ListItemText primary="Zobrazit karty kategorie" />
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    setContent("addSubcategory");
-                  }}
-                >
-                  <ListItemIcon>
-                    <Add />
-                  </ListItemIcon>
-                  <ListItemText primary="Přidat subkategorii" />
-                </MenuItem>
                 <MenuItem onClick={() => setContent("rename")}>
                   <ListItemIcon>
                     <Edit />
@@ -142,13 +108,6 @@ const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
                   <ListItemText primary="Odstranit" />
                 </MenuItem>
               </MenuList>
-            )}
-            {content === "addSubcategory" && (
-              <CreateCategory
-                setOpen={handleOpen}
-                activeCategory={category}
-                loadCategories={loadCategories}
-              />
             )}
             {content === "rename" && (
               <CategoriesRename
@@ -170,10 +129,9 @@ const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
               >
                 <div
                   className={classNames(
+                    classesText.textGrey,
                     classesText.textBold,
-                    classesText.textCenter,
-                    classesSpacing.p2,
-                    classesSpacing.pb1
+                    classesText.textCenter
                   )}
                 >
                   Opravdu chcete smazat kategorii {category.name}
@@ -183,18 +141,14 @@ const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
                 </div>
                 <div
                   className={classNames(
-                    classesSpacing.mt1,
+                    classesSpacing.mt2,
                     classesLayout.flex,
                     classesLayout.spaceBetween,
                     classesLayout.flexGrow,
                     classesLayout.directionRowReverse
                   )}
                 >
-                  <Button
-                    variant="text"
-                    color="secondary"
-                    onClick={handleDelete}
-                  >
+                  <Button variant="text" color="primary" onClick={handleDelete}>
                     Smazat
                   </Button>
                   <Button
@@ -213,4 +167,3 @@ const CategoriesPopoverView: React.FC<CategoriesPopoverProps &
     </>
   );
 };
-export const CategoriesPopover = withRouter(CategoriesPopoverView);

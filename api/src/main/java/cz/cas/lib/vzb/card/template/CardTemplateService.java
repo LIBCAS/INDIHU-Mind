@@ -14,6 +14,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_FAILED_COMPARISON;
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.eq;
 import static core.util.Utils.notNull;
 
@@ -35,20 +38,20 @@ public class CardTemplateService {
     @Transactional
     public void delete(String id) {
         CardTemplate entity = find(id);
-        notNull(entity, () -> new MissingObject(CardTemplate.class, id));
-        notNull(entity.getOwner(), () -> new ForbiddenObject(CardTemplate.class, id));
-        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(CardTemplate.class, id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, CardTemplate.class, id));
+        notNull(entity.getOwner(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, CardTemplate.class, id));
+        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, CardTemplate.class, id));
         store.delete(entity);
     }
 
     @Transactional
     public CardTemplate save(String id, CardTemplate newTemplate) {
-        eq(id, newTemplate.getId(), () -> new BadArgument("id"));
+        eq(id, newTemplate.getId(), () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "id != dto.id"));
 
         newTemplate.setOwner(userDelegate.getUser());
         CardTemplate templateInDb = find(newTemplate.getId());
         if (templateInDb != null) {
-            eq(templateInDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(CardTemplate.class, newTemplate.getId()));
+            eq(templateInDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, CardTemplate.class, newTemplate.getId()));
             templateInDb.getAttributeTemplates().stream().filter(a -> !newTemplate.getAttributeTemplates().contains(a)).forEach(
                     a -> attributeTemplateStore.hardDelete(a)
             );

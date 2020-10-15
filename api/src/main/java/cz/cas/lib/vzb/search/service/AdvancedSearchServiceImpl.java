@@ -6,7 +6,6 @@ import core.exception.MissingObject;
 import core.index.dto.Result;
 import core.store.Transactional;
 import core.util.Utils;
-import cz.cas.lib.vzb.reference.marc.record.MarcRecord;
 import cz.cas.lib.vzb.search.query.*;
 import cz.cas.lib.vzb.search.searchable.AdvancedSearch;
 import cz.cas.lib.vzb.search.searchable.AdvancedSearchClass;
@@ -29,6 +28,8 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.eq;
 import static core.util.Utils.notNull;
 
@@ -76,7 +77,7 @@ public class AdvancedSearchServiceImpl implements AdvancedSearchService {
             forSave.setOwner(userDelegate.getUser());
             log.debug(String.format("Creating new Query entity '%s' for user '%s'", forSave.getId(), userDelegate.getUser()));
         } else { // UPDATE
-            eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Query.class, forSave.getId()));
+            eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Query.class, forSave.getId()));
             forSave.setOwner(userDelegate.getUser());
             log.debug(String.format("Updating Query entity '%s' of user '%s'", forSave.getId(), userDelegate.getUser()));
         }
@@ -94,8 +95,8 @@ public class AdvancedSearchServiceImpl implements AdvancedSearchService {
     @Override
     public Query findQuery(String id) {
         Query entity = store.find(id);
-        notNull(entity, () -> new MissingObject(MarcRecord.class, id));
-        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Query.class, id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, Query.class, id));
+        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Query.class, id));
 
         return entity;
     }

@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static core.exception.BadArgument.ErrorCode.WRONG_MARC_FORMAT;
+
 @Service
 @Slf4j
 public class MarcFieldsValidator {
@@ -58,19 +60,19 @@ public class MarcFieldsValidator {
 
     private void assertFieldHasSupportedTag(Datafield field, List<MarcFieldStructure> fieldsForTag) {
         if (fieldsForTag == null)
-            throw new BadArgument("Datafield:{" + field + "} has a tag that is not supported");
+            throw new BadArgument(WRONG_MARC_FORMAT, "Datafield:{" + field + "} has a tag that is not supported");
     }
 
     private void assertFieldContainsSupportedCodes(Datafield field, List<Character> supportedCodes, List<Character> codesOfField) {
         for (Character character : codesOfField) {
             if (!supportedCodes.contains(character))
-                throw new BadArgument("Datafield:{" + field + "} contains code that is not supported: '" + character + "'");
+                throw new BadArgument(WRONG_MARC_FORMAT, "Datafield:{" + field + "} contains code that is not supported: '" + character + "'");
         }
     }
 
     private void assertFieldHasNoDuplicatedCodes(Datafield field, List<Character> codesOfField) {
         if (!codesOfField.stream().sequential().allMatch(new HashSet<>()::add)) {
-            throw new BadArgument("Datafield:{" + field + "} contains code that occurs more than once.");
+            throw new BadArgument(WRONG_MARC_FORMAT, "Datafield:{" + field + "} contains code that occurs more than once.");
         }
     }
 

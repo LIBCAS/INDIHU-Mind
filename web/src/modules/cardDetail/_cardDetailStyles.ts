@@ -10,6 +10,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     actionsIcon: {
       marginLeft: theme.spacing(1),
+      color: theme.greyText,
       transition: ".3s ease color",
       cursor: "pointer",
       "&:hover": {
@@ -19,10 +20,6 @@ export const useStyles = makeStyles((theme: Theme) => {
     actionsBack: {
       marginLeft: 0,
       marginRight: "auto"
-    },
-    actions: {
-      display: "flex",
-      alignItems: "center"
     },
     contentCategoryCreate: {
       display: "inline-block"
@@ -94,25 +91,10 @@ export const useStyles = makeStyles((theme: Theme) => {
     iconSecondary: {
       transition: ".3s ease color",
       cursor: "pointer",
-      color: theme.blackIconColor,
+      color: theme.greyText,
       "&:hover": {
         color: theme.palette.secondary.main
       }
-    },
-    cardPrint: {
-      padding: 12
-    },
-    cardPrintRow: {
-      display: "flex",
-      marginBottom: 6
-    },
-    cardPrintLabel: {
-      width: 80,
-      marginRight: 8,
-      textAlign: "right"
-    },
-    cardPrintValue: {
-      fontWeight: "bold"
     }
   };
 });

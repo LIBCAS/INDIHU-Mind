@@ -12,7 +12,7 @@ export const labelGet = (dispatch: any) => {
   api()
     .get("label")
     .json()
-    .then((res: any) => {
+    .then(res => {
       dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: -1 });
       dispatch({ type: LABEL_GET, payload: res });
     })

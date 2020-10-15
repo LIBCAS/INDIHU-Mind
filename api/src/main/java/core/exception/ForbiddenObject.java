@@ -1,41 +1,38 @@
 package core.exception;
 
-import core.domain.DomainObject;
-import core.rest.config.ResourceExceptionHandler;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-/**
- * @see ResourceExceptionHandler#forbiddenObject(ForbiddenObject)
- */
-public class ForbiddenObject extends GeneralException {
-    private Object object;
+import java.util.Map;
 
-    public ForbiddenObject(Object object) {
-        super();
-        this.object = object;
+public class ForbiddenObject extends RestGeneralException {
+
+    public ForbiddenObject(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    public ForbiddenObject(Class<?> clazz, String objectId) {
-        super();
-        try {
-            this.object = clazz.newInstance();
+    public ForbiddenObject(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
+    }
 
-            if (DomainObject.class.isAssignableFrom(clazz)) {
-                ((DomainObject) this.object).setId(objectId);
-            }
+    public ForbiddenObject(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
+    }
 
-        } catch (Exception e) {
-            // ignore
+    public ForbiddenObject(RestErrorCodeEnum code, Class<?> clazz, String objectId) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
+    }
+
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        NOT_OWNED_BY_USER("Vlastněn jiným uživatelem");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
         }
-    }
-
-    @Override
-    public String toString() {
-        return "ForbiddenObject{" +
-                "object=" + object +
-                '}';
-    }
-
-    public Object getObject() {
-        return object;
     }
 }

@@ -1,15 +1,14 @@
 package cz.cas.lib.vzb.reference.marc.record;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import cz.cas.lib.vzb.dto.validation.Uuid;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.lang.Nullable;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,16 +16,12 @@ import java.util.List;
  * @see Citation
  * @see UpdateCitationDto
  */
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
-@ValidCreateCitationDto
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonPropertyOrder({"name", "content", "dataFields"})
 public class CreateCitationDto {
-
-    @NotNull
-    @ApiModelProperty(value = "Type of citation", required = true, allowableValues = "MARC, BRIEF")
-    private CitationType type;
 
     @NotBlank
     @ApiModelProperty(value = "Name of citation", required = true)
@@ -38,10 +33,10 @@ public class CreateCitationDto {
     @ApiModelProperty(value = "IDs of linked cards")
     private List<@Uuid String> linkedCards = new ArrayList<>();
 
-    @ApiModelProperty(value = "Datafields of MARC citation", notes = "Use only with type=MARC")
+    @ApiModelProperty(value = "MARC datafields")
     private List<Datafield> dataFields = new ArrayList<>();
 
-    @ApiModelProperty(value = "Copy-pasted text of BRIEF citation", notes = "Use only with type=BRIEF")
+    @ApiModelProperty(value = "Copy-pasted text")
     private String content;
 
 }

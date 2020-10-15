@@ -1,40 +1,39 @@
 package core.exception;
 
-import core.rest.config.ResourceExceptionHandler;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-/**
- * @see ResourceExceptionHandler#missingObject(core.exception.MissingObject)
- */
-public class MissingObject extends GeneralException {
-    private String type;
+import java.util.Map;
 
-    private String id;
+public class MissingObject extends RestGeneralException {
 
-    public MissingObject(Class clazz, String id) {
-        super(makeMessage(clazz.getTypeName(), id));
-        this.type = clazz.getTypeName();
-        this.id = id;
+    public MissingObject(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    public MissingObject(String type, String id) {
-        super(makeMessage(type, id));
-        this.type = type;
-        this.id = id;
+    public MissingObject(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
     }
 
-    @Override
-    public String toString() {
-        return makeMessage(type, id);
+    public MissingObject(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
     }
 
-    private static String makeMessage(String type, String id) {
-        return "MissingObject{" +
-                "type=" + type +
-                ", id='" + id + '\'' +
-                '}';
+    public MissingObject(RestErrorCodeEnum code, Class<?> clazz, String objectId) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
     }
 
-    public String getId() {
-        return id;
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        ENTITY_IS_NULL("Entita nenalezena"),
+        FILE_IS_MISSING("Soubor chybí");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
+        }
     }
 }

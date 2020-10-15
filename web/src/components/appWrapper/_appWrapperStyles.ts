@@ -11,23 +11,8 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     gridRight: {
       width: "100%",
-      height: "100%",
-      overflow: "auto",
-      "&::-webkit-scrollbar": {
-        width: "6px",
-        backgroundColor: "#F5F5F5"
-      },
-      "&::-webkit-scrollbar-track": {
-        "-webkit-box-shadow": "inset 0 0 6px rgba(0,0,0,0.3)",
-        backgroundColor: "#F5F5F5"
-      },
-      "&::-webkit-scrollbar-thumb": {
-        backgroundColor: "#093d77"
-      },
-      padding: theme.spacing(1)
-    },
-    gridRightCompact: {
-      [theme.breakpoints.up("lg")]: {
+      padding: theme.spacing(1),
+      [theme.breakpoints.up("md")]: {
         width: "calc(100% - 250px)"
       }
     }

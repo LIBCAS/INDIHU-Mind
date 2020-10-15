@@ -14,6 +14,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import java.util.Collection;
 
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.notNull;
 import static cz.cas.lib.vzb.util.ResponseContainer.LIST;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -47,7 +48,7 @@ public class CardTemplateApi {
     @GetMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE)
     public CardTemplate find(@ApiParam(value = "ID of entity", required = true) @PathVariable("id") String id) {
         CardTemplate entity = service.find(id);
-        notNull(entity, () -> new MissingObject(CardTemplate.class, id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, CardTemplate.class, id));
         return entity;
     }
 

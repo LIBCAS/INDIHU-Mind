@@ -9,7 +9,6 @@ import { FileItem } from "../../components/file/FileItem";
 import { GlobalContext } from "../../context/Context";
 import { CardProps } from "../../types/card";
 
-import { Gallery } from "../../components/gallery";
 import { Record } from "../../components/card/Record";
 import { Label } from "../../components/card/Label";
 import { Category } from "../../components/card/Category";
@@ -92,102 +91,97 @@ const CardsTableDetailContentView: React.FC<CardsTableDetailContentProps &
         <Popconfirm
           confirmText="Smazat kartu?"
           onConfirmClick={handleDelete}
-          Button={
+          Button={() => (
             <Button
               variant="outlined"
               className={classNames(classesSpacing.ml1, classesSpacing.mb1)}
               size="small"
-              color="secondary"
+              color="inherit"
             >
               Smazat <Delete className={classesSpacing.ml1} fontSize="small" />
             </Button>
-          }
+          )}
         />
       </div>
-      <Gallery items={card.documents} />
-      {card.categories.length > 0 && (
-        <div className={classesSpacing.mt2}>
-          <Typography className={classNames(classesText.subtitle)}>
-            kategorie
-          </Typography>
-          {card.categories.map(cat => (
-            <Category key={cat.id} category={cat} />
-          ))}
-        </div>
-      )}
+      <div />
+      {card.categories.map(cat => (
+        <Category key={cat.id} category={cat} />
+      ))}
       {card.note && (
-        <div className={classesSpacing.mt2}>
-          <Typography className={classNames(classesText.subtitle)}>
-            popis
-          </Typography>
-          <Typography variant="body1" className={classesSpacing.mt2}>
-            {card.note}
-          </Typography>
-        </div>
+        <Typography variant="body1" className={classesSpacing.mt2}>
+          {card.note}
+        </Typography>
       )}
       {card.labels.length > 0 && (
-        <div className={classesSpacing.mt2}>
-          <Typography className={classesText.subtitle}>štítky</Typography>
-          <div
-            className={classNames(classesLayout.flex, classesLayout.flexWrap)}
-          >
-            {card.labels.map(label => (
-              <Label key={label.id} label={label} />
-            ))}
-          </div>
-        </div>
+        <Typography
+          className={classNames(classesText.subtitle, classesSpacing.mt2)}
+        >
+          štítky
+        </Typography>
       )}
+      <div className={classNames(classesLayout.flex, classesLayout.flexWrap)}>
+        {card.labels.map(label => (
+          <Label key={label.id} label={label} />
+        ))}
+      </div>
       {card.records.length > 0 && (
-        <div className={classesSpacing.mt2}>
-          <Typography className={classesText.subtitle}>Citace</Typography>
-          <div
-            className={classNames(classesLayout.flex, classesLayout.flexWrap)}
-          >
-            {card.records.map(record => (
-              <Record key={record.id} record={record} />
-            ))}
-          </div>
-        </div>
+        <Typography
+          className={classNames(classesText.subtitle, classesSpacing.mt2)}
+        >
+          Citace
+        </Typography>
       )}
+      <div className={classNames(classesLayout.flex, classesLayout.flexWrap)}>
+        {card.records.map(record => (
+          <Record key={record.id} record={record} />
+        ))}
+      </div>
       {card.attributes && (
-        <div className={classesSpacing.mt2}>
-          <Typography className={classesText.subtitle}>Atributy</Typography>
-          <div
-            className={classNames(classesLayout.flex, classesLayout.flexWrap)}
-          >
-            {card.attributes.map(attribute => {
-              return (
-                <div
-                  key={attribute.id}
-                  className={classNames(
-                    classesLayout.flex,
-                    classesSpacing.mb1,
-                    classesLayout.directionColumn
-                  )}
-                >
-                  <Typography className={classes.contentAttributeTitle}>
-                    {attribute.name}
-                  </Typography>
-                  <Typography>{parseAttribute(attribute)}</Typography>
-                </div>
-              );
-            })}
-          </div>
+        <div
+          className={classNames(
+            classesLayout.flex,
+            classesLayout.directionColumn,
+            classesSpacing.mt1
+          )}
+        >
+          {card.attributes.map(attribute => {
+            return (
+              <div
+                key={attribute.id}
+                className={classNames(
+                  classesLayout.flex,
+                  classesSpacing.mb1,
+                  classesLayout.directionColumn
+                )}
+              >
+                <Typography className={classes.contentAttributeTitle}>
+                  {attribute.name}
+                </Typography>
+                <Typography>{parseAttribute(attribute)}</Typography>
+              </div>
+            );
+          })}
         </div>
       )}
-      {card.documents && card.documents.length > 0 && (
-        <div className={classesSpacing.mt2}>
-          <Typography className={classesText.subtitle}>Soubory</Typography>
+      {card.files && card.files.length > 0 && (
+        <>
+          <Typography
+            className={classNames(classesText.subtitle, classesSpacing.mt1)}
+          >
+            Soubory
+          </Typography>
           <div className={classes.columnsWrapper}>
-            {card.documents.map(f => (
+            {card.files.map(f => (
               <FileItem key={f.id} file={f} />
             ))}
           </div>
-        </div>
+        </>
       )}
       {(card.linkedCards.length > 0 || card.linkingCards.length > 0) && (
-        <div className={classesSpacing.mt2}>
-          <Typography className={classesText.subtitle}>
+        <>
+          <Typography
+            className={classNames(classesText.subtitle, classesSpacing.mt1)}
+          >
             Propojené karty
           </Typography>
           <div className={classes.columnsWrapper}>
@@ -198,7 +192,7 @@ const CardsTableDetailContentView: React.FC<CardsTableDetailContentProps &
               <CardTile key={card.id} card={card} />
             ))}
           </div>
-        </div>
+        </>
       )}
     </div>
   );

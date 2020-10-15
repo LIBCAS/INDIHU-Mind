@@ -1,7 +1,6 @@
 import React, { useState, useContext } from "react";
 import Grid from "@material-ui/core/Grid";
 import Fade from "@material-ui/core/Fade";
-import classNames from "classnames";
 
 import { GlobalContext } from "../../context/Context";
 
@@ -18,10 +17,9 @@ export const AppWrapper: React.FC = ({ children }) => {
   const dispatch: Function = context.dispatch;
   const classes = useStyles();
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
-  const enableCards = /^\/card/.test(window.location.pathname);
 
   return (
-    <Fade style={{ height: "100%" }} in>
+    <Fade in>
       <div className={classes.base}>
         <TableSearchWatcher
           dispatch={dispatch}
@@ -30,25 +28,14 @@ export const AppWrapper: React.FC = ({ children }) => {
           labelActive={labelActive}
         />
         <Navbar setLeftPanelOpen={setLeftPanelOpen} />
-        <Grid
-          container
-          spacing={0}
-          style={{ flexWrap: "nowrap", height: "calc(100% - 64px)" }}
-        >
+        <Grid container spacing={0} style={{ flexWrap: "nowrap" }}>
           <Grid item>
             <LeftPanel
               leftPanelOpen={leftPanelOpen}
               setLeftPanelOpen={setLeftPanelOpen}
-              enableCards={enableCards}
             />
           </Grid>
-          <Grid
-            item
-            className={classNames(
-              classes.gridRight,
-              enableCards && classes.gridRightCompact
-            )}
-          >
+          <Grid item className={classes.gridRight}>
             {children}
           </Grid>
         </Grid>

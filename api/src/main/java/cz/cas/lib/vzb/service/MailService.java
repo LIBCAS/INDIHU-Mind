@@ -28,7 +28,7 @@ public class MailService {
 
     public void sendResetPasswordEmail(String email, String tokenId) {
         Map<String, Object> params = asMap("passwordResetUrl", serverAddress + "/reset-password?token=" + tokenId);
-        String templateName = "mail/passwordReset.ftl";
+        String templateName = "mail/passwordReset.ftlh";
         String emailSubject = "Obnova hesla";
 
         createEmail(email, templateName, emailSubject, params);
@@ -36,7 +36,7 @@ public class MailService {
 
     public void sendUserCreatedEmail(String email, String password) {
         Map<String, Object> params = asMap("password", password, "email", email);
-        String templateName = "mail/userCreated.ftl";
+        String templateName = "mail/userCreated.ftlh";
         String emailSubject = "Vytvořen účet";
 
         createEmail(email, templateName, emailSubject, params);
@@ -46,7 +46,7 @@ public class MailService {
      * Creates and sends email
      *
      * @param email        address of receiver
-     * @param templateName path to FreeMaker template e.g. mail/my-template.ftl
+     * @param templateName path to FreeMaker template e.g. mail/my-template.ftlh
      * @param emailSubject subject of the email
      * @param fields       map of values to insert into email template
      */

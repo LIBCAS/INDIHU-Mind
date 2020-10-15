@@ -28,12 +28,7 @@ export const RecordsMenu: React.FC<RecordsMenuProps> = ({
   );
   return (
     <>
-      <Modal
-        open={showModal}
-        setOpen={setShowModal}
-        content={Content}
-        fullSize={true}
-      />
+      <Modal open={showModal} setOpen={setShowModal} content={Content} />
     </>
   );
 };

@@ -11,7 +11,7 @@ import {
 } from "../../context/reducers/status";
 import { api } from "../../utils/api";
 import { notEmpty } from "../../utils/form/validate";
-import { OptionType } from "../../components/select/_types";
+import { OptionType } from "../../components/form/reactSelect/_reactSelectTypes";
 import { Formik } from "../../components/form/Formik";
 import { Select } from "../../components/form/Select";
 

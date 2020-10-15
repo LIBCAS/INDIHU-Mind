@@ -1,51 +1,56 @@
-env: deploy # staging / deploy
+env: deploy # deploy / staging (for test data initialization)
 
 spring:
   application:
     name: vzb
-
+  freemarker:
+    checkTemplateLocation: false
   datasource:
     url: jdbc:postgresql://localhost:5432/vzb
-    username: uas
-    password: vuji61oilo
+    username: INSERT_VALUE_HERE
+    password: INSERT_VALUE_HERE
     driver-class-name: org.postgresql.Driver
     name: mainPool
-
   jpa:
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQL9Dialect
     hibernate:
       ddl-auto: validate
-      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
       use-new-id-generator-mappings: true
-    properties.hibernate.jdbc.lob.non_contextual_creation: true
-
+      naming:
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    properties:
+      hibernate:
+        jdbc.lob.non_contextual_creation: true
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10250KB # 10MB + 10KB buffer for request fields
-
   jackson:
     serialization:
       write-dates-as-timestamps: false
-
   mail: # data for connecting to SMTP server
-    host: smtp.gmail.com
-    port: 465
-    username: noreply@inqool.cz
-    password: DER8wJQWB44ppa2V
-    protocol: smtp
+    host: INSERT_VALUE_HERE
+    port: INSERT_VALUE_HERE
+    username: INSERT_VALUE_HERE
+    password: INSERT_VALUE_HERE
+    protocol: INSERT_VALUE_HERE
     properties.mail.smtp:
       auth: true
       starttls.enable: false
-      ssl.trust: smtp.gmail.com
+      ssl.trust: INSERT_VALUE_HERE
       ssl.enable: true
-
   liquibase:
     changeLog: classpath:/dbchangelog.vzb.xml
     url: jdbc:postgresql://localhost:5432/vzb
-    user: uas
-    password: vuji61oilo
+    user: INSERT_VALUE_HERE
+    password: INSERT_VALUE_HERE
+
+server:
+  tomcat:
+    max-http-form-post-size: -1
+    max-swallow-size: -1
 
 mail: # data for creating email in UAS MailCenter
   sender:
@@ -61,9 +66,9 @@ security:
   basic:
     authQuery: "/api/login"
   jwt:
-    secret: YXVyYTI0Z3JvZ3M=
-    expiration: 300000
-    refresh: 30
+    secret: INSERT_VALUE_HERE # Secret encoded in Base64 format
+    expiration: 300000 # Seconds
+    refresh: 30 # Seconds
   password:
     length: 8
     digit: true

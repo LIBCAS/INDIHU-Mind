@@ -59,7 +59,7 @@ export const onDeleteCard = (
 ) => {
   dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: 1 });
   api()
-    .post(`card/set_softdelete`, {
+    .post(`card/set-softdelete`, {
       json: {
         ids: [id],
         value: true

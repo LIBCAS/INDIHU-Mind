@@ -5,10 +5,10 @@ import { GlobalContext, StateProps } from "../../context/Context";
 import { categoryGet } from "../../context/actions/category";
 import { CreateCategory } from "../../components/tabContent/CreateCategory";
 import { Modal } from "../../components/portal/Modal";
-import { Select } from "../../components/form/Select";
 
 import { CategoryProps } from "../../types/category";
-import { OptionType } from "../../components/select/_types";
+import { OptionType } from "../../components/form/reactSelect/_reactSelectTypes";
+import { ReactSelect } from "../../components/form/reactSelect/ReactSelect";
 
 import { flattenCategory, parseCategory } from "./_utils";
 
@@ -66,12 +66,11 @@ export const CardCreateAddCategory: React.FC<CardCreateAddCategoryProps> = ({
       name="categories"
       render={({ field, form }: FieldProps<any>) => {
         return (
-          <div>
-            <Select
+          <>
+            <ReactSelect
               form={form}
               field={field}
               loading={false}
-              isMulti={true}
               label="Kategorie"
               options={options}
               onCreate={onCreate}
@@ -88,7 +87,7 @@ export const CardCreateAddCategory: React.FC<CardCreateAddCategoryProps> = ({
                 />
               }
             />
-          </div>
+          </>
         );
       }}
     />

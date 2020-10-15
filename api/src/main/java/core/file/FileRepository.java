@@ -14,6 +14,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_IS_NULL;
+import static core.exception.BadArgument.ErrorCode.INVALID_UUID;
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
+import static core.exception.MissingObject.ErrorCode.FILE_IS_MISSING;
 import static core.util.Utils.checked;
 import static core.util.Utils.notNull;
 import static java.nio.file.Files.*;
@@ -54,7 +59,7 @@ public class FileRepository {
         checkUUID(id);
 
         FileRef fileRef = store.find(id);
-        notNull(fileRef, () -> new MissingObject(FileRef.class, id));
+        notNull(fileRef, () -> new MissingObject(ENTITY_IS_NULL, FileRef.class, id));
 
         Path path = Paths.get(basePath, id);
 
@@ -66,7 +71,7 @@ public class FileRepository {
 
             return fileRef;
         } else {
-            throw new MissingObject(Path.class, id);
+            throw new MissingObject(FILE_IS_MISSING, Path.class, id);
         }
     }
 
@@ -93,7 +98,7 @@ public class FileRepository {
             });
 
         } else {
-            throw new MissingObject(Path.class, ref.getId());
+            throw new MissingObject(FILE_IS_MISSING, Path.class, ref.getId());
         }
     }
 
@@ -130,7 +135,7 @@ public class FileRepository {
         checkUUID(id);
 
         FileRef fileRef = store.find(id);
-        notNull(fileRef, () -> new MissingObject(FileRef.class, id));
+        notNull(fileRef, () -> new MissingObject(ENTITY_IS_NULL, FileRef.class, id));
 
         return fileRef;
     }
@@ -150,9 +155,9 @@ public class FileRepository {
      */
     @Transactional
     public FileRef create(InputStream stream, String name, String contentType) {
-        notNull(stream, () -> new BadArgument("stream"));
-        notNull(name, () -> new BadArgument("name"));
-        notNull(contentType, () -> new BadArgument("contentType"));
+        notNull(stream, () -> new BadArgument(ARGUMENT_IS_NULL, "stream"));
+        notNull(name, () -> new BadArgument(ARGUMENT_IS_NULL,"name"));
+        notNull(contentType, () -> new BadArgument(ARGUMENT_IS_NULL,"contentType"));
 
         FileRef ref = new FileRef();
         ref.setName(name);
@@ -163,7 +168,7 @@ public class FileRepository {
             Path folder = Paths.get(basePath);
 
             if (!isDirectory(folder) && exists(folder)) {
-                throw new ForbiddenObject(Path.class, ref.getId());
+                throw new ForbiddenObject(NOT_OWNED_BY_USER, Path.class, ref.getId());
             } else if (!isDirectory(folder)) {
                 createDirectories(folder);
             }
@@ -187,7 +192,7 @@ public class FileRepository {
      */
     @Transactional
     public void del(FileRef fileRef) {
-        notNull(fileRef, () -> new BadArgument("fileRef"));
+        notNull(fileRef, () -> new BadArgument(ARGUMENT_IS_NULL, "fileRef"));
 
         Path path = Paths.get(basePath, fileRef.getId());
 
@@ -201,7 +206,7 @@ public class FileRepository {
     }
 
     private void checkUUID(String id) {
-        checked(() -> UUID.fromString(id), () -> new BadArgument(Path.class, id));
+        checked(() -> UUID.fromString(id), () -> new BadArgument(INVALID_UUID, Path.class, id));
     }
 
     /**

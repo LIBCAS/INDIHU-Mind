@@ -15,15 +15,10 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 public class IndexedCitation extends IndexedNamedObject implements AdvancedSearchClass {
 
     public static final String USER_ID = "user_id";
-    public static final String CITATION_TYPE = "citation_type";
 
     @Field(value = USER_ID)
     @Indexed(type = IndexFieldType.STRING)
     private String userId;
-
-    @Field(value = CITATION_TYPE)
-    @Indexed(type = IndexFieldType.STRING)
-    private String citationType;
 
 
     // ------------------------------------ ADVANCED SEARCH CLASS ------------------------------------

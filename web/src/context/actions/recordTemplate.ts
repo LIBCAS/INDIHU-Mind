@@ -9,16 +9,10 @@ import {
 export const recordTemplateGet = (dispatch: any) => {
   dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: 1 });
   api()
-    .post("template/parametrized", {
-      json: {
-        page: 0,
-        pageSize: 0,
-        filter: []
-      }
-    })
+    .get("template")
     .json<any[]>()
-    .then((res: any) => {
-      const resFiltered = res.items.filter((r: any) => !r.deleted);
+    .then(res => {
+      const resFiltered = res.filter(r => !r.deleted);
       dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: -1 });
       dispatch({ type: RECORD_TEMPLATE_GET, payload: resFiltered });
     })

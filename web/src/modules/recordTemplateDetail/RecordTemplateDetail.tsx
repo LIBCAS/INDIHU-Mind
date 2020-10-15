@@ -9,6 +9,7 @@ import { RecordTemplateDetailActions } from "./RecordTemplateDetailActions";
 import { RecordTemplateDetailContent } from "./RecordTemplateDetailContent";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { RecordTemplateProps } from "../../types/recordTemplate";
+import { parseTemplate } from "../recordsTemplates/_utils";
 
 export const RecordTemplateDetail: React.FC<RouteComponentProps> = ({
   history,
@@ -25,7 +26,7 @@ export const RecordTemplateDetail: React.FC<RouteComponentProps> = ({
     api()
       .get(`template/${recordTemplateId}`)
       .json<RecordTemplateProps>()
-      .then((res: any) => {
+      .then(res => {
         setLoading(false);
         if (res) {
           setRecord(res);

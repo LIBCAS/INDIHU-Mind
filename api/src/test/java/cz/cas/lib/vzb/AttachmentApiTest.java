@@ -7,7 +7,6 @@ import cz.cas.lib.vzb.card.IndexedCard;
 import cz.cas.lib.vzb.init.builders.*;
 import cz.cas.lib.vzb.reference.marc.record.Citation;
 import cz.cas.lib.vzb.reference.marc.record.CitationStore;
-import cz.cas.lib.vzb.reference.marc.record.MarcRecord;
 import cz.cas.lib.vzb.security.user.Roles;
 import cz.cas.lib.vzb.security.user.User;
 import cz.cas.lib.vzb.security.user.UserService;
@@ -103,7 +102,7 @@ public class AttachmentApiTest extends ApiTest {
         Card card = CardBuilder.builder().pid(1).name("card").owner(user).build();
         Card card2 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
         transactionTemplate.execute(t -> cardStore.save(asList(card, card2)));
-        MarcRecord record = MarcRecordBuilder.builder().name("record ein").owner(user).linkedCards(card, card2).build();
+        Citation record = CitationBuilder.builder().name("record ein").owner(user).linkedCards(card, card2).build();
         transactionTemplate.execute(t -> citationStore.save(record));
 
         Path fileInStorage = Files.createFile(TEST_FILES_DIRECTORY.resolve("filename.pdf"));
@@ -149,8 +148,8 @@ public class AttachmentApiTest extends ApiTest {
     public void saveExternalFile() throws Exception {
         Card card = CardBuilder.builder().pid(1).name("card").owner(user).build();
         transactionTemplate.execute(t -> cardStore.save(card));
-        MarcRecord record = MarcRecordBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
-        MarcRecord record2 = MarcRecordBuilder.builder().name("record two").owner(user).linkedCards(card).build();
+        Citation record = CitationBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
+        Citation record2 = CitationBuilder.builder().name("record two").owner(user).linkedCards(card).build();
         transactionTemplate.execute(t -> citationStore.save(asList(record, record2)));
 
         CreateAttachmentDto createDto = new CreateAttachmentDto();
@@ -192,15 +191,16 @@ public class AttachmentApiTest extends ApiTest {
     }
 
     @Test
-    public void saveUrlFile() throws Exception {
+    public void saveUrlFileWeb() throws Exception {
         Card card = CardBuilder.builder().pid(1).name("card").owner(user).build();
         Card card2 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
         transactionTemplate.execute(t -> cardStore.save(asList(card, card2)));
-        MarcRecord record = MarcRecordBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
-        MarcRecord record2 = MarcRecordBuilder.builder().name("record two").owner(user).linkedCards(card2).build();
+        Citation record = CitationBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
+        Citation record2 = CitationBuilder.builder().name("record two").owner(user).linkedCards(card2).build();
         transactionTemplate.execute(t -> citationStore.save(asList(record, record2)));
 
         CreateAttachmentDto createDto = new CreateAttachmentDto();
+        createDto.setLocation(UrlAttachmentFile.UrlDocumentLocation.WEB);
         createDto.setLinkedCards(asList(card.getId(), card2.getId()));
         createDto.setRecords(asList(record.getId(), record2.getId()));
         createDto.setName("husky.gif");
@@ -236,6 +236,59 @@ public class AttachmentApiTest extends ApiTest {
         assertThat(record2FromDb.getDocuments()).isNotNull();
         assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
 
+        Path downloadedFile = TEST_FILES_DIRECTORY.resolve(fromDb.getId());
+        assertThat(downloadedFile).doesNotExist();
+    }
+
+    @Test
+    public void saveUrlFileServer() throws Exception {
+        Card card = CardBuilder.builder().pid(1).name("card").owner(user).build();
+        Card card2 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
+        transactionTemplate.execute(t -> cardStore.save(asList(card, card2)));
+        Citation record = CitationBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
+        Citation record2 = CitationBuilder.builder().name("record two").owner(user).linkedCards(card2).build();
+        transactionTemplate.execute(t -> citationStore.save(asList(record, record2)));
+
+        CreateAttachmentDto createDto = new CreateAttachmentDto();
+        createDto.setLocation(UrlAttachmentFile.UrlDocumentLocation.SERVER);
+        createDto.setLinkedCards(asList(card.getId(), card2.getId()));
+        createDto.setRecords(asList(record.getId(), record2.getId()));
+        createDto.setName("husky.gif");
+        createDto.setProviderType(AttachmentFileProviderType.URL);
+        createDto.setType("gif");
+        createDto.setLink("https://upload.wikimedia.org/wikipedia/commons/f/f0/LogoMUNI-2018.png");
+
+        byte[] jsonContent = objectMapper.writeValueAsBytes(createDto);
+        MockMultipartFile jsonPart = new MockMultipartFile("dto", "dto", "application/json", jsonContent);
+
+        securedMvc().perform(
+                multipart(ATTACHMENT_API_URL)
+                        .file(jsonPart)
+                        .with(mockedUser(user.getId(), Roles.USER))
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        Set<AttachmentFile> cardFiles = cardStore.find(card.getId()).getDocuments();
+        assertThat(cardFiles).hasSize(1);
+        Optional<AttachmentFile> docuemntFromDb = cardFiles.stream().findFirst();
+        assertThat(docuemntFromDb).isPresent();
+        AttachmentFile fromDb = docuemntFromDb.get();
+        assertThat(fromDb.getProviderType()).isEqualTo(AttachmentFileProviderType.URL);
+        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card, card2);
+        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record, record2);
+
+        Citation recordFromDb = citationStore.find(record.getId());
+        assertThat(recordFromDb.getDocuments()).isNotNull();
+        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+
+        Citation record2FromDb = citationStore.find(record2.getId());
+        assertThat(record2FromDb.getDocuments()).isNotNull();
+        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+
+        Path downloadedFile = TEST_FILES_DIRECTORY.resolve(fromDb.getId());
+        assertThat(downloadedFile).exists();
+        assertThat(downloadedFile).isRegularFile();
     }
 
     @Test
@@ -388,8 +441,8 @@ public class AttachmentApiTest extends ApiTest {
     public void updateFromZeroToTwoRecords() throws Exception {
         Card card = CardBuilder.builder().pid(1).name("card1").owner(user).build();
         transactionTemplate.execute(t -> cardStore.save(asList(card)));
-        MarcRecord recordAfterUpdate = MarcRecordBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
-        MarcRecord recordAfterUpdate2 = MarcRecordBuilder.builder().name("record two").owner(user).linkedCards(card).build();
+        Citation recordAfterUpdate = CitationBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
+        Citation recordAfterUpdate2 = CitationBuilder.builder().name("record two").owner(user).linkedCards(card).build();
         transactionTemplate.execute(t -> citationStore.save(asList(recordAfterUpdate, recordAfterUpdate2)));
 
         final String uuid = UUID.randomUUID().toString();
@@ -438,8 +491,8 @@ public class AttachmentApiTest extends ApiTest {
     public void updateFromTwoToZeroRecords() throws Exception {
         Card card = CardBuilder.builder().pid(1).name("card1").owner(user).build();
         transactionTemplate.execute(t -> cardStore.save(asList(card)));
-        MarcRecord record = MarcRecordBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
-        MarcRecord record2 = MarcRecordBuilder.builder().name("record two").owner(user).linkedCards(card).build();
+        Citation record = CitationBuilder.builder().name("record ein").owner(user).linkedCards(card).build();
+        Citation record2 = CitationBuilder.builder().name("record two").owner(user).linkedCards(card).build();
         transactionTemplate.execute(t -> citationStore.save(asList(record, record2)));
 
         final String uuid = UUID.randomUUID().toString();
@@ -513,8 +566,8 @@ public class AttachmentApiTest extends ApiTest {
         Card card1 = CardBuilder.builder().pid(1).name("card1").owner(user).build();
         Card card2 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
         transactionTemplate.execute(t -> cardStore.save(asList(card1, card2)));
-        MarcRecord record = MarcRecordBuilder.builder().name("record ein").owner(user).linkedCards(card1, card2).build();
-        MarcRecord record2 = MarcRecordBuilder.builder().name("record two").owner(user).linkedCards(card2).build();
+        Citation record = CitationBuilder.builder().name("record ein").owner(user).linkedCards(card1, card2).build();
+        Citation record2 = CitationBuilder.builder().name("record two").owner(user).linkedCards(card2).build();
         transactionTemplate.execute(t -> citationStore.save(asList(record, record2)));
 
         final String uuid = UUID.randomUUID().toString();

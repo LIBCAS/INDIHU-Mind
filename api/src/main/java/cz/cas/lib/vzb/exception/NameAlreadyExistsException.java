@@ -1,36 +1,36 @@
 package cz.cas.lib.vzb.exception;
 
-import core.exception.GeneralException;
+import core.exception.RestGeneralException;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
 import cz.cas.lib.vzb.security.user.User;
+import lombok.Getter;
 
 /**
  * This exception is thrown when user tries to create entity with name that is already present
  * and this behaviour is enforced by this type of constraint from db.changelog
  *
  * {@code
- *  < addUniqueConstraint constraintName="vzb_label_of_user_uniqueness" tableName="vzb_label" columnNames="name,owner_id"/>
+ * < addUniqueConstraint constraintName="vzb_label_of_user_uniqueness" tableName="vzb_label"
+ * columnNames="name,owner_id"/>
  * }
  */
-public class NameAlreadyExistsException extends GeneralException {
-    private String type;
-    private String id;
-    private String name;
-    private String userId;
+public class NameAlreadyExistsException extends RestGeneralException {
 
-    public NameAlreadyExistsException(Class clazz, String otherEntityId, String name, User user) {
-        super(makeMessage(clazz.getTypeName(), otherEntityId, name, user.getId()));
-        this.type = clazz.getTypeName();
-        this.id = otherEntityId;
-        this.name = name;
-        this.userId = user.getId();
+    public NameAlreadyExistsException(RestErrorCodeEnum code, String name, Class<?> clazz, String objectId, User owner) {
+        super(code);
+        this.details = Utils.asMap("name", name, "class", clazz.getSimpleName(), "existingEntityId", objectId, "owner", owner.getId());
     }
 
-    @Override
-    public String toString() {
-        return makeMessage(type, id, name, userId);
-    }
 
-    private static String makeMessage(String type, String id, String name, String userId) {
-        return String.format("NameAlreadyExistsException {type=%s, ID of existing entity='%s', name='%s' of user='%s'}", type, id, name, userId);
+    public enum ErrorCode implements RestErrorCodeEnum {
+        NAME_ALREADY_EXISTS("Jméno již existuje");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
+        }
     }
 }
+

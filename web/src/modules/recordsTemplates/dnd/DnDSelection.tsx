@@ -1,51 +1,49 @@
-import React from "react";
+import React, { useRef } from "react";
 import classNames from "classnames";
-import { FormikProps } from "formik";
+import { get } from "lodash";
 
+import { useStyles } from "./_dndStyles";
 import { useStyles as useLayoutStyles } from "../../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
 
-import { Item } from "./_types";
+import { ItemTypes, Item } from "./_types";
 import { DnDSelectionItem } from "./DnDSelectionItem";
 import { Typography } from "@material-ui/core";
+import { useDrop } from "react-dnd";
+import { DragItem } from "./DndCard";
 
 interface DnDSelectionProps {
   initCards: Item[];
-  label?: string;
   cards: Item[];
   setCards: React.Dispatch<React.SetStateAction<Item[]>>;
-  formikBag: FormikProps<any>;
 }
 
 export const DnDSelection: React.FC<DnDSelectionProps> = ({
-  label,
-  ...rest
+  cards,
+  initCards,
+  setCards
 }) => {
+  const classes = useStyles();
   const classesLayout = useLayoutStyles();
   const classesSpacing = useSpacingStyles();
 
   return (
     <div>
-      {label && (
-        <Typography variant="subtitle1" gutterBottom>
-          {label}
-        </Typography>
-      )}
+      <Typography variant="subtitle1" gutterBottom>
+        Výběr MARC tagů
+      </Typography>
       <div
-        className={classNames(
-          classesLayout.flex,
-          classesLayout.directionColumn,
-          classesSpacing.mb2
-        )}
+        className={classNames(classesLayout.flex, classesLayout.flexWrap)}
         style={{ paddingRight: "-.5rem" }}
       >
-        {rest.initCards.map((card, i) => {
+        {Object.keys(initCards).map((key, i) => {
+          const { id, text }: Item = get(initCards, key);
           return (
             <DnDSelectionItem
-              key={card.id + i}
+              key={id + i}
+              id={id}
+              tag={id === "customizations" ? text : id}
               index={9999}
-              {...card}
-              {...rest}
             />
           );
         })}

@@ -16,12 +16,14 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import java.util.List;
 
+import static core.exception.BadArgument.ErrorCode.UNEXPECTED_ARGUMENT;
+
 /**
  * Api for creating and retrieving notifications.
  */
 @RestController
 @ApiIgnore("Not used in the project")
-@Api(value = "notifications", description = "Api for creating and retrieving notifications")
+@Api(value = "Notification Api for creating and retrieving notifications")
 @RequestMapping("/api/notifications")
 @Changed("multi notifications not supported")
 @RolesAllowed({Roles.ADMIN, Roles.USER})
@@ -118,7 +120,7 @@ public class NotificationApi {
             @ApiParam(value = "Notification will be also send by email", required = true) @RequestParam("emailing") boolean emailing) {
 
         if ((recipientId != null) == (roleId != null)) {
-            throw new BadArgument("exactly one of recipientId and roleId needs to be set");
+            throw new BadArgument(UNEXPECTED_ARGUMENT, "exactly one of recipientId and roleId needs to be set");
         } else if (recipientId != null) {
             service.createNotification(title, description, recipientId, flash, emailing);
         } else {

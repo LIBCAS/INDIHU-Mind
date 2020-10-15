@@ -32,13 +32,13 @@ export const useStyles = makeStyles((theme: Theme) => {
     cardLinked: {
       height: "140px",
       width: "100%",
-      //marginTop: theme.spacing(1.5),
+      marginTop: theme.spacing(1.5),
       borderTop: `1px solid ${theme.greyLight}`,
       borderLeft: `1px solid ${theme.greyLight}`,
       borderRight: `1px solid ${theme.greyLight}`,
       borderTopLeftRadius: "5px",
       borderTopRightRadius: "5px",
-      padding: theme.spacing(2)
+      padding: "12px 8px"
     },
     cardLinkedNote: {
       overflow: "hidden"

@@ -15,7 +15,6 @@ import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useEffectStyles } from "../../theme/styles/effectStyles";
 
 import { deleteAttribute } from "./_utils";
-import Typography from "@material-ui/core/Typography";
 
 interface TemplatesAttributeLabelProps {
   attribute: CardTemplateAttribute;
@@ -23,11 +22,9 @@ interface TemplatesAttributeLabelProps {
   setPopoverOpen: Function;
 }
 
-export const TemplatesAttributeLabel: React.FC<TemplatesAttributeLabelProps> = ({
-  attribute,
-  formikBag,
-  setPopoverOpen
-}) => {
+export const TemplatesAttributeLabel: React.FC<
+  TemplatesAttributeLabelProps
+> = ({ attribute, formikBag, setPopoverOpen }) => {
   const classesText = useTextStyles();
   const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
@@ -42,15 +39,11 @@ export const TemplatesAttributeLabel: React.FC<TemplatesAttributeLabelProps> = (
       className={classNames(
         classesLayout.flex,
         classesLayout.alignCenter,
-        classesText.textGrey
+        classesText.textGrey,
+        classesSpacing.mt1
       )}
     >
-      <Typography
-        noWrap
-        className={classNames(classesText.text600, classesText.textBlack)}
-      >
-        {attribute.name}
-      </Typography>
+      {attribute.name}
       <div
         className={classNames(
           classesLayout.flex,
@@ -58,6 +51,17 @@ export const TemplatesAttributeLabel: React.FC<TemplatesAttributeLabelProps> = (
           classesSpacing.mlAuto
         )}
       >
+        <Popconfirm
+          confirmText="Opravdu chcete smazat tento atribut?"
+          onConfirmClick={onDelete}
+          Button={() => (
+            <Tooltip title="Smazat">
+              <IconButton className={classNames(classesEffect.hoverSecondary)}>
+                <Delete />
+              </IconButton>
+            </Tooltip>
+          )}
+        />
         <Tooltip title="Editovat">
           <IconButton
             onClick={() => setPopoverOpen(true)}
@@ -66,17 +70,6 @@ export const TemplatesAttributeLabel: React.FC<TemplatesAttributeLabelProps> = (
             <Edit fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Popconfirm
-          confirmText="Opravdu chcete smazat tento atribut?"
-          onConfirmClick={onDelete}
-          Button={
-            <Tooltip title="Smazat">
-              <IconButton className={classNames(classesEffect.hoverSecondary)}>
-                <Delete />
-              </IconButton>
-            </Tooltip>
-          }
-        />
       </div>
     </div>
   );

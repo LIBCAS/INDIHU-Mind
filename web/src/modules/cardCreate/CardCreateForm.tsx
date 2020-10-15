@@ -23,7 +23,6 @@ import { notEmpty } from "../../utils/form/validate";
 import { useStyles as useStylesText } from "../../theme/styles/textStyles";
 import { useStyles as useFormStyles } from "../../components/form/_formStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 
 import { Formik } from "../../components/form/Formik";
 import { InputText } from "../../components/form/InputText";
@@ -47,8 +46,6 @@ import { CardCreateAddFile } from "./CardCreateAddFile";
 import { useStyles } from "./_cardCreateStyles";
 import { onSubmitCard, getTemplateName } from "./_utils";
 import { CardCreateAddRecord } from "./CardCreateAddRecord";
-import { theme } from "../../theme/theme";
-import { RecordProps } from "../../types/record";
 
 export interface InitValuesProps {
   id: string;
@@ -57,8 +54,7 @@ export interface InitValuesProps {
   categories: CategoryProps[];
   labels: LabelProps[];
   attributes: AttributeProps[];
-  records: RecordProps[];
-  documents?: FileProps[];
+  files?: FileProps[];
   cardContentId?: string;
   linkedCards?: { id: string; name: string; note: string }[];
 }
@@ -69,10 +65,9 @@ let defaultInitialValues: InitValuesProps = {
   note: "",
   categories: [] as CategoryProps[],
   labels: [] as LabelProps[],
-  records: [] as RecordProps[],
   attributes: [] as AttributeProps[],
   linkedCards: [],
-  documents: []
+  files: []
 };
 
 interface CardCreateFormProps {
@@ -101,8 +96,6 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
   const classesForm = useFormStyles();
 
   const classesSpacing = useSpacingStyles();
-
-  const classesLayout = useLayoutStyles();
 
   const context: any = useContext(GlobalContext);
 
@@ -179,33 +172,24 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
                 validate={notEmpty}
                 name="name"
                 render={({ field, form }: FieldProps<any>) => (
-                  <>
+                  <React.Fragment>
                     <InputBase
-                      className={classNames(
-                        classesForm.title,
-                        classes.cardTitle
-                      )}
+                      className={classesForm.title}
                       error={Boolean(form.touched.name && form.errors.name)}
-                      autoFocus={false}
+                      autoFocus={edit ? false : true}
                       autoComplete="off"
                       {...field}
                       placeholder="Zadejte název"
                     />
-                    <Typography
-                      style={{
-                        marginLeft: theme.spacing(3),
-                        marginRight: theme.spacing(3)
-                      }}
-                      color="error"
-                    >
+                    <Typography className={classesSpacing.ml2} color="error">
                       {form.touched.name &&
                         form.errors.name &&
                         form.errors.name}
                     </Typography>
-                    <Divider />
-                  </>
+                  </React.Fragment>
                 )}
               />
+              <Divider />
               <div className={classes.subWrapper}>
                 <Field
                   name="note"
@@ -221,35 +205,30 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
                     />
                   )}
                 />
-                <div
-                  className={classNames(
-                    classesLayout.flex,
-                    classesLayout.flexWrap,
-                    classesLayout.directionColumnMobile,
-                    classesLayout.halfItemsWithSpaceBetween,
-                    classesLayout.fullItemsMobile
-                  )}
-                >
-                  <CardCreateAddCategory formikBag={formikBag} />
-                  <CardCreateAddLabel formikBag={formikBag} />
-                </div>
+
+                <CardCreateAddCategory formikBag={formikBag} />
+
+                <CardCreateAddLabel formikBag={formikBag} />
 
                 <CardCreateAddRecord formikBag={formikBag} />
 
-                <div className={classesSpacing.mt2} />
-                <Typography className={classesText.subtitle}>
+                <Typography
+                  className={classNames(
+                    classesText.subtitle,
+                    classesSpacing.mt2
+                  )}
+                >
                   ATRIBUTY
                 </Typography>
-                <div className={classes.attributeItemsContainer}>
-                  {formikBag.values.attributes.map((att: AttributeProps) => (
-                    <div key={att.id} className={classes.attributeItemWrapper}>
-                      <CardCreateAttribute
-                        attribute={att}
-                        formikBag={formikBag}
-                      />
-                    </div>
-                  ))}
-                </div>
+                {formikBag.values.attributes.map((att: AttributeProps) => {
+                  return (
+                    <CardCreateAttribute
+                      key={att.id}
+                      attribute={att}
+                      formikBag={formikBag}
+                    />
+                  );
+                })}
                 <div ref={AddAttributeRef} className={classes.addWrapper}>
                   <ButtonGrey
                     text="Přidat atribut"
@@ -261,7 +240,6 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
                     open={popoverOpen}
                     setOpen={setPopoverOpen}
                     anchorEl={AddAttributeRef.current}
-                    overflowVisible={true}
                     content={
                       <CardCreateAddAttribute
                         formikBagParent={formikBag}

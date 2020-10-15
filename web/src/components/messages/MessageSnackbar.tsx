@@ -21,9 +21,7 @@ export const MessageSnackbar: React.FC<MessageSnackbarProps> = ({
       open={open}
       onClose={onClose}
       message={
-        typeof message === "string" && message.length
-          ? message
-          : "Někde se stala chyba. Zkuste to prosím znovu"
+        message ? message : "Někde se stala chyba. Zkuste to prosím znovu"
       }
     />
   );

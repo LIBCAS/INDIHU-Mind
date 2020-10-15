@@ -2,9 +2,8 @@ package helper;
 
 
 import core.domain.DomainObject;
-import liquibase.util.SystemUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.hamcrest.Description;
-import org.hamcrest.Factory;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
@@ -84,9 +83,8 @@ public class TestUtils {
          * <p/>
          *
          * @param operand the expected value of matching Instants
-         * @param error   the delta (+/-) miliseconds within which matches will be allowed
+         * @param error   the delta (+/-) milliseconds within which matches will be allowed
          */
-        @Factory
         public static Matcher<Instant> closeTo(Instant operand, long error) {
             return new IsInstantCloseTo(operand, error);
         }

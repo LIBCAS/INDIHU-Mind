@@ -44,6 +44,11 @@ public final class UrlAttachmentBuilder {
         return this;
     }
 
+    public UrlAttachmentBuilder location(UrlAttachmentFile.UrlDocumentLocation location) {
+        urlAttachmentFile.setLocation(location);
+        return this;
+    }
+
     public UrlAttachmentBuilder owner(User owner) {
         urlAttachmentFile.setOwner(owner);
         return this;

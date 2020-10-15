@@ -83,7 +83,7 @@ export const LabelsActions: React.FC<LabelsActionsProps> = ({
       <Popconfirm
         confirmText="Opravdu chcete smazat tento štítek"
         onConfirmClick={onDelete}
-        Button={
+        Button={() => (
           <Tooltip title="Smazat">
             <IconButton
               color="inherit"
@@ -94,7 +94,7 @@ export const LabelsActions: React.FC<LabelsActionsProps> = ({
               <Delete style={{ fontSize: "18px" }} />
             </IconButton>
           </Tooltip>
-        }
+        )}
       />
     </div>
   );

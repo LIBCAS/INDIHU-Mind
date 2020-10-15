@@ -1,27 +1,24 @@
 package cz.cas.lib.vzb.exception;
 
-import core.exception.GeneralException;
+import core.exception.RestGeneralException;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-public class ContentLengthRequiredException extends GeneralException {
+public class ContentLengthRequiredException extends RestGeneralException {
 
-    private String message;
-
-    public ContentLengthRequiredException() {
-        super();
+    public ContentLengthRequiredException(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
     }
 
-    public ContentLengthRequiredException(String message) {
-        super();
-        this.message = message;
-    }
 
-    @Override
-    public String toString() {
-        if (message != null) {
-            return "LengthRequired{" + message + '}';
-        } else {
-            return "LengthRequired{message not specified}";
+    public enum ErrorCode implements RestErrorCodeEnum {
+        CONTENT_LENGTH_HEADER_MISSING("Chybí 'Content-Length' HTTP záhlaví");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
         }
     }
-
 }

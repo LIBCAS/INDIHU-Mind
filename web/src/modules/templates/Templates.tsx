@@ -40,7 +40,6 @@ export const Templates: React.FC = () => {
       <Modal
         open={open}
         setOpen={setOpen}
-        fullSize={true}
         content={<TemplatesForm setShowModal={setOpen} />}
       />
       <div

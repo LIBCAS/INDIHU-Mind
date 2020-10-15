@@ -43,4 +43,11 @@ public class CreateAttachmentDto {
     @ApiModelProperty(value = "URL link to external file", position = 7, notes = "Use for URL or External files")
     private String link;
 
+    @ApiModelProperty(value = "Flag describes whether to download and store a URL file", position = 8, notes = "Use for URL files only")
+    private UrlAttachmentFile.UrlDocumentLocation location;
+
+
+    public boolean shouldDownloadUrlDocumentFromLink() {
+        return location == UrlAttachmentFile.UrlDocumentLocation.SERVER;
+    }
 }

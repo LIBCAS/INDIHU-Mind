@@ -4,7 +4,6 @@ import moment from "moment";
 import "moment/locale/cs";
 import MomentUtils from "@date-io/moment";
 import {
-  DatePicker as MaterialDatePicker,
   DateTimePicker as MaterialDateTimePicker,
   MuiPickersUtilsProvider
 } from "@material-ui/pickers";
@@ -22,7 +21,6 @@ interface DateTimePickerProps {
   autoFocus?: boolean;
   onClose?: () => void;
   onAccept?: (date: any) => void;
-  dateOnly?: boolean;
 }
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({
@@ -32,8 +30,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   onChange,
   autoFocus,
   onClose,
-  onAccept,
-  dateOnly = false
+  onAccept
 }) => {
   const classesForm = useFormStyles();
   const inputRef = useRef<HTMLElement>(null);
@@ -42,7 +39,6 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       inputRef.current.click();
     }
   }, [autoFocus, inputRef]);
-  const Component = dateOnly ? MaterialDatePicker : MaterialDateTimePicker;
   return (
     <>
       {label && (
@@ -55,7 +51,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
         </InputLabel>
       )}
       <MuiPickersUtilsProvider utils={MomentUtils} locale={"cs"}>
-        <Component
+        <MaterialDateTimePicker
           {...field}
           onChange={
             onChange
@@ -67,7 +63,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
           onAccept={onAccept}
           onClose={onClose}
           cancelLabel="Zrušit"
-          format={dateOnly ? "DD. MM. YYYY" : "DD. MM. YYYY, HH:mm"}
+          format="DD. MM. YYYY, HH:mm"
           ampm={false}
           InputProps={{
             disableUnderline: true

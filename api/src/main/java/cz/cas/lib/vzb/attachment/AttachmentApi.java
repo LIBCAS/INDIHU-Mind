@@ -53,8 +53,11 @@ public class AttachmentApi {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful response", response = AttachmentFile.class),
             @ApiResponse(code = 400, message = "DTO did not pass validation | Can not parse name and extension from URL file"),
-            @ApiResponse(code = 403, message = "Card not owner by logged in user | USER_QUOTA_REACHED, FILE_TOO_BIG, FILE_FORBIDDEN - see response body to distinguish between these 3"),
+            @ApiResponse(code = 403, message = "Card not owner by logged in user | File is forbidden"),
+            @ApiResponse(code = 409, message = "Document can not be saved by user because their storage would be exceeded"),
             @ApiResponse(code = 411, message = "Content-length header is missing for provided URL file"),
+            @ApiResponse(code = 413, message = "Max upload file size for LOCAL type exceeded"),
+
     })
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public AttachmentFile save(@ApiParam(value = "LOCAL file uploaded from user's PC") @RequestPart(value = "file", required = false) MultipartFile file,
@@ -98,7 +101,7 @@ public class AttachmentApi {
     @RolesAllowed({}) // FE requested that this endpoint should not require token because of using 3rd party library
     @ApiOperation(value = "Download a file from INDIHU Mind server for a specified attachment.",
             notes = "Returns content of a file in an input stream.",
-            response = ResponseEntity.class)
+            response = InputStreamResource.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful response", response = InputStreamResource.class),
             @ApiResponse(code = 400, message = "Requesting file that is not LOCAL or URL (not stored in app's storage)"),

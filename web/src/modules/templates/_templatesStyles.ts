@@ -15,7 +15,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       fontWeight: 800
     },
     templateItemIcon: {
-      color: theme.blackIconColor,
+      color: theme.greyText,
       [theme.breakpoints.up("md")]: {
         opacity: 0
       }
@@ -24,6 +24,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       display: "flex",
       alignItems: "center",
       padding: "20px 10px",
+      border: `1px solid ${theme.greyLight}`,
       borderRadius: "3px",
       marginBottom: "20px",
       "&:hover": {
@@ -41,29 +42,16 @@ export const useStyles = makeStyles((theme: Theme) => {
       display: "flex",
       flexDirection: "column",
       width: "100%",
-      padding: theme.spacing(3),
-      paddingBottom: theme.spacing(2),
-      paddingTop: theme.spacing(1)
+      padding: theme.spacing(2)
     },
     atributeFieldwrapper: {
-      fontSize: "16px",
-      maxWidth: "240px",
-      minWidth: "240px",
-      border: `1px solid ${theme.greyLight}`,
-      borderRadius: 5,
-      padding: theme.spacing(1.5),
-      paddingTop: theme.spacing(0.5),
-      marginRight: theme.spacing(1),
-      marginBottom: theme.spacing(1)
+      fontSize: "16px"
     },
     actionWrapper: {
       display: "flex",
       flexDirection: "row-reverse",
       justifyContent: "space-between",
       marginTop: theme.spacing(2)
-    },
-    templateFormWrapper: {
-      height: "85vh"
     }
   };
 });

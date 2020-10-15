@@ -49,6 +49,3 @@ export const validateTokenExp = (user: ApiUser | null) => {
   // If exp date is not a number, its invalid
   return false;
 };
-
-export const isAdmin = (token: ReturnType<typeof decodeToken>) =>
-  token && token.authorities.indexOf("ROLE_ADMIN") !== -1;

@@ -1,49 +1,40 @@
 package core.exception;
 
-import core.domain.DomainObject;
-import core.rest.config.ResourceExceptionHandler;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-/**
- * @see ResourceExceptionHandler#conflictException(ConflictObject)
- */
-public class ConflictObject extends GeneralException {
-    private Object object;
+import java.util.Map;
 
-    public ConflictObject() {
-        super();
+
+public class ConflictObject extends RestGeneralException {
+
+    public ConflictObject(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    public ConflictObject(Object object) {
-        super();
-        this.object = object;
+    public ConflictObject(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
     }
 
-    public ConflictObject(Class<?> clazz, String objectId) {
-        super();
-        try {
-            this.object = clazz.newInstance();
+    public ConflictObject(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
+    }
 
-            if (DomainObject.class.isAssignableFrom(clazz)) {
-                ((DomainObject) this.object).setId(objectId);
-            }
+    public ConflictObject(RestErrorCodeEnum code, Class<?> clazz, String objectId) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
+    }
 
-        } catch (Exception e) {
-            // ignore
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        EMAIL_TAKEN("E-mail se už používá"),
+        FILE_IS_MISSING("Soubor chybí");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
         }
-    }
-
-    @Override
-    public String toString() {
-        if (object != null) {
-            return "ConflictObject{" +
-                    "object=" + object +
-                    '}';
-        } else {
-            return "ConflictObject{id not specified}";
-        }
-    }
-
-    public Object getObject() {
-        return object;
     }
 }

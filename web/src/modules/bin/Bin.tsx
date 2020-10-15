@@ -36,9 +36,8 @@ export const Bin: React.FC<RouteComponentProps> = () => {
     controller = new AbortController();
     setLoading(true);
     api()
-      .post(`card/deleted`, {
-        signal: controller.signal,
-        json: { page: 0, pageSize: 30 }
+      .get(`card/deleted?page=0&pageSize=30`, {
+        signal: controller.signal
       })
       .json()
       .then((res: any) => {
@@ -85,7 +84,7 @@ export const Bin: React.FC<RouteComponentProps> = () => {
     api()
       .delete(`card/soft-deleted`)
       .json<number>()
-      .then((res: any) => {
+      .then(res => {
         setLoading(false);
         setCards([]);
         dispatch({
@@ -116,20 +115,24 @@ export const Bin: React.FC<RouteComponentProps> = () => {
         >
           <Typography
             display="inline"
-            className={classNames(classesSpacing.mb2, classesSpacing.mt2)}
+            className={classNames(
+              classesSpacing.mb2,
+              classesSpacing.mt2,
+              classesSpacing.mrAuto
+            )}
             variant="h5"
           >
-            <p className={classNames(classesSpacing.mr2)}>Koš</p>
+            Koš
           </Typography>
           <Popconfirm
             confirmText="Vysypat koš?"
             acceptText="Ano"
             onConfirmClick={() => onRemoveAll()}
-            Button={
-              <Button color="secondary" variant="contained">
+            Button={() => (
+              <Button color="secondary" variant="outlined">
                 Vysypat koš
               </Button>
-            }
+            )}
           />
         </div>
         <div style={{ position: "relative" }}>
@@ -150,7 +153,6 @@ export const Bin: React.FC<RouteComponentProps> = () => {
                 onRestore={onRestore}
                 onRemove={onRemove}
                 onRemoveText="Vysypat kartu z koše"
-                topMargin={0}
               />
             </Grid>
           ))}

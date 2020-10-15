@@ -4,10 +4,10 @@ import { Field, FieldProps } from "formik";
 import { CreateLabel } from "../../components/tabContent/CreateLabel";
 import { labelGet } from "../../context/actions/label";
 import { Modal } from "../../components/portal/Modal";
-import { Select } from "../../components/form/Select";
 import { LabelProps } from "../../types/label";
 import { GlobalContext, StateProps } from "../../context/Context";
-import { OptionType } from "../../components/select/_types";
+import { OptionType } from "../../components/form/reactSelect/_reactSelectTypes";
+import { ReactSelect } from "../../components/form/reactSelect/ReactSelect";
 
 import { parseLabel } from "./_utils";
 
@@ -46,12 +46,11 @@ export const CardCreateAddLabel: React.FC<CardCreateAddLabelProps> = ({
     <Field
       name="labels"
       render={({ field, form }: FieldProps<any>) => (
-        <div>
-          <Select
+        <>
+          <ReactSelect
             form={form}
             field={field}
             loading={false}
-            isMulti={true}
             label="Štítky"
             options={options}
             onCreate={onCreate}
@@ -67,7 +66,7 @@ export const CardCreateAddLabel: React.FC<CardCreateAddLabelProps> = ({
               />
             }
           />
-        </div>
+        </>
       )}
     />
   );

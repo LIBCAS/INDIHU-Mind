@@ -1,28 +1,77 @@
 import React from "react";
+import classNames from "classnames";
+import Input from "@material-ui/core/Input";
+import InputLabel from "@material-ui/core/InputLabel";
+import MenuItem from "@material-ui/core/MenuItem";
+import MaterialSelect from "@material-ui/core/Select";
+import Typography from "@material-ui/core/Typography";
 
-import {
-  Select as SelectComponent,
-  SelectProps as SelectComponentProps
-} from "../select";
-import { FormFieldWrapper, FormFieldWrapperProps } from "./FormFieldWrapper";
+import { useStyles as useFormStyles } from "./_formStyles";
 
-interface SelectProps extends FormFieldWrapperProps, SelectComponentProps {}
+interface SelectProps {
+  options: {
+    value: string;
+    label: string;
+  }[];
+  field: any;
+  form: any;
+  label?: string;
+  placeholder?: string;
+  onChange?: any;
+  multiple?: boolean;
+}
 
 export const Select: React.FC<SelectProps> = ({
-  form,
-  field,
   label,
+  options,
+  field,
+  form,
   onChange,
-  ...props
+  multiple,
+  placeholder
 }) => {
-  const handleChange = (value: any) => {
-    form.setFieldValue(field.name, value);
-    onChange && onChange(value);
+  const classesForm = useFormStyles();
+  const handleChange = (e: any) => {
+    field.onChange(e);
+    onChange && onChange(e);
   };
-
   return (
-    <FormFieldWrapper {...props} form={form} field={field} label={label}>
-      <SelectComponent {...props} value={field.value} onChange={handleChange} />
-    </FormFieldWrapper>
+    <>
+      {label && (
+        <InputLabel className={classesForm.label} htmlFor={field.name}>
+          {label}
+        </InputLabel>
+      )}
+      <MaterialSelect
+        displayEmpty
+        error={Boolean(form.touched[field.name] && form.errors[field.name])}
+        {...field}
+        value={form.values[field.name]}
+        multiple={multiple}
+        onChange={handleChange}
+        input={
+          <Input
+            disableUnderline
+            inputProps={{
+              className: classNames(classesForm.default, classesForm.select)
+            }}
+          />
+        }
+      >
+        <MenuItem className={classesForm.label} disabled value="">
+          {placeholder ? placeholder : "Vyberte"}
+        </MenuItem>
+        {options.map((opt, i) => (
+          <MenuItem key={i} value={opt.value}>
+            {opt.label}
+          </MenuItem>
+        ))}
+      </MaterialSelect>
+      <Typography className={classesForm.selectError} color="error">
+        {form.touched[field.name] &&
+          form.errors[field.name] &&
+          form.errors[field.name]}
+      </Typography>
+    </>
   );
 };

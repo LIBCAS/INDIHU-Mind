@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.inject.Inject;
 import java.text.DecimalFormat;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_IS_NULL;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.notNull;
 
 /**
@@ -32,10 +34,10 @@ public class Generator {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public synchronized long generatePlain(String id) throws MissingObject {
-        notNull(id, () -> new BadArgument("id"));
+        notNull(id, () -> new BadArgument(ARGUMENT_IS_NULL, "id"));
 
         Sequence sequence = store.find(id);
-        notNull(sequence, () -> new MissingObject(Sequence.class, id));
+        notNull(sequence, () -> new MissingObject(ENTITY_IS_NULL, Sequence.class, id));
 
         Long counter = sequence.getCounter();
         if (counter == null) {
@@ -62,10 +64,10 @@ public class Generator {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public synchronized String generate(String id) throws MissingObject {
-        notNull(id, () -> new BadArgument("id"));
+        notNull(id, () -> new BadArgument(ARGUMENT_IS_NULL, "id"));
 
         Sequence sequence = store.find(id);
-        notNull(sequence, () -> new MissingObject(Sequence.class, id));
+        notNull(sequence, () -> new MissingObject(ENTITY_IS_NULL, Sequence.class, id));
 
         Long counter = sequence.getCounter();
         if (counter == null) {
@@ -99,10 +101,10 @@ public class Generator {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public synchronized String generate(String id, String prefix, int maxLeadingZerosNumber) throws MissingObject {
-        notNull(id, () -> new BadArgument("id"));
+        notNull(id, () -> new BadArgument(ARGUMENT_IS_NULL, "id"));
 
         Sequence sequence = store.find(id);
-        notNull(sequence, () -> new MissingObject(Sequence.class, id));
+        notNull(sequence, () -> new MissingObject(ENTITY_IS_NULL, Sequence.class, id));
 
         Long counter = sequence.getCounter();
         if (counter == null) {
@@ -134,11 +136,11 @@ public class Generator {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public synchronized String generate(String id, Long counter) throws MissingObject {
-        notNull(id, () -> new BadArgument("id"));
-        notNull(counter, () -> new BadArgument("counter"));
+        notNull(id, () -> new BadArgument(ARGUMENT_IS_NULL, "id"));
+        notNull(counter, () -> new BadArgument(ARGUMENT_IS_NULL, "counter"));
 
         Sequence sequence = store.find(id);
-        notNull(sequence, () -> new MissingObject(Sequence.class, id));
+        notNull(sequence, () -> new MissingObject(ENTITY_IS_NULL, Sequence.class, id));
 
         sequence.setCounter(counter + 1);
         store.save(sequence);

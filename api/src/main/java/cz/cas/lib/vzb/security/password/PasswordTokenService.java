@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.notNull;
 
 @Service
@@ -25,14 +26,14 @@ public class PasswordTokenService {
 
     public PasswordToken find(String id) {
         PasswordToken passwordToken = store.find(id);
-        notNull(passwordToken, () -> new MissingObject(PasswordToken.class, id));
+        notNull(passwordToken, () -> new MissingObject(ENTITY_IS_NULL, PasswordToken.class, id));
         return passwordToken;
     }
 
     @Transactional
     public PasswordToken generateNewToken(@NonNull String email) {
         User user = userStore.findByEmail(email);
-        notNull(user, () -> new MissingObject(User.class, email));
+        notNull(user, () -> new MissingObject(ENTITY_IS_NULL, User.class, email));
 
         PasswordToken token = new PasswordToken();
         token.setExpirationTime(Instant.now().plus(expirationInMinutes, ChronoUnit.MINUTES));

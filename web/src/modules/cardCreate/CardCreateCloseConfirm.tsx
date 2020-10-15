@@ -1,8 +1,6 @@
 import React from "react";
 import MuiTypography from "@material-ui/core/Typography";
 import MuiButton from "@material-ui/core/Button";
-import { useStyles } from "./_cardCreateStyles";
-import classes from "*.module.css";
 
 export interface CardCreateCloseConfirmProps {
   onCancel: VoidFunction;
@@ -13,10 +11,8 @@ export const CardCreateCloseConfirm: React.FC<CardCreateCloseConfirmProps> = ({
   onCancel,
   onSubmit
 }) => {
-  const classes = useStyles();
-
   return (
-    <div className={classes.cardCreateCloseConfirmWrapper}>
+    <div style={{ display: "flex", flexDirection: "column", padding: "10px" }}>
       <MuiTypography variant="h5" color="inherit" align="center" gutterBottom>
         Potvrzení zahození změn
       </MuiTypography>
@@ -24,11 +20,17 @@ export const CardCreateCloseConfirm: React.FC<CardCreateCloseConfirmProps> = ({
         Opravdu si přejete ukončit vytváření karty?
         <br /> Můžete tak přijít o neuložené změny!
       </MuiTypography>
-      <div className={classes.cardCreateCloseConfirmButtonsWrapper}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-end"
+        }}
+      >
         <MuiButton
           style={{ margin: "0 3px" }}
           variant="outlined"
-          color="default"
+          color="secondary"
           size="medium"
           onClick={onCancel}
         >

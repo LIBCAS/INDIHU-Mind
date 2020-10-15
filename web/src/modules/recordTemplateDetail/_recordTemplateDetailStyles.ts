@@ -10,6 +10,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     actionsIcon: {
       marginLeft: theme.spacing(1),
+      color: theme.greyText,
       transition: ".3s ease color",
       cursor: "pointer",
       "&:hover": {
@@ -23,7 +24,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     iconSecondary: {
       transition: ".3s ease color",
       cursor: "pointer",
-      color: theme.blackIconColor,
+      color: theme.greyText,
       "&:hover": {
         color: theme.palette.secondary.main
       }

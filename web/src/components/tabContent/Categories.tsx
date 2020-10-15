@@ -108,15 +108,7 @@ export const Categories: React.FC<CategoriesProps> = ({
       />
       <div
         className={classes.categoriesContainer}
-        style={{
-          maxHeight: transition
-            ? window.innerWidth < 512
-              ? "75%"
-              : "90%"
-            : window.innerWidth < 512
-            ? "85%"
-            : `calc(100% - 32px)`
-        }}
+        style={{ maxHeight: transition ? "52vh" : "65vh" }}
       >
         {categories.map(c => (
           <CategoryItem

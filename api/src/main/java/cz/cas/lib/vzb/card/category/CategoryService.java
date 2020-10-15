@@ -19,7 +19,11 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_FAILED_COMPARISON;
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.*;
+import static cz.cas.lib.vzb.exception.NameAlreadyExistsException.ErrorCode.NAME_ALREADY_EXISTS;
 
 @Service
 @Slf4j
@@ -39,15 +43,15 @@ public class CategoryService {
 
     @Transactional
     public Category save(String id, Category newCat) {
-        eq(id, newCat.getId(), () -> new BadArgument("id"));
+        eq(id, newCat.getId(), () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "id != dto.id"));
         Category catFromDb = store.find(newCat.getId());
         if (catFromDb != null)
-            eq(catFromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Category.class, newCat.getId()));
+            eq(catFromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Category.class, newCat.getId()));
 
         // enforce addUniqueConstraint `vzb_category_of_user_uniqueness` of columnNames="name,parent_id,owner_id"
         newCat.setOwner(userDelegate.getUser());
         Category nameExists = store.findEqualNameDifferentIdInParent(newCat);
-        isNull(nameExists, () -> new NameAlreadyExistsException(Category.class, nameExists.getId(), nameExists.getName(), nameExists.getOwner()));
+        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Category.class, nameExists.getId(), nameExists.getOwner()));
 
         store.save(newCat);
 
@@ -61,8 +65,8 @@ public class CategoryService {
 
     public Category find(String id) {
         Category entity = store.find(id);
-        notNull(entity, () -> new MissingObject(Category.class, id));
-        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Category.class, id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, Category.class, id));
+        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Category.class, id));
         return entity;
     }
 

@@ -30,6 +30,7 @@ import javax.validation.Validator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
@@ -39,7 +40,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_IS_NULL;
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.ForbiddenOperation.ErrorCode.FILE_NOT_STORED_ON_SERVER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
+import static core.exception.MissingObject.ErrorCode.FILE_IS_MISSING;
 import static core.util.Utils.*;
+import static cz.cas.lib.vzb.exception.UserQuotaReachedException.ErrorCode.USER_QUOTA_REACHED;
 
 @Slf4j
 @Service
@@ -73,7 +80,7 @@ public class AttachmentFileService {
     @Transactional
     public ResponseEntity<InputStreamResource> downloadAttachment(String id) {
         AttachmentFile file = store.find(id);
-        notNull(file, () -> new MissingObject(AttachmentFile.class, id));
+        notNull(file, () -> new MissingObject(ENTITY_IS_NULL, AttachmentFile.class, id));
 
         // -- FE requested to ignore token because their library does not support it --
         // eq(file.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(AttachmentFile.class, id));
@@ -84,7 +91,11 @@ public class AttachmentFileService {
         }
 
         DownloadableAttachment downloadableFile = (DownloadableAttachment) file;
-        initializeDownloadableContent(downloadableFile);
+        if (downloadableFile.shouldBeInServerStorage()) {
+            initializeDownloadableContent(downloadableFile);
+        } else {
+            throw new ForbiddenOperation(FILE_NOT_STORED_ON_SERVER, DownloadableAttachment.class, "File not in server's storage: " + file.getId());
+        }
 
         return ResponseEntity
                 .ok()
@@ -96,8 +107,8 @@ public class AttachmentFileService {
 
     public AttachmentFile find(String id) {
         AttachmentFile attachmentFile = store.find(id);
-        notNull(attachmentFile, () -> new MissingObject(AttachmentFile.class, id));
-        eq(attachmentFile.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(AttachmentFile.class, id));
+        notNull(attachmentFile, () -> new MissingObject(ENTITY_IS_NULL, AttachmentFile.class, id));
+        eq(attachmentFile.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, AttachmentFile.class, id));
 
         return attachmentFile;
     }
@@ -193,7 +204,7 @@ public class AttachmentFileService {
 
         List<Card> linkedCards = cardStore.findAllInList(dto.getLinkedCards());
         for (Card card : linkedCards) {
-            eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Card.class, card.getId()));
+            eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, card.getId()));
             card.getDocuments().add(savedAttachment); // establish relation between cards and attachments
             savedAttachment.getLinkedCards().add(card);
         }
@@ -201,7 +212,7 @@ public class AttachmentFileService {
 
         List<Citation> linkedRecords = recordStore.findAllInList(dto.getRecords());
         for (Citation record : linkedRecords) {
-            eq(record.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Citation.class, record.getId()));
+            eq(record.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Citation.class, record.getId()));
             record.getDocuments().add(savedAttachment);
             savedAttachment.getRecords().add(record);
         }
@@ -220,8 +231,8 @@ public class AttachmentFileService {
     @Transactional
     public AttachmentFile updateAttachmentFile(String id, UpdateAttachmentDto dto) {
         AttachmentFile file = store.find(id);
-        notNull(file, () -> new MissingObject(AttachmentFile.class, id));
-        eq(file.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(AttachmentFile.class, id));
+        notNull(file, () -> new MissingObject(ENTITY_IS_NULL, AttachmentFile.class, id));
+        eq(file.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, AttachmentFile.class, id));
 
         file.setName(dto.getName());
 
@@ -321,7 +332,7 @@ public class AttachmentFileService {
     private void removeFilesWithoutAuthorization(Set<String> fileIds) {
         for (String id : fileIds) {
             AttachmentFile attachmentFile = store.find(id);
-            notNull(attachmentFile, () -> new MissingObject(AttachmentFile.class, id));
+            notNull(attachmentFile, () -> new MissingObject(ENTITY_IS_NULL, AttachmentFile.class, id));
 
             Set<Card> linkedCards = attachmentFile.getLinkedCards();
             linkedCards.forEach(card -> card.getDocuments().remove(attachmentFile));
@@ -342,12 +353,12 @@ public class AttachmentFileService {
             throw new BadRequestException("Attachment file did not pass validation");
 
         if (dto.getProviderType() == AttachmentFileProviderType.LOCAL) {
-            notNull(file, () -> new MissingObject(MultipartFile.class, "null"));
+            notNull(file, () -> new MissingObject(ENTITY_IS_NULL, MultipartFile.class, "null"));
             IndihuMindUtils.checkFileExtensionFromName(file.getOriginalFilename());
             checkUserFileSizeQuota(file.getSize());
         }
 
-        if (dto.getProviderType() == AttachmentFileProviderType.URL) {
+        if (dto.getProviderType() == AttachmentFileProviderType.URL && dto.shouldDownloadUrlDocumentFromLink()) {
             URL url = IndihuMindUtils.createUrlFromLink(dto.getLink());
             IndihuMindUtils.checkUrlFileExtension(url);
             checkUserFileSizeQuota(IndihuMindUtils.getSizeFromUrlFile(url));
@@ -361,7 +372,7 @@ public class AttachmentFileService {
         long urlAttachmentsSize = urlAttachmentStore.urlAttachmentsSizeForUser(userDelegate.getUser().getId()) / 1000;
         long sizeUserAlreadyHasKb = localAttachmentsSize + urlAttachmentsSize;
         if (sizeUserAlreadyHasKb + uploadSizeKb > kbPerUser)
-            throw new UserQuotaReachedException(kbPerUser);
+            throw new UserQuotaReachedException(USER_QUOTA_REACHED, kbPerUser);
     }
 
     /**
@@ -384,15 +395,28 @@ public class AttachmentFileService {
         checked(() -> {
             Path filePath = Paths.get(attachmentsDirectory, attachmentFile.getId());
             String url = dto.getLink();
+            attachmentFile.setLink(url);
+            attachmentFile.setLocation(dto.getLocation());
 
             int connectionTimeout = Math.toIntExact(TimeUnit.MINUTES.toMillis(2));
             int downloadTimeout = Math.toIntExact(TimeUnit.MINUTES.toMillis(5));
-            FileUtils.copyURLToFile(new URL(url), filePath.toFile(), connectionTimeout, downloadTimeout);
+
+            URL source = new URL(url);
+            URLConnection connection = source.openConnection();
+            long contentSize = connection.getContentLengthLong();
+            if (dto.shouldDownloadUrlDocumentFromLink()) {
+                connection.setConnectTimeout(connectionTimeout);
+                connection.setReadTimeout(downloadTimeout);
+                FileUtils.copyInputStreamToFile(connection.getInputStream(), filePath.toFile()); // will close stream
+                attachmentFile.setSize(Files.size(filePath));
+            } else {
+                connection.getInputStream().close();
+                attachmentFile.setSize(contentSize);
+            }
 
             final Tika tikaService = new Tika();
             attachmentFile.setContentType(tikaService.detect(url));
-            attachmentFile.setSize(Files.size(filePath));
-            attachmentFile.setLink(url);
+
         }, GeneralRollbackException::new);
 
         return attachmentFile;
@@ -406,7 +430,7 @@ public class AttachmentFileService {
         LocalAttachmentFile attachmentFile = new LocalAttachmentFile();
 
         try (InputStream stream = fileContent.getInputStream()) {
-            notNull(stream, () -> new BadArgument("File stream malfunctioned."));
+            notNull(stream, () -> new BadArgument(ARGUMENT_IS_NULL, "File stream malfunctioned."));
 
             checked(() -> {
                 Path path = Paths.get(attachmentsDirectory, attachmentFile.getId());
@@ -417,7 +441,7 @@ public class AttachmentFileService {
             attachmentFile.setSize(fileContent.getSize());
 
         } catch (IOException e) {
-            throw new BadArgument("File input stream malfunctioned");
+            throw new BadArgument(ARGUMENT_IS_NULL, "File input stream malfunctioned");
         }
 
         return attachmentFile;
@@ -440,7 +464,7 @@ public class AttachmentFileService {
     private void initializeDownloadableContent(DownloadableAttachment attachmentFile) {
         Path attachmentFilePath = Paths.get(attachmentsDirectory, attachmentFile.getId());
         if (!Files.isRegularFile(attachmentFilePath)) {
-            throw new MissingObject(DownloadableAttachment.class, attachmentFile.getId());
+            throw new MissingObject(FILE_IS_MISSING, DownloadableAttachment.class, attachmentFile.getId());
         }
 
         checked(() -> { // for possible rollback of transaction

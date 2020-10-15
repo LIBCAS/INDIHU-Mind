@@ -2,8 +2,8 @@ package cz.cas.lib.vzb.reference.marc.template.field;
 
 import core.exception.GeneralException;
 import core.util.Utils;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
 import cz.cas.lib.vzb.reference.marc.record.Datafield;
-import cz.cas.lib.vzb.reference.marc.record.MarcRecord;
 import cz.cas.lib.vzb.reference.marc.record.Subfield;
 import cz.cas.lib.vzb.reference.marc.template.Typeface;
 import cz.cas.lib.vzb.reference.marc.template.field.author.*;
@@ -49,7 +49,7 @@ public class FieldAuthor extends TemplateField {
      *
      * @param errorMessage string message to use in case no author field is found
      */
-    public void initializeAuthorsNames(MarcRecord record, String errorMessage) {
+    public void initializeAuthorsNames(Citation record, String errorMessage) {
         List<Datafield> primaryHumanAuthorFields = record.getDatafieldByTag("100");
         List<Datafield> primaryCompanyAuthorFields = record.getDatafieldByTag("110");
         List<Datafield> otherHumanAuthorsFields = record.getDatafieldByTag("700");

@@ -31,7 +31,7 @@ public class TestDataFiller {
     @Inject private LabelCategoryTestData labelCategoryProvider;
     @Inject private CardTestData cardProvider;
     @Inject private CardContentTestData cardContentProvider;
-    @Inject private MarcRecordTestData recordProvider;
+    @Inject private CitationTestData citationProvider;
     @Inject private RefTemplateTestData refTemplateProvider;
     @Inject private TemplatesTestData templatesProvider;
     @Inject private AttachmentFileTestData attachmentProvider;
@@ -84,20 +84,20 @@ public class TestDataFiller {
         AttachmentFile adminLocalFile = attachmentProvider.adminLocalFile(adminUser);
         AttachmentFile adminUrlFile = attachmentProvider.adminUrlFile(adminUser);
 
-        recordProvider.recordMovieMLissUsa(testUser);
-        recordProvider.recordChabonMichaelSummerland(testUser);
-        recordProvider.recordIsbn(testUser);
-        recordProvider.recordSurveyCatalogingPractices(testUser);
-        recordProvider.recordDanielSmith(testUser);
-        recordProvider.recordAntiqueWorld(testUser);
-        Citation recordHumanAuthor = recordProvider.recordWithHumanPrimaryAuthor(testUser);
-        Citation recordCompanyAuthor = recordProvider.recordWithCompanyPrimaryAuthor(testUser);
-        Citation recordQuick = recordProvider.briefRecord1(testUser);
+        citationProvider.recordMovieMLissUsa(testUser);
+        citationProvider.recordChabonMichaelSummerland(testUser);
+        citationProvider.recordIsbn(testUser);
+        citationProvider.recordSurveyCatalogingPractices(testUser);
+        citationProvider.recordDanielSmith(testUser);
+        citationProvider.recordAntiqueWorld(testUser);
+        Citation recordHumanAuthor = citationProvider.recordWithHumanPrimaryAuthor(testUser);
+        Citation recordCompanyAuthor = citationProvider.recordWithCompanyPrimaryAuthor(testUser);
+        Citation recordQuick = citationProvider.briefRecord1(testUser);
 
         recordHumanAuthor.setDocuments(asSet(urlFile, extFile1));
         recordCompanyAuthor.setDocuments(asSet(urlFile, locFile, extFile1));
         recordQuick.setDocuments(asSet(extFile1, extFile2));
-        recordProvider.getRecordStore().save(asSet(recordCompanyAuthor, recordHumanAuthor, recordQuick));
+        citationProvider.getRecordStore().save(asSet(recordCompanyAuthor, recordHumanAuthor, recordQuick));
 
         refTemplateProvider.locationWithAuthor(testUser);
         refTemplateProvider.euroScience(testUser);
@@ -126,7 +126,7 @@ public class TestDataFiller {
         templatesProvider.wipeAllDatabaseData();
         cardContentProvider.wipeAllDatabaseData();
         labelCategoryProvider.wipeAllDatabaseData();
-        recordProvider.wipeAllDatabaseData();
+        citationProvider.wipeAllDatabaseData();
         attachmentProvider.wipeAllDatabaseData();
         refTemplateProvider.wipeAllDatabaseData();
         cardProvider.wipeAllDatabaseData();
@@ -140,13 +140,13 @@ public class TestDataFiller {
         User testUser = userProvider.getStore().findByEmail(UserTestData.TEST_USER_EMAIL);
         String userId = testUser.getId();
 
-        Collection<Citation> records = recordProvider.getRecordStore().findByUser(userId);
+        Collection<Citation> records = citationProvider.getRecordStore().findByUser(userId);
         for (Citation entity : records) {
             List<Card> cardsOfCitation = cardProvider.getCardStore().findCardsOfCitation(entity);
             cardsOfCitation.forEach(c -> c.removeCitation(entity));
             cardProvider.getCardStore().save(cardsOfCitation);
-            recordProvider.getRecordStore().hardDelete(entity);
-            recordProvider.getRecordStore().removeIndex(entity);
+            citationProvider.getRecordStore().hardDelete(entity);
+            citationProvider.getRecordStore().removeIndex(entity);
         }
 
         Collection<ReferenceTemplate> templates = refTemplateProvider.getTemplateStore().findByUser(userId);

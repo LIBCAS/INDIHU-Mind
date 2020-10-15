@@ -38,8 +38,7 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
   Menu,
   history,
   ComponentDetail,
-  Toolbar,
-  createModalProps
+  Toolbar
 }) => {
   const classes = useStyles();
 
@@ -165,7 +164,6 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
   return (
     <>
       <Modal
-        {...createModalProps}
         open={showForm}
         setOpen={setShowForm}
         content={<CreateForm setShowModal={setShowForm} />}

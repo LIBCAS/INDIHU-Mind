@@ -10,6 +10,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     actionsIcon: {
       marginLeft: theme.spacing(1),
+      color: theme.greyText,
       transition: ".3s ease color",
       cursor: "pointer",
       "&:hover": {
@@ -23,7 +24,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     iconSecondary: {
       transition: ".3s ease color",
       cursor: "pointer",
-      color: theme.blackIconColor,
+      color: theme.greyText,
       "&:hover": {
         color: theme.palette.secondary.main
       }
@@ -46,16 +47,6 @@ export const useStyles = makeStyles((theme: Theme) => {
         justifyContent: "flex-start",
         marginRight: "-15px"
       }
-    },
-    label: {
-      width: 300,
-      color: theme.greyText,
-      fontWeight: 800,
-      textTransform: "uppercase",
-      fontSize: 16,
-      textAlign: "right",
-      padding: "0 .5em"
-    },
-    compactLabel: { width: "auto" }
+    }
   };
 });

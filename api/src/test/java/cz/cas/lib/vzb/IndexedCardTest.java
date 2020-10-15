@@ -8,10 +8,7 @@ import core.security.authorization.assign.AssignedRoleService;
 import core.security.authorization.assign.AssignedRoleStore;
 import core.sequence.SequenceStore;
 import core.store.DomainStore;
-import cz.cas.lib.vzb.attachment.AttachmentFileProviderType;
-import cz.cas.lib.vzb.attachment.AttachmentFileStore;
-import cz.cas.lib.vzb.attachment.ExternalAttachmentFile;
-import cz.cas.lib.vzb.attachment.LocalAttachmentFile;
+import cz.cas.lib.vzb.attachment.*;
 import cz.cas.lib.vzb.card.*;
 import cz.cas.lib.vzb.card.attribute.Attribute;
 import cz.cas.lib.vzb.card.attribute.AttributeStore;
@@ -76,7 +73,7 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
     private static final AttachmentFileStore attachmentFileStore = new AttachmentFileStore();
 
     // for initialization in @Before before()
-    private static final List<DomainStore> allStores = asList(
+    private static final List<DomainStore<?,?>> allStores = asList(
             userStore, cardStore, cardContentStore, attributeStore,
             labelStore, categoryStore, sequenceStore, assignedRoleStore,
             attachmentFileStore
@@ -94,7 +91,7 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
 
     @Override
     public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedCard.class);
+        return Set.of(IndexedCard.class, IndexedAttachmentFile.class);
     }
 
     @Before
@@ -218,16 +215,20 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
     private void clearTables() {
         attributeStore.clearTable();
         cardContentStore.clearTable();
-        attachmentFileStore.clearTable();
         cardStore.clearTable();
-        categoryStore.clearTable();
         labelStore.clearTable();
+        categoryStore.clearTable();
+        // New Hibernate generates temporary tables for bulk delete, however this temporary table is not defined by app and cannot be found resulting in error
+        // Possible workaround is to define BulkStrategy, however the only strategy that embedded H2 DB supports failed as well
+        Collection<AttachmentFile> allFiles = attachmentFileStore.findAll();
+        allFiles.forEach(attachmentFileStore::hardDelete);
+        attachmentFileStore.removeAllIndexes();
 
-        userStore.clearTable();
-        sequenceStore.clearTable();
         cardStore.removeAllIndexes();
         userStore.clearTable();
+        sequenceStore.clearTable();
     }
+
 
     private String fillData() {
         User regularUser = UserBuilder.builder().id("57a8ae68-9f3c-4d84-98e5-35e5ea8ec878").email("user@vzb.cz").password("vzb").allowed(true).build();

@@ -79,47 +79,39 @@ export const UserCreateForm: React.FC<UserCreateFormProps> = ({
               className={classNames(
                 classesLayout.flex,
                 classesLayout.flexWrap,
-                classesLayout.justifyCenter
+                classesLayout.justifyCenter,
+                classesSpacing.m1
               )}
             >
-              <div
-                style={{ width: "100%" }}
-                className={classNames(
-                  classesLayout.flex,
-                  classesLayout.directionColumn,
-                  classesSpacing.p3
-                )}
+              <Typography
+                variant="h5"
+                color="primary"
+                align="center"
+                gutterBottom
               >
-                <Typography
-                  variant="h5"
-                  color="primary"
-                  align="center"
-                  gutterBottom
-                >
-                  Registrace uživatele
-                </Typography>
-                <Field
-                  name="email"
-                  render={({
-                    field,
-                    form
-                  }: FieldProps<UserCreateFormValues>) => (
-                    <InputText
-                      label="Email"
-                      type="email"
-                      field={field}
-                      form={form}
-                      autoFocus={false}
-                    />
-                  )}
-                />
-              </div>
-              <Divider />
-              <div className={classesSpacing.p3}>
-                <Button variant="contained" color="primary" type="submit">
-                  Registrovat
-                </Button>
-              </div>
+                Registrace uživatele
+              </Typography>
+              <Field
+                name="email"
+                render={({ field, form }: FieldProps<UserCreateFormValues>) => (
+                  <InputText
+                    label="Email"
+                    type="email"
+                    field={field}
+                    form={form}
+                    autoFocus
+                  />
+                )}
+              />
+              <Divider className={classesSpacing.mt3} />
+              <Button
+                className={classesSpacing.mt3}
+                variant="contained"
+                color="primary"
+                type="submit"
+              >
+                Registrovat
+              </Button>
             </div>
           </Form>
         )}

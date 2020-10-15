@@ -77,11 +77,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                 <div className={classes.chromePickerContent}>
                   <ClickAwayListener onClickAway={handleClick}>
                     <div>
-                      <ChromePicker
-                        color={color}
-                        onChange={handleChange}
-                        disableAlpha={true}
-                      />
+                      <ChromePicker color={color} onChange={handleChange} />
                       <div className={classes.chromePickerActions}>
                         <div>
                           <Button color="primary" onClick={onSubmit}>

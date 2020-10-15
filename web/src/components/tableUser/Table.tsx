@@ -16,7 +16,7 @@ import { Loader } from "../loader/Loader";
 import { TableCheckbox } from "./TableCheckbox";
 import { TableHeader } from "./TableHeader";
 import { TableProps, OrderProps, DataProps } from "./_types";
-import { changeData } from "./_utils";
+import { changeData, changeRequest } from "./_utils";
 import { useStyles } from "./_tableStyles";
 
 export const TableUser: React.FC<TableProps> = ({ baseUrl, columns }) => {
@@ -27,34 +27,27 @@ export const TableUser: React.FC<TableProps> = ({ baseUrl, columns }) => {
   // checkboxed cards
   const [checkboxRows, setCheckboxRows] = useState<UserProps[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [request, setRequest] = useState<string>("");
   const [order, setOrder] = useState<OrderProps>({
     column: "",
     direction: "ASC"
   });
   const [data, setData] = useState<DataProps>({ count: 0, items: [] });
   const [page, setPage] = useState<number>(0);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [rowsPerPage, setrowsPerPage] = useState<number>(10);
   // change http request - set URL query params to load data from api in the right order & page
+  useEffect(() => {
+    changeRequest(setRequest, baseUrl, order, page, rowsPerPage);
+  }, []);
 
+  useEffect(() => {
+    changeRequest(setRequest, baseUrl, order, page, rowsPerPage);
+  }, [setRequest, order, page, rowsPerPage, baseUrl]);
   // load data from api with changed request
-  const loadData = () =>
-    changeData(
-      baseUrl,
-      {
-        page,
-        pageSize,
-        ...(order.column
-          ? { sorting: [{ order: order.direction, sort: order.column }] }
-          : {})
-      },
-      setData,
-      loading,
-      setLoading
-    );
-
-  useEffect(loadData, [page, pageSize, order]);
-
-  useEffect(loadData, []);
+  const loadData = () => changeData(request, setData, loading, setLoading);
+  useEffect(() => {
+    loadData();
+  }, [request]);
 
   // load new data if data are modified outside this component
   useEffect(() => {
@@ -88,7 +81,7 @@ export const TableUser: React.FC<TableProps> = ({ baseUrl, columns }) => {
   };
 
   const handleChangeRowsPerPage = (event: any) => {
-    setPageSize(event.target.value);
+    setrowsPerPage(event.target.value);
     setPage(0);
   };
 
@@ -174,7 +167,7 @@ export const TableUser: React.FC<TableProps> = ({ baseUrl, columns }) => {
           labelDisplayedRows={({ from, to, count }) =>
             `${from}-${to} z ${count}`
           }
-          rowsPerPage={pageSize}
+          rowsPerPage={rowsPerPage}
           page={page}
           backIconButtonProps={{
             "aria-label": "Předchozí strana"

@@ -75,7 +75,7 @@ export const useStyles = makeStyles((theme: Theme) => ({
   },
   icons: {
     padding: "5px",
-    color: theme.blackIconColor,
+    color: theme.greyText,
     [theme.breakpoints.up("md")]: {
       opacity: 0
     }
@@ -112,7 +112,6 @@ export const useStyles = makeStyles((theme: Theme) => ({
   },
   groupTitle: {
     marginRight: theme.spacing(1),
-    minWidth: 190,
     ["@media (min-width:1200px)"]: {
       width: "auto"
     }

@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_FAILED_COMPARISON;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.eq;
 import static core.util.Utils.notNull;
 
@@ -50,7 +52,7 @@ public interface GeneralApi<T extends DomainObject> extends ReadOnlyApi<T> {
     default T save(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id,
                    @ApiParam(value = "Single instance", required = true)
                    @RequestBody T request) {
-        eq(id, request.getId(), () -> new BadArgument("id"));
+        eq(id, request.getId(), () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "id != dto.id"));
 
         return getAdapter().save(request);
     }
@@ -70,7 +72,7 @@ public interface GeneralApi<T extends DomainObject> extends ReadOnlyApi<T> {
     @Transactional
     default void delete(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
         T entity = getAdapter().find(id);
-        notNull(entity, () -> new MissingObject(getAdapter().getType(), id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, getAdapter().getType(), id));
 
         getAdapter().delete(entity);
     }

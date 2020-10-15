@@ -43,48 +43,6 @@ export const useStyles = makeStyles((theme: Theme) => {
         1
       )}px ${theme.spacing(1)}px`
     },
-    labelSelect: {
-      width: 250,
-      textAlign: "right",
-      color: "rgba(0, 0, 0, 0.54)",
-      margin: "5px 0",
-      "& *": {
-        color: "rgba(0, 0, 0, 0.54)"
-      }
-    },
-    labelSelectShort: {
-      width: 220
-    },
-    labelSelectWrapper: {
-      width: 250,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "flex-end",
-      paddingRight: 16,
-      margin: "4px 0",
-      color: "rgba(0, 0, 0, 0.54)"
-    },
-    icon: {
-      marginLeft: 8,
-      display: "flex",
-      alignItems: "center",
-      cursor: "pointer"
-    },
-    disabledIcon: {
-      color: "rgba(0, 0, 0, 0.54)",
-      cursor: "auto"
-    },
-    invisible: {
-      visibility: "hidden"
-    },
-    multipleFieldTextFields: {
-      width: "calc(100% - 250px)",
-      display: "flex",
-      alignItems: "center"
-    },
-    multipleFieldFirst: {
-      marginRight: "8px !important"
-    },
     textArea: {
       boxSizing: "border-box"
     },
@@ -100,15 +58,6 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     dateTimePickerInput: {
       width: "100%"
-    },
-    oneLineFieldLabel: {
-      width: 250,
-      paddingRight: 16,
-      textAlign: "right",
-      margin: "16px 0"
-    },
-    oneLineField: {
-      width: "calc(100% - 250px)"
     },
     colorPickerInput: {
       width: "100%",

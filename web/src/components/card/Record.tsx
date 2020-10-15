@@ -22,12 +22,7 @@ const RecordView: React.FC<RecordPropsView & RouteComponentProps> = ({
     history.push(`/record/${record.id}`);
   };
   return (
-    <div
-      key={record.id}
-      className={classes.label}
-      style={{ marginRight: 8 }}
-      onClick={onClick}
-    >
+    <div key={record.id} className={classes.label} onClick={onClick}>
       <Typography className={classes.labelText}>{record.name}</Typography>
     </div>
   );

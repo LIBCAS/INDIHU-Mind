@@ -91,7 +91,7 @@ public class MailCenter {
     /**
      * Transforms input template with provided data and prepared message and sends it.
      *
-     * @param templateName FreeMaker template name (or rather path), e.g. mail/myEmail.ftl
+     * @param templateName FreeMaker template name (or rather path), e.g. mail/myEmail.ftlh
      * @param arguments    Data
      * @param helper       Previously created message helper
      */
@@ -126,7 +126,7 @@ public class MailCenter {
             Map<String, Object> params = generalArguments();
             params.put("content", description);
 
-            String templatePath = "templates/notification.ftl";
+            String templatePath = "templates/notification.ftlh";
             transformAndSend(templatePath, params, message);
 
         } catch (MessagingException ex) {

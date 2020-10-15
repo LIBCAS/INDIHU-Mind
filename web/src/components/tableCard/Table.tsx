@@ -4,14 +4,14 @@ import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
-import MuiPaper from "@material-ui/core/Paper";
+import Paper from "@material-ui/core/Paper";
 import { get } from "lodash";
 import moment from "moment";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 import classNames from "classnames";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
-import MuiChip from "@material-ui/core/Chip";
-import MuiFiberManualRecordIcon from "@material-ui/icons/FiberManualRecord";
+import Chip from "@material-ui/core/Chip";
+
 import { CardProps } from "../../types/card";
 import { ConditionalWrapper } from "../conditionalWrapper/ConditionalWrapper";
 
@@ -24,8 +24,6 @@ import { TableProps, OrderProps, DataProps } from "./_types";
 import { changeData, changeFilter } from "./_utils";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles } from "./_tableStyles";
-import { Label } from "../card/Label";
-import { PrintTable } from "../print/PrintTable";
 
 const TableView: React.FC<TableProps & RouteComponentProps> = ({
   baseUrl,
@@ -134,16 +132,13 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
     checkboxRows.length === data.items.length && data.items.length !== 0;
   return (
     <>
-      <div className={classes.toolbar}>
-        <TableGroupEdit
-          checkboxRows={checkboxRows}
-          selectedRow={selectedRow}
-          loadData={loadData}
-          setCheckboxRows={setCheckboxRows}
-        />
-        <PrintTable items={checkboxRows} columns={columns} />
-      </div>
-      <MuiPaper className={classes.root}>
+      <TableGroupEdit
+        checkboxRows={checkboxRows}
+        selectedRow={selectedRow}
+        loadData={loadData}
+        setCheckboxRows={setCheckboxRows}
+      />
+      <Paper className={classes.root}>
         <Loader loading={loading} local className={classes.loader} />
         <div className={classes.tableWrapper}>
           <MaterialTable className={classes.table} aria-labelledby="tableTitle">
@@ -194,7 +189,14 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
                           >
                             {(column.path === "labels" &&
                               row.labels.map((label: any) => (
-                                <Label label={label} key={label.id} />
+                                <Chip
+                                  key={label.id}
+                                  label={label.name}
+                                  style={{
+                                    backgroundColor: label.color,
+                                    margin: "0 3px"
+                                  }}
+                                />
                               ))) || (
                               <ConditionalWrapper
                                 condition={column.path === "name"}
@@ -291,7 +293,7 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
             actions: classes.paginationActions
           }}
         />
-      </MuiPaper>
+      </Paper>
       <Menu
         selectedRow={selectedRow}
         showModal={menuOpen}

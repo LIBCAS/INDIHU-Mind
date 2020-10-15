@@ -28,7 +28,6 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
   >(undefined);
   const [card, setCard] = useState<CardContentProps | undefined>(undefined);
   const loadCard = () => {
-    setLoading(true);
     api()
       .get(`card/${cardId}/content`)
       .json()
@@ -95,7 +94,6 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
                     history={history}
                     cardContent={cardContent}
                     setCardContent={setCardContent}
-                    refreshCard={loadCard}
                   />
                 </Grid>
                 <Grid item xs={12} lg={3}>

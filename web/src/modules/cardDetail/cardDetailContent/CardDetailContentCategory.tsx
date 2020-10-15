@@ -1,11 +1,9 @@
 import React, { useContext } from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
-import MuiTypography from "@material-ui/core/Typography";
-import MuiClearIcon from "@material-ui/icons/Clear";
-import MuiTooltip from "@material-ui/core/Tooltip";
+import Typography from "@material-ui/core/Typography";
+import Cancel from "@material-ui/icons/Cancel";
 
 import { onEditCard } from "./_utils";
-import { formatCategoryName } from "../../../utils/category";
 
 import { Popconfirm } from "../../../components/portal/Popconfirm";
 import { CardContentProps } from "../../../types/card";
@@ -23,51 +21,40 @@ interface CardDetailContentCategoryViewProps {
   category: CategoryProps;
 }
 
-const CardDetailContentCategoryView: React.FC<CardDetailContentCategoryViewProps &
-  RouteComponentProps> = ({ card, setCardContent, category, history }) => {
+const CardDetailContentCategoryView: React.FC<
+  CardDetailContentCategoryViewProps & RouteComponentProps
+> = ({ card, setCardContent, category, history }) => {
   const context: any = useContext(GlobalContext);
-
   const dispatch: Function = context.dispatch;
-
   const classes = useStyles();
-
-  const handleCategoryClick = () => {
+  const onClick = () => {
     categoryActiveSet(dispatch, category);
-
     history.push("/cards");
   };
-
-  const handleDelete = () => {
+  const onDelete = () => {
     const categories = card.card.categories.filter(
       cat => cat.id !== category.id
     );
-
+    // .map(cat => ({ id: cat.id }));
     onEditCard("categories", categories, card, setCardContent);
   };
-
   return (
-    <MuiTypography
+    <Typography
       component="div"
       key={category.id}
       variant="body1"
       className={classes.category}
     >
-      <MuiTooltip title="Kliknutím přejdete na detail kategorie.">
-        <div onClick={handleCategoryClick}>{formatCategoryName(category)}</div>
-      </MuiTooltip>
+      <div onClick={onClick}>{category.name}</div>
       {card.lastVersion && (
         <Popconfirm
           confirmText="Odebrat kategorii?"
-          onConfirmClick={handleDelete}
-          tooltip="Kliknutím odeberete kategorii"
-          acceptText="Ano"
-          cancelText="Ne"
-          Button={
-            <MuiClearIcon fontSize="small" className={classes.removeCategory} />
-          }
+          onConfirmClick={onDelete}
+          tooltip="Smazat"
+          Button={() => <Cancel />}
         />
       )}
-    </MuiTypography>
+    </Typography>
   );
 };
 

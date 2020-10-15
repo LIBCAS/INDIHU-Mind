@@ -30,15 +30,15 @@ public class CitationStore extends IndexedNamedStore<Citation, QCitation, Indexe
     /**
      * For constraint check; Must be unique name for owner
      */
-    public Citation findEqualNameDifferentId(Citation newRecord) {
-        if (requireNonNull(newRecord).getName() == null) return null;
+    public Citation findEqualNameDifferentId(Citation newCitation) {
+        if (requireNonNull(newCitation).getName() == null) return null;
 
         Citation entity = query()
                 .select(qObject())
-                .where(qObject().owner.id.eq(newRecord.getOwner().getId()))
+                .where(qObject().owner.id.eq(newCitation.getOwner().getId()))
                 .where(qObject().deleted.isNull())
-                .where(qObject().name.eq(newRecord.getName()))
-                .where(qObject().id.ne(newRecord.getId()))
+                .where(qObject().name.eq(newCitation.getName()))
+                .where(qObject().id.ne(newCitation.getId()))
                 .fetchFirst();
         detachAll();
         return entity;
@@ -49,7 +49,6 @@ public class CitationStore extends IndexedNamedStore<Citation, QCitation, Indexe
     public IndexedCitation toIndexObject(Citation obj) {
         IndexedCitation indexedCitation = super.toIndexObject(obj);
         if (obj.getOwner() != null) indexedCitation.setUserId(obj.getOwner().getId());
-        indexedCitation.setCitationType(obj.getType().name());
         return indexedCitation;
     }
 

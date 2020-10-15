@@ -1,43 +1,39 @@
 package core.exception;
 
-import core.domain.DomainObject;
-import core.rest.config.ResourceExceptionHandler;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-/**
- * @see ResourceExceptionHandler#invalidAttribute(InvalidAttribute)
- */
-public class InvalidAttribute extends GeneralException {
-    private DomainObject object;
+import java.util.Map;
 
-    private String attribute;
+public class InvalidAttribute extends RestGeneralException {
 
-    private Object value;
-
-    public InvalidAttribute(DomainObject object, String attribute, Object value) {
-        super();
-        this.object = object;
-        this.attribute = attribute;
-        this.value = value;
+    public InvalidAttribute(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    @Override
-    public String toString() {
-        return "InvalidAttribute{" +
-                "object=" + object +
-                ", attribute='" + attribute + '\'' +
-                ", value=" + value +
-                '}';
+    public InvalidAttribute(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
     }
 
-    public DomainObject getObject() {
-        return object;
+    public InvalidAttribute(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
     }
 
-    public String getAttribute() {
-        return attribute;
+    public InvalidAttribute(Class<?> clazz, String objectId, RestErrorCodeEnum code) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
     }
 
-    public Object getValue() {
-        return value;
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        ARGUMENT_IS_NULL("Argument je NULL"),
+        UNEXPECTED_ARGUMENT("Neočekávaný argument");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
+        }
     }
 }

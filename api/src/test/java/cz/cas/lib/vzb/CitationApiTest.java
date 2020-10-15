@@ -73,30 +73,29 @@ public class CitationApiTest extends ApiTest {
 
     @Test
     public void createSimple() throws Exception {
-        createRecordWithApiFromDto(new CreateCitationDto(), Collections.emptyList(), CitationType.MARC);
+        createRecordWithApiFromDto(new CreateCitationDto(), Collections.emptyList());
     }
 
     @Test
     public void createSimpleBrief() throws Exception {
-        createRecordWithApiFromDto(new CreateCitationDto(), Collections.emptyList(), CitationType.BRIEF);
+        createRecordWithApiFromDto(new CreateCitationDto(), Collections.emptyList());
     }
 
     @Test
     public void createWithCards() throws Exception {
-        createRecordWithApiFromDto(new CreateCitationDto(), asList(card1, card2, card3), CitationType.MARC);
+        createRecordWithApiFromDto(new CreateCitationDto(), asList(card1, card2, card3));
     }
 
     @Test
     public void createWithExistingName() throws Exception {
-        String nameForRecord = "MarcRecord name must be unique";
+        String nameForRecord = "Citation name must be unique";
 
         CreateCitationDto firstDto = new CreateCitationDto();
         firstDto.setName(nameForRecord);
-        Citation firstRecord = createRecordWithApiFromDto(firstDto, Collections.emptyList(), CitationType.MARC);
+        Citation firstRecord = createRecordWithApiFromDto(firstDto, Collections.emptyList());
 
         CreateCitationDto secondDto = new CreateCitationDto();
-        secondDto.setType(CitationType.MARC);
-        secondDto.setName(nameForRecord); // same name as first MarcRecord
+        secondDto.setName(nameForRecord); // same name as first Citation
 
         securedMvc().perform(
                 post(RECORD_API_URL)
@@ -112,18 +111,17 @@ public class CitationApiTest extends ApiTest {
 
     @Test
     public void createWithExistingNameDifferentOwner() throws Exception {
-        String nameForRecord = "MarcRecord name must be unique";
+        String nameForRecord = "Citation name must be unique";
 
         CreateCitationDto firstDto = new CreateCitationDto();
         firstDto.setName(nameForRecord);
-        Citation firstRecord = createRecordWithApiFromDto(firstDto, Collections.emptyList(), CitationType.MARC);
+        Citation firstRecord = createRecordWithApiFromDto(firstDto, Collections.emptyList());
 
         User otherUser = UserBuilder.builder().password("other").email("other").allowed(false).build();
         transactionTemplate.execute(status -> userService.create(otherUser));
 
         CreateCitationDto secondDto = new CreateCitationDto();
-        secondDto.setType(CitationType.MARC);
-        secondDto.setName(nameForRecord); // same name as first MarcRecord
+        secondDto.setName(nameForRecord); // same name as first Citation
 
         String contentAsString = securedMvc().perform(
                 post(RECORD_API_URL)
@@ -132,7 +130,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(otherUser.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        MarcRecord secondRecord = objectMapper.readValue(contentAsString, MarcRecord.class);
+        Citation secondRecord = objectMapper.readValue(contentAsString, Citation.class);
 
         Citation ofUser = citationStore.find(firstRecord.getId());
         Citation ofOtherUser = citationStore.find(secondRecord.getId());
@@ -149,7 +147,7 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void updateSimple() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList(), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList());
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
         updateDto.setId(recordWithApiFromDto.getId());
@@ -163,7 +161,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
 
-        MarcRecord recordFromDb = (MarcRecord) citationStore.find(recordWithApiFromDto.getId());
+        Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
         assertThat(recordFromDb.getLinkedCards()).isEmpty();
@@ -179,7 +177,7 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void updateSimpleBrief() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList(), CitationType.BRIEF);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList());
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
         updateDto.setId(recordWithApiFromDto.getId());
@@ -194,7 +192,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
 
-        BriefRecord recordFromDb = (BriefRecord) citationStore.find(recordWithApiFromDto.getId());
+        Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
         assertThat(recordFromDb.getLinkedCards()).isEmpty();
@@ -206,7 +204,7 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void updateFromZeroCardsToThreeCards() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList(), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList());
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
         updateDto.setId(recordWithApiFromDto.getId());
@@ -221,7 +219,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
 
-        MarcRecord recordFromDb = (MarcRecord) citationStore.find(recordWithApiFromDto.getId());
+        Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
         assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1, card2, card3);
@@ -237,7 +235,7 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void updateFromTwoCardsToThreeCards() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card1, card2), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card1, card2));
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
         updateDto.setId(recordWithApiFromDto.getId());
@@ -252,7 +250,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
 
-        MarcRecord recordFromDb = (MarcRecord) citationStore.find(recordWithApiFromDto.getId());
+        Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
         assertThat(recordFromDb.getName()).isEqualTo("This is new original and unique name");
@@ -269,7 +267,7 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void updateFromThreeCardsToOneCard() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card1, card2, card3), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card1, card2, card3));
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
         updateDto.setId(recordWithApiFromDto.getId());
@@ -284,7 +282,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
 
-        MarcRecord recordFromDb = (MarcRecord) citationStore.find(recordWithApiFromDto.getId());
+        Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
         assertThat(recordFromDb.getName()).isEqualTo("This is new original and unique name");
@@ -301,11 +299,11 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void updateCardsAndDocuments() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card2), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card2));
 
         UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().owner(user).cards(card2, card3).name("new url file").contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
         UrlAttachmentFile url2File = UrlAttachmentBuilder.builder().owner(user).cards().name("new url file2").contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
-        transactionTemplate.execute(s -> documentStore.save(asList(urlFile,url2File)));
+        transactionTemplate.execute(s -> documentStore.save(asList(urlFile, url2File)));
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
         updateDto.setId(recordWithApiFromDto.getId());
@@ -320,7 +318,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
 
-        MarcRecord recordFromDb = (MarcRecord) citationStore.find(recordWithApiFromDto.getId());
+        Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
         assertThat(recordFromDb.getName()).isEqualTo("This is new original and unique name");
@@ -341,7 +339,7 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void updateFromTwoCardsToZeroCards() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card1, card2), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card1, card2));
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
         updateDto.setId(recordWithApiFromDto.getId());
@@ -357,7 +355,7 @@ public class CitationApiTest extends ApiTest {
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().is2xxSuccessful());
 
-        MarcRecord recordFromDb = (MarcRecord) citationStore.find(recordWithApiFromDto.getId());
+        Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
         assertThat(recordFromDb.getName()).isEqualTo("This is new original and unique name");
@@ -374,7 +372,7 @@ public class CitationApiTest extends ApiTest {
     @Test
     public void deleteRecordWithoutCards() throws Exception {
         CreateCitationDto recordDto = new CreateCitationDto();
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList(), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, Collections.emptyList());
 
         securedMvc().perform(
                 delete(RECORD_API_URL + recordWithApiFromDto.getId())
@@ -392,7 +390,7 @@ public class CitationApiTest extends ApiTest {
 
     @Test
     public void deleteRecordWithCards() throws Exception {
-        Citation recordWithApiFromDto = createRecordWithApiFromDto(new CreateCitationDto(), asList(card1, card2, card3), CitationType.MARC);
+        Citation recordWithApiFromDto = createRecordWithApiFromDto(new CreateCitationDto(), asList(card1, card2, card3));
 
         securedMvc().perform(
                 delete(RECORD_API_URL + recordWithApiFromDto.getId())
@@ -417,7 +415,7 @@ public class CitationApiTest extends ApiTest {
      */
     @Test
     public void findDeletedRecord() throws Exception {
-        MarcRecord record = new MarcRecord();
+        Citation record = new Citation();
         record.setId("2ad11b80-2442-42a3-8f77-c72097a5ba5c");
         record.setOwner(user);
         record.setName("ein Recordoriginalname");
@@ -457,13 +455,11 @@ public class CitationApiTest extends ApiTest {
         transactionTemplate.execute(t -> cardStore.save(asList(card1, card2, card3)));
     }
 
-    private Citation createRecordWithApiFromDto(CreateCitationDto dto, List<Card> withCards, CitationType citationType) throws Exception {
+    private Citation createRecordWithApiFromDto(CreateCitationDto dto, List<Card> withCards) throws Exception {
         if (dto.getName() == null || dto.getName().isEmpty())
             dto.setName("name must be original and unique for user!");
-        dto.setType(citationType);
-        if (citationType == CitationType.MARC) {
-            dto.setDataFields(TEST_DATAFIELDS);
-        } else dto.setContent("Testing content");
+        dto.setDataFields(TEST_DATAFIELDS);
+        dto.setContent("Testing content");
 
         if (!withCards.isEmpty())
             dto.setLinkedCards(withCards.stream().map(Card::getId).collect(Collectors.toList()));
@@ -488,11 +484,9 @@ public class CitationApiTest extends ApiTest {
         assertThat(recordFromDb.getName()).isEqualTo(dto.getName());
         assertThat(recordFromDb.getDocuments()).extracting("id").containsExactlyInAnyOrderElementsOf(dto.getDocuments());
 
-        if (citationType == CitationType.MARC) {
-            assertThat(((MarcRecord) recordFromDb).getDataFields()).hasSize(TEST_DATAFIELDS.size());
-        } else {
-            assertThat(((BriefRecord) recordFromDb).getContent()).isEqualTo(dto.getContent());
-        }
+        assertThat(recordFromDb.getDataFields()).hasSize(TEST_DATAFIELDS.size());
+        assertThat(recordFromDb.getContent()).isEqualTo(dto.getContent());
+
 
         for (Card card : withCards) {
             assertThat(recordFromDb.getLinkedCards()).contains(card);

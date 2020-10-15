@@ -15,8 +15,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
 import static core.util.Utils.eq;
 import static core.util.Utils.isNull;
+import static cz.cas.lib.vzb.exception.NameAlreadyExistsException.ErrorCode.NAME_ALREADY_EXISTS;
 
 @Service
 @Slf4j
@@ -46,12 +48,12 @@ public class LabelService {
     public Label save(Label newLabel) {
         Label fromDb = store.find(newLabel.getId());
         if (fromDb != null)
-            eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(Label.class, newLabel.getId()));
+            eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Label.class, newLabel.getId()));
 
         // enforce addUniqueConstraint `vzb_label_of_user_uniqueness` of columnNames="name,owner_id"
         newLabel.setOwner(userDelegate.getUser());
         Label nameExists = store.findEqualNameDifferentId(newLabel);
-        isNull(nameExists, () -> new NameAlreadyExistsException(Label.class, nameExists.getId(), nameExists.getName(), nameExists.getOwner()));
+        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Label.class, nameExists.getId(), nameExists.getOwner()));
 
         store.save(newLabel);
         if (fromDb != null && !StringUtils.equals(fromDb.getName(), newLabel.getName())) {

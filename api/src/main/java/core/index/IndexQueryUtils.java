@@ -15,6 +15,9 @@ import org.springframework.data.solr.core.query.SimpleStringCriteria;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_FAILED_COMPARISON;
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_IS_NULL;
+import static core.index.UnsupportedSearchParameterException.ErrorCode.UNSUPPORTED_PARAMETER;
 import static core.util.Utils.*;
 
 public class IndexQueryUtils {
@@ -51,7 +54,7 @@ public class IndexQueryUtils {
         if (values.isEmpty())
             return new SimpleStringCriteria("(-*:*)");
         if (indexedField.getKeywordField() == null)
-            throw new UnsupportedSearchParameterException("equality check not supported for field: " + indexedField.getFieldName());
+            throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "equality check not supported for field: " + indexedField.getFieldName());
         return Criteria.where(indexedField.getKeywordField()).in(values);
     }
 
@@ -68,7 +71,7 @@ public class IndexQueryUtils {
         String join = String.join(" ", values.stream().map(o -> "\"" + o + "\"").collect(Collectors.toList()));
         if (!values.isEmpty()) {
             if (indexedField.getKeywordField() == null)
-                throw new UnsupportedSearchParameterException("equality check not supported for field: " + indexedField.getFieldName());
+                throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "equality check not supported for field: " + indexedField.getFieldName());
             return new SimpleStringCriteria("(*:* -" + indexedField.getKeywordField() + ":(" + join + "))");
         }
         return new SimpleStringCriteria("(*:*)");
@@ -85,7 +88,7 @@ public class IndexQueryUtils {
      */
     public static Criteria prefixQuery(IndexField indexedField, String value) {
         if (indexedField.getKeywordField() == null)
-            throw new UnsupportedSearchParameterException("prefix query not supported for field: " + indexedField.getFieldName());
+            throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "prefix query not supported for field: " + indexedField.getFieldName());
         return new SimpleStringCriteria(indexedField.getKeywordField() + ":" + value.replace(" ", "\\ ") + "*");
     }
 
@@ -100,7 +103,7 @@ public class IndexQueryUtils {
      */
     public static Criteria suffixQuery(IndexField indexedField, String value) {
         if (indexedField.getKeywordField() == null)
-            throw new UnsupportedSearchParameterException("suffix query not supported for field: " + indexedField.getFieldName());
+            throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "suffix query not supported for field: " + indexedField.getFieldName());
         return new SimpleStringCriteria(indexedField.getKeywordField() + ":*" + value.replace(" ", "\\ "));
     }
 
@@ -122,7 +125,7 @@ public class IndexQueryUtils {
             case IndexFieldType.TEXT:
                 return phrase(fieldName, value);
             default:
-                throw new UnsupportedSearchParameterException();
+                throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER);
         }
     }
 
@@ -271,7 +274,7 @@ public class IndexQueryUtils {
         Criteria parentCriteria = Criteria.where(IndexQueryUtils.TYPE_FIELD).is(indexType);
         Map<String, IndexField> childIndexedFields = INDEXED_FIELDS_MAP.get(childIndexType);
         if (childIndexedFields == null)
-            throw new UnsupportedSearchParameterException("unknown child index type: " + childIndexType);
+            throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "unknown child index type: " + childIndexType);
         Criteria childrenCriteria = andQuery(filters, indexType, childIndexedFields).and(Criteria.where(IndexQueryUtils.TYPE_FIELD).is(childIndexType));
         return new NestedCriteria(parentCriteria, childrenCriteria);
     }
@@ -286,30 +289,30 @@ public class IndexQueryUtils {
                     sortField = "score";
                 else {
                     IndexField field = indexedFields.get(sortSpecification.getSort());
-                    notNull(field, () -> new UnsupportedSearchParameterException("sort field: " + sortSpecification.getSort() + " not mapped"));
+                    notNull(field, () -> new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "sort field: " + sortSpecification.getSort() + " not mapped"));
                     sortField = field.getSortField();
-                    notNull(sortField, () -> new UnsupportedSearchParameterException("sort is not supported on field type: " + field.getFieldType() + " consider adding " + IndexField.STRING_SUFFIX + " copy field"));
+                    notNull(sortField, () -> new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "sort is not supported on field type: " + field.getFieldType() + " consider adding " + IndexField.STRING_SUFFIX + " copy field"));
                 }
                 s = s.and(Sort.by(Sort.Direction.valueOf(sortSpecification.getOrder().toString()), sortField));
             }
             query.addSort(s);
         } else {
-            notNull(params.getSort(), () -> new BadArgument("sort"));
-            notNull(params.getOrder(), () -> new BadArgument("order"));
+            notNull(params.getSort(), () -> new BadArgument(ARGUMENT_IS_NULL, "sort"));
+            notNull(params.getOrder(), () -> new BadArgument(ARGUMENT_IS_NULL, "order"));
             String sortField;
             if ("score".equals(params.getSort()))
                 sortField = "score";
             else {
                 IndexField field = indexedFields.get(params.getSort());
-                notNull(field, () -> new UnsupportedSearchParameterException("sort field: " + params.getSort() + " not mapped"));
+                notNull(field, () -> new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "sort field: " + params.getSort() + " not mapped"));
                 sortField = field.getSortField();
-                notNull(sortField, () -> new UnsupportedSearchParameterException("sort is not supported on field type: " + field.getFieldType() + " consider adding " + IndexField.STRING_SUFFIX + " copy field"));
+                notNull(sortField, () -> new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "sort is not supported on field type: " + field.getFieldType() + " consider adding " + IndexField.STRING_SUFFIX + " copy field"));
             }
             query.addSort(Sort.by(Sort.Direction.valueOf(params.getOrder().toString()), sortField));
         }
         if (params.getPageSize() != null && params.getPageSize() > 0) {
-            notNull(params.getPage(), () -> new BadArgument("page"));
-            gte(params.getPage(), 0, () -> new BadArgument("page"));
+            notNull(params.getPage(), () -> new BadArgument(ARGUMENT_IS_NULL, "page"));
+            gte(params.getPage(), 0, () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "page > 0"));
             query.setPageRequest(PageRequest.of(params.getPage(), params.getPageSize()));
         }
     }
@@ -332,7 +335,7 @@ public class IndexQueryUtils {
         String value = sanitizeFilterValue(filter.getValue());
         FilterOperation operation = filter.getOperation();
         if (operation == null) {
-            throw new BadArgument("operation not specified: " + filter);
+            throw new BadArgument(ARGUMENT_IS_NULL, "operation not specified: " + filter);
         }
         boolean logicalFilter = operation == FilterOperation.AND
                 || operation == FilterOperation.OR
@@ -340,13 +343,13 @@ public class IndexQueryUtils {
                 || operation == FilterOperation.NEGATE;
         boolean nullFilter = operation == FilterOperation.IS_NULL || operation == FilterOperation.NOT_NULL;
         if (!logicalFilter && !nullFilter && value == null) {
-            throw new BadArgument("value not specified: " + filter);
+            throw new BadArgument(ARGUMENT_IS_NULL, "value not specified: " + filter);
         }
         IndexField field = null;
         if (!logicalFilter) {
             field = indexedFields.get(filter.getField());
             if (field == null)
-                throw new UnsupportedSearchParameterException("field: " + filter.getField() + " not mapped in index of: " + indexType);
+                throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "field: " + filter.getField() + " not mapped in index of: " + indexType);
         }
         switch (operation) {
             case EQ:
@@ -379,7 +382,7 @@ public class IndexQueryUtils {
             case NESTED:
                 //nested objects must be in the same collection as parent object
                 if (!INDEXED_FIELDS_MAP.containsKey(filter.getField()))
-                    throw new UnsupportedSearchParameterException("unknown child index of type: " + filter.getField());
+                    throw new UnsupportedSearchParameterException(UNSUPPORTED_PARAMETER, "unknown child index of type: " + filter.getField());
                 return nestedQuery(filter.getField(), filter.getFilter(), indexType);
             case NEGATE:
                 return negateQuery(filter.getFilter(), indexType, indexedFields);

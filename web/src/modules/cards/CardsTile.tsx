@@ -1,37 +1,24 @@
-import React, { useState, useEffect, useContext } from "react";
-import { flatten } from "lodash";
+import React, { useState, useEffect } from "react";
 
 import { api } from "../../utils/api";
 import { CardProps } from "../../types/card";
-import { GlobalContext } from "../../context/Context";
-import { CategoryProps } from "../../types/category";
 
 import { Loader } from "../../components/loader/Loader";
 
+import { CardTileItem } from "./CardsTileItem";
 import { useStyles } from "./_cardsStyles";
-import { CardTile } from "../../components/card/CardTile";
 
 interface ApiProps {
   count: number;
   items: CardProps[];
 }
 
-interface CardsTileProps {
-  query: any;
-}
-export const CardsTile: React.FC<CardsTileProps> = ({ query }) => {
+export const CardsTile: React.FC = () => {
   const classes = useStyles();
 
   const [loading, setLoading] = useState(true);
 
-  const [cards, setCards] = useState<
-    { id: string; name: string; note: string }[]
-  >([]);
-
-  const context: any = useContext(GlobalContext);
-
-  const { categoryActive } = context.state.category;
-  const { labelActive } = context.state.label;
+  const [cards, setCards] = useState<CardProps[]>([]);
 
   useEffect(() => {
     // TODO: Implement pagination or infinite loading for card tiles display
@@ -39,26 +26,21 @@ export const CardsTile: React.FC<CardsTileProps> = ({ query }) => {
       .post("card/parametrized", {
         json: {
           page: 0,
-          pageSize: 999,
-          ...(categoryActive || labelActive
-            ? {
-                filter: query
-              }
-            : {})
+          pageSize: 999
         }
       })
       .json<ApiProps>()
-      .then((result: any) => {
+      .then(result => {
         setLoading(false);
         setCards(result.items);
       });
-  }, [query]);
+  }, []);
   return (
     <>
       <Loader loading={loading} />
       <div className={classes.tileWrapper}>
         {cards.map(card => (
-          <CardTile key={card.id} card={card} showLabels={true} />
+          <CardTileItem key={card.id} card={card} />
         ))}
       </div>
     </>

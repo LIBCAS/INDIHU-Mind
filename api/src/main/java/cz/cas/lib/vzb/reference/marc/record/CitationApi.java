@@ -54,24 +54,19 @@ public class CitationApi {
      * {
      *   "id": "string",
      *   "name": "string",
-     *   "type": "MARC" | "BRIEF"
      *   "linkedCards": ["cardId"],
-     *   "documentId": "string",
-     *
+     *   "documents": "["documentId"],,
+     *   "content":"string"
      *   "dataFields": [
      *     {
      *       "tag": "string", (size exactly 3)
      *       "indicator1": "char",
      *       "indicator2": "char",
      *       "subfields": [
-     *         {
-     *           "code": "char",
-     *           "data": "string"
-     *         }
+     *         { "code": "char", "data": "string" }
      *       ]
      *     }
      *   ],
-     *   "content":"string"
      * }
      * </pre>
      */

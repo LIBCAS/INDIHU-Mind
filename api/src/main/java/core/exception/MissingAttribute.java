@@ -1,52 +1,39 @@
 package core.exception;
 
-import core.domain.DomainObject;
-import core.rest.config.ResourceExceptionHandler;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-/**
- * @see ResourceExceptionHandler#missingAttribute(MissingAttribute)
- */
-public class MissingAttribute extends GeneralException {
-    private Object object;
+import java.util.Map;
 
-    private String attribute;
+public class MissingAttribute extends RestGeneralException {
 
-    public MissingAttribute(Object object, String attribute) {
-        super();
-        this.object = object;
-        this.attribute = attribute;
+    public MissingAttribute(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    public MissingAttribute(Class<?> clazz, String objectId, String attribute) {
-        super();
-        try {
-            this.object = clazz.newInstance();
+    public MissingAttribute(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
+    }
 
-            if (DomainObject.class.isAssignableFrom(clazz)) {
-                ((DomainObject) this.object).setId(objectId);
-            }
+    public MissingAttribute(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
+    }
 
-        } catch (Exception e) {
-            // ignore
+    public MissingAttribute(RestErrorCodeEnum code, Class<?> clazz, String objectId) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
+    }
+
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        MISSING_ATTRIBUTE("Chybějící atribut");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
         }
-
-
-        this.attribute = attribute;
-    }
-
-    @Override
-    public String toString() {
-        return "MissingAttribute{" +
-                "object=" + object +
-                ", attribute='" + attribute + '\'' +
-                '}';
-    }
-
-    public Object getObject() {
-        return object;
-    }
-
-    public String getAttribute() {
-        return attribute;
     }
 }
+

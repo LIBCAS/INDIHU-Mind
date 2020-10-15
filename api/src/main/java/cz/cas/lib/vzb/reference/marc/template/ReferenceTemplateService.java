@@ -9,9 +9,9 @@ import core.index.dto.Result;
 import core.store.Transactional;
 import cz.cas.lib.vzb.dto.GeneratePdfDto;
 import cz.cas.lib.vzb.exception.NameAlreadyExistsException;
+import cz.cas.lib.vzb.reference.marc.record.Citation;
+import cz.cas.lib.vzb.reference.marc.record.CitationStore;
 import cz.cas.lib.vzb.reference.marc.record.IndexedCitation;
-import cz.cas.lib.vzb.reference.marc.record.MarcRecord;
-import cz.cas.lib.vzb.reference.marc.record.MarcRecordStore;
 import cz.cas.lib.vzb.reference.marc.template.field.TemplateField;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.service.PdfExporter;
@@ -33,7 +33,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static core.exception.ForbiddenObject.ErrorCode.NOT_OWNED_BY_USER;
+import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.*;
+import static cz.cas.lib.vzb.exception.NameAlreadyExistsException.ErrorCode.NAME_ALREADY_EXISTS;
 
 @Service
 @Slf4j
@@ -46,15 +49,15 @@ public class ReferenceTemplateService {
     private Clock clock = Clock.systemDefaultZone(); // can be changed in tests with setter
 
     private ReferenceTemplateStore store;
-    private MarcRecordStore marcRecordStore;
+    private CitationStore citationStore;
     private UserDelegate userDelegate;
     private PdfExporter pdfExporter;
 
 
     public ReferenceTemplate find(String id) {
         ReferenceTemplate entity = store.find(id);
-        notNull(entity, () -> new MissingObject(ReferenceTemplate.class, id));
-        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(ReferenceTemplate.class, id));
+        notNull(entity, () -> new MissingObject(ENTITY_IS_NULL, ReferenceTemplate.class, id));
+        eq(entity.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, ReferenceTemplate.class, id));
 
         return entity;
     }
@@ -63,12 +66,12 @@ public class ReferenceTemplateService {
     public ReferenceTemplate save(@NonNull ReferenceTemplate entity) {
         ReferenceTemplate fromDb = store.find(entity.getId());
         if (fromDb != null)
-            eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(ReferenceTemplate.class, entity.getId()));
+            eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, ReferenceTemplate.class, entity.getId()));
 
         // enforce addUniqueConstraint `vzb_record_of_user_uniqueness` of columnNames="name,owner_id"
         entity.setOwner(userDelegate.getUser());
         ReferenceTemplate nameExists = store.findEqualNameDifferentId(entity);
-        isNull(nameExists, () -> new NameAlreadyExistsException(ReferenceTemplate.class, nameExists.getId(), nameExists.getName(), nameExists.getOwner()));
+        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), ReferenceTemplate.class, nameExists.getId(), nameExists.getOwner()));
 
         return store.save(entity);
     }
@@ -99,17 +102,16 @@ public class ReferenceTemplateService {
     public ResponseEntity<InputStreamResource> generatePdf(GeneratePdfDto dto) {
         ReferenceTemplate template = find(dto.getTemplateId());
 
-        // BriefRecords are skipped automatically by store
-        List<MarcRecord> records = marcRecordStore.findAllInList(dto.getIds());
-        records.forEach(record -> eq(record.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(MarcRecord.class, record.getId())));
+        List<Citation> citations = citationStore.findAllInList(dto.getIds());
+        citations.forEach(record -> eq(record.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Citation.class, record.getId())));
 
-        log.debug(String.format("Generating PDF file for template='%s' of user='%s' with records='[%s]'",
-                template.getId(), template.getOwner(), IndihuMindUtils.prettyPrintCollectionIds(records)));
+        log.debug(String.format("Generating PDF file for template='%s' of user='%s' with citations='[%s]'",
+                template.getId(), template.getOwner(), IndihuMindUtils.prettyPrintCollectionIds(citations)));
 
         // For each record, fill data into template and generate string with HTML tags by applying customizations
         List<String> htmlLines = new ArrayList<>();
-        for (MarcRecord record : records) {
-            ReferenceTemplate templateWithData = createTemplateWithFilledData(template, record);
+        for (Citation citation : citations) {
+            ReferenceTemplate templateWithData = createTemplateWithFilledData(template, citation);
             String formattedCitationAsHtml = createHtmlStringFromTemplateData(templateWithData);
             htmlLines.add(formattedCitationAsHtml);
         }
@@ -143,7 +145,7 @@ public class ReferenceTemplateService {
      *
      * If there is no suitable data for {@link TemplateField} then value from application.yml is used
      */
-    private ReferenceTemplate createTemplateWithFilledData(ReferenceTemplate templateWithoutData, MarcRecord record) {
+    private ReferenceTemplate createTemplateWithFilledData(ReferenceTemplate templateWithoutData, Citation record) {
         ReferenceTemplate template = ReferenceTemplate.blankCopyOf(templateWithoutData);
 
         template.marcFields().forEach(marcField -> marcField.initializeDataForTagAndCode(record, MISSING_DATA_ERROR_TEXT));
@@ -156,8 +158,8 @@ public class ReferenceTemplateService {
 
 
     @Inject
-    public void setRecordStore(MarcRecordStore marcRecordStore) {
-        this.marcRecordStore = marcRecordStore;
+    public void setRecordStore(CitationStore marcRecordStore) {
+        this.citationStore = marcRecordStore;
     }
 
     @Inject

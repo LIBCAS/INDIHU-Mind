@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import javax.validation.Valid;
 import java.util.Collection;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_FAILED_COMPARISON;
 import static core.util.Utils.eq;
 import static cz.cas.lib.vzb.util.ResponseContainer.LIST;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -92,7 +93,7 @@ public class ReferenceTemplateApi {
     @PutMapping(value = "/{id}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ReferenceTemplate save(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id,
                                   @ApiParam(value = "Single instance", required = true) @RequestBody ReferenceTemplate request) {
-        eq(id, request.getId(), () -> new BadArgument("id"));
+        eq(id, request.getId(), () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "id != dto.id"));
         return service.save(request);
     }
 

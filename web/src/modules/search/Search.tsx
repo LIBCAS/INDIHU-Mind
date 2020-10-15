@@ -8,7 +8,7 @@ import { SearchCardProps } from "../../types/search";
 import { api } from "../../utils/api";
 import { Loader } from "../../components/loader/Loader";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
+
 import { SearchItem } from "./SearchItem";
 
 let controller = new AbortController();
@@ -22,7 +22,6 @@ export const Search: React.FC<RouteComponentProps> = ({
   const searchText = searchParams.get("q");
   const [loading, setLoading] = useState(false);
   const [cards, setCards] = useState<SearchCardProps[]>([]);
-  const [error, setError] = useState<boolean | string>(false);
 
   useEffect(() => {
     if (!controller.signal.aborted && loading) controller.abort();
@@ -33,19 +32,16 @@ export const Search: React.FC<RouteComponentProps> = ({
         signal: controller.signal
       })
       .json()
-      .then(({ items }: any) => {
+      .then((res: any) => {
         setLoading(false);
-        setCards(items);
-        if (!items.length) {
-          setError("Nebyly nalezeny žádné karty.");
-        }
-      })
-      .catch(() => setError("Nepovedlo se načíst karty."));
+        setCards(res.items);
+      });
+    // TODO
+    // .catch()
   }, [searchText]);
   return (
     <Fade in>
       <div>
-        {error && <MessageSnackbar setVisible={setError} message={error} />}
         <Typography
           className={classNames(classesSpacing.mb2, classesSpacing.mt2)}
           variant="h5"

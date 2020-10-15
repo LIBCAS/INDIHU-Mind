@@ -1,41 +1,40 @@
 package core.exception;
 
-import core.domain.DomainObject;
-import core.rest.config.ResourceExceptionHandler;
+import core.rest.config.RestErrorCodeEnum;
+import core.util.Utils;
+import lombok.Getter;
 
-/**
- * @see ResourceExceptionHandler#forbiddenOperation(ForbiddenOperation)
- */
-public class ForbiddenOperation extends GeneralException {
-    private Object object;
+import java.util.Map;
 
-    public ForbiddenOperation(Object object) {
-        super();
-        this.object = object;
+public class ForbiddenOperation extends RestGeneralException {
+
+    public ForbiddenOperation(RestErrorCodeEnum code) {
+        super(code);
     }
 
-    public ForbiddenOperation(Class<?> clazz, String objectId) {
-        super();
-        try {
-            this.object = clazz.newInstance();
+    public ForbiddenOperation(RestErrorCodeEnum code, String value) {
+        super(code, Utils.asMap("info", value));
+    }
 
-            if (DomainObject.class.isAssignableFrom(clazz)) {
-                ((DomainObject) this.object).setId(objectId);
-            }
+    public ForbiddenOperation(RestErrorCodeEnum code, Map<String, String> details) {
+        super(code, details);
+    }
 
-        } catch (Exception e) {
-            // ignore
+    public ForbiddenOperation(RestErrorCodeEnum code, Class<?> clazz, String objectId) {
+        super(code);
+        this.details = Utils.asMap("class", clazz.getSimpleName(), "id", objectId);
+    }
+
+
+    public enum ErrorCode implements RestErrorCodeEnum {
+        INVALID_TOKEN("Neplatný token"),
+        FILE_NOT_STORED_ON_SERVER("Soubor není uložen na serveru"),
+        ARGUMENT_IS_NULL("Argument je NULL");
+
+        @Getter private final String message;
+
+        ErrorCode(String message) {
+            this.message = message;
         }
-    }
-
-    @Override
-    public String toString() {
-        return "ForbiddenOperation{" +
-                "object=" + object +
-                '}';
-    }
-
-    public Object getObject() {
-        return object;
     }
 }

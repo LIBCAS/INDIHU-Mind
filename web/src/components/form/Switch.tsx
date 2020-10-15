@@ -1,18 +1,9 @@
 import React from "react";
-import classNames from "classnames";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import MaterialSwitch from "@material-ui/core/Switch";
 import InputLabel from "@material-ui/core/InputLabel";
 
 import { useStyles as useFormStyles } from "./_formStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-
-interface SwitchWrapperProps {
-  children: JSX.Element;
-  field: any;
-  title?: any;
-  oneLine?: boolean;
-}
 
 interface SwitchProps {
   label: string | JSX.Element;
@@ -22,54 +13,22 @@ interface SwitchProps {
   title?: any;
   autoFocus?: boolean;
   secondary?: boolean;
-  oneLine?: boolean;
 }
-
-const SwitchWrapper: React.FC<SwitchWrapperProps> = ({
-  field,
-  title,
-  oneLine,
-  children
-}) => {
-  const classesLayout = useLayoutStyles();
-  const classesForm = useFormStyles();
-
-  const content = (
-    <>
-      {title && (
-        <InputLabel
-          className={classNames(
-            classesForm.label,
-            oneLine && classesForm.oneLineFieldLabel
-          )}
-          htmlFor={field.name}
-        >
-          {title}
-        </InputLabel>
-      )}
-      {children}
-    </>
-  );
-
-  return oneLine ? (
-    <div className={classNames(classesLayout.flex, classesLayout.alignCenter)}>
-      {content}
-    </div>
-  ) : (
-    content
-  );
-};
 
 export const Switch: React.FC<SwitchProps> = ({
   label,
   field,
   title,
-  secondary,
-  oneLine
+  secondary
 }) => {
   const classesForm = useFormStyles();
   return (
-    <SwitchWrapper field={field} title={title} oneLine={oneLine}>
+    <>
+      {title && (
+        <InputLabel className={classesForm.label} htmlFor={field.name}>
+          {title}
+        </InputLabel>
+      )}
       <FormControlLabel
         control={
           <MaterialSwitch
@@ -92,7 +51,7 @@ export const Switch: React.FC<SwitchProps> = ({
         }
         label={label}
       />
-    </SwitchWrapper>
+    </>
   );
 };
 

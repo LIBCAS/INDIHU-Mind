@@ -6,11 +6,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     tabContentWrapper: {
       display: "flex",
       height: "100%",
-      justifyContent: "start",
-      [theme.breakpoints.up("md")]: {
-        maxHeight: "calc(100vh - 196px)",
-        justifyContent: "space-between"
-      },
+      // justifyContent: "center",
       flexDirection: "column",
       padding: theme.spacing(2)
     },
@@ -54,7 +50,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       flexDirection: "column",
       padding: theme.spacing(4),
       [theme.breakpoints.up("md")]: {
-        padding: theme.spacing(3)
+        padding: theme.spacing(2)
       }
     },
     label: {

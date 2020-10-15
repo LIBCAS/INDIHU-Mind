@@ -1,54 +1,49 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef } from "react";
+import Card from "./DndCard";
 import classNames from "classnames";
-import { Typography } from "@material-ui/core";
-import { FormikProps } from "formik";
-import { filter } from "lodash";
+import { useDrop } from "react-dnd";
+import { ItemTypes, Item } from "./_types";
 
-import { Item } from "./_types";
+import { useStyles } from "./_dndStyles";
 import { useStyles as useLayoutStyles } from "../../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
 
-import Card, { DragItem } from "./DndCard";
+import { DragItem } from "./DndCard";
+import { Typography } from "@material-ui/core";
+import { DnDAdd } from "./DnDAdd";
+import { DnDRemove } from "./DnDRemove";
+import { DnDAddFirst } from "./DnDAddFirst";
+import { Formik, FormikProps, Form } from "formik";
 
 export interface DnDProps {
   initCards: Item[];
   cards: Item[];
   setCards: React.Dispatch<React.SetStateAction<Item[]>>;
   formikBag: FormikProps<any>;
+  recordTemplate: any;
 }
 
-const DnD: React.FC<DnDProps> = ({ initCards, cards, setCards, formikBag }) => {
+const DnD: React.FC<DnDProps> = ({
+  initCards,
+  cards,
+  setCards,
+  formikBag,
+  recordTemplate
+}) => {
+  const classes = useStyles();
   const classesLayout = useLayoutStyles();
   const classesSpacing = useSpacingStyles();
 
-  const [active, setActive] = useState<string | null>(null);
-
-  const moveItem = <T extends unknown>(
+  const swapItems = <T extends unknown>(
     arr: T[],
     indexA: number,
     indexB: number
   ): T[] => {
-    const lower = indexA < indexB;
-    const lowerIndex = lower ? indexA : indexB;
-    const higherIndex = lower ? indexB : indexA;
-
-    return Math.abs(indexA - indexB) === 1
-      ? [
-          ...arr.slice(0, lowerIndex),
-          arr[higherIndex],
-          arr[lowerIndex],
-          ...arr.slice(higherIndex + 1)
-        ]
-      : [
-          ...arr.slice(0, lowerIndex),
-          ...(lower ? [] : [arr[indexA]]),
-          ...arr.slice(
-            lowerIndex + (lower ? 1 : 0),
-            higherIndex + (lower ? 1 : 0)
-          ),
-          ...(lower ? [arr[indexA]] : []),
-          ...arr.slice(higherIndex + 1)
-        ];
+    let arraySwapped = arr.slice();
+    let temp = arraySwapped[indexA];
+    arraySwapped[indexA] = arraySwapped[indexB];
+    arraySwapped[indexB] = temp;
+    return arraySwapped;
   };
 
   const moveCard = useCallback(
@@ -67,8 +62,12 @@ const DnD: React.FC<DnDProps> = ({ initCards, cards, setCards, formikBag }) => {
               }
             }
             const newCard = { ...findById, count };
-
-            formikBag.setFieldValue(id + count + "customizations", []);
+            if (findById.id === "customizations") {
+              formikBag.setFieldValue(id + count, "");
+            } else {
+              formikBag.setFieldValue(id + count + "customizations", []);
+              formikBag.setFieldValue(id + count + "code", "");
+            }
 
             if (isLast) {
               cardsAdded = [...cardsAdded, newCard];
@@ -78,39 +77,41 @@ const DnD: React.FC<DnDProps> = ({ initCards, cards, setCards, formikBag }) => {
           }
           return cardsAdded;
         } else {
-          return moveItem(cards, dragIndex, hoverIndex);
+          const swappedItems = swapItems(cards, dragIndex, hoverIndex);
+          return swappedItems;
         }
       });
     },
     [cards]
   );
   return (
-    <div className={classesSpacing.pt2}>
+    <div>
       <Typography variant="subtitle1" gutterBottom>
         Vytvořená šablona
       </Typography>
-      <div className={classesSpacing.mb2} />
+      <div
+        className={classNames(classesLayout.flex, classesLayout.spaceBetween)}
+      >
+        {cards.length === 0 && <DnDAddFirst moveCard={moveCard} />}
+        {cards.length !== 0 && <DnDAdd cards={cards} moveCard={moveCard} />}
+        <DnDRemove cards={cards} setCards={setCards} formikBag={formikBag} />
+      </div>
       <div
         className={classNames(classesLayout.flex, classesLayout.flexWrap)}
         style={{ paddingRight: "-.5rem" }}
       >
         {cards.map(({ id, count, text }, index) => {
-          const key = id + count;
-          const isActive = active === key;
           return (
             <Card
-              key={key}
+              key={id + count}
               index={index}
               id={id}
               count={count}
               text={text}
               moveCard={moveCard}
+              setCards={setCards}
               formikBag={formikBag}
-              removeCard={() =>
-                setCards(filter(cards, c => c.id !== id || c.count !== count))
-              }
-              active={isActive}
-              toggleActive={() => setActive(isActive ? null : key)}
+              recordTemplate={recordTemplate}
             />
           );
         })}
