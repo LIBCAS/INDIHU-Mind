@@ -41,8 +41,6 @@ public class SrDbTest extends DbTest {
 
     /**
      * should have different name than its subclass or the method of subclass is not called
-     *
-     * @throws Exception
      */
     @Before
     public void srDbTestSetUp() throws Exception {
@@ -65,8 +63,8 @@ public class SrDbTest extends DbTest {
      */
     @After
     public void srDbTestTearDownn() throws Exception {
-        client.deleteByQuery("test", "*:*");
-        client.commit("test");
+        client.deleteByQuery("uas-test", "*:*");
+        client.commit("uas-test");
         client.close();
     }
 

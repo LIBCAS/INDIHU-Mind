@@ -11,7 +11,7 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 
 @Getter
 @Setter
-@SolrDocument(collection = "test")
+@SolrDocument(collection = "uas-test")
 public class IndexedParentEntity extends IndexedDomainObject {
     @Field
     @Indexed(type = IndexFieldType.TEXT, copyTo = {"attribute" + IndexField.STRING_SUFFIX, "attribute" + IndexField.SORT_SUFFIX})

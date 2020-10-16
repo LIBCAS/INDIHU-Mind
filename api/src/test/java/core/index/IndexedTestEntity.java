@@ -9,7 +9,7 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 
 @Getter
 @Setter
-@SolrDocument(collection = "test")
+@SolrDocument(collection = "uas-test")
 public class IndexedTestEntity extends IndexedDatedObject {
 
     @Field
