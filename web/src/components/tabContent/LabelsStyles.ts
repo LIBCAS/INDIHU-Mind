@@ -8,35 +8,35 @@ export const useStyles = makeStyles((theme: Theme) => {
       padding: `4px`,
       marginBottom: theme.spacing(1),
       "&:hover $wrapperIcons": {
-        opacity: 1
-      }
+        opacity: 1,
+      },
     },
     innerWrapper: {
       display: "flex",
       // flexWrap: "wrap",
       alignItems: "center",
-      padding: "5px"
+      padding: "5px",
     },
     wrapperActive: {
       borderRadius: "350px",
       background: "#313840",
       "& $wrapperIcons": {
-        opacity: 1
-      }
+        opacity: 1,
+      },
     },
     wrapperIcons: {
       display: "flex",
       opacity: 0,
       color: theme.greyText,
-      marginLeft: "auto"
+      marginLeft: "auto",
     },
     label: {
       color: "#A0A1A3",
       paddingLeft: theme.spacing(1),
-      fontSize: 15
+      fontSize: 15,
     },
     labelActive: {
-      color: "#fff"
+      color: "#fff",
     },
     dot: {
       display: "inline-block",
@@ -44,10 +44,10 @@ export const useStyles = makeStyles((theme: Theme) => {
       minHeight: 8,
       borderRadius: "50%",
       marginLeft: theme.spacing(1),
-      marginRight: theme.spacing(1)
+      marginRight: theme.spacing(1),
     },
     createButton: {
-      marginBottom: theme.spacing(1)
-    }
+      marginBottom: theme.spacing(1),
+    },
   };
 });

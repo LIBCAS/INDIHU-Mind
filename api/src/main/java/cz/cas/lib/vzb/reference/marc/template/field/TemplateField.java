@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import cz.cas.lib.vzb.reference.marc.template.Typeface;
+import cz.cas.lib.vzb.reference.marc.template.field.interpunction.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,10 +27,15 @@ import java.util.stream.Collectors;
         @JsonSubTypes.Type(name = "PERIOD", value = FieldPeriod.class),
         @JsonSubTypes.Type(name = "COLON", value = FieldColon.class),
         @JsonSubTypes.Type(name = "SEMICOLON", value = FieldSemicolon.class),
+        @JsonSubTypes.Type(name = "BRACKET_LEFT", value = FieldBracketLeft.class),
+        @JsonSubTypes.Type(name = "BRACKET_RIGHT", value = FieldBracketRight.class),
+        @JsonSubTypes.Type(name = "HYPHEN", value = FieldHyphen.class),
+        @JsonSubTypes.Type(name = "SLASH", value = FieldSlash.class),
         @JsonSubTypes.Type(name = "COMMA", value = FieldComma.class),
         @JsonSubTypes.Type(name = "SPACE", value = FieldSpace.class),
         @JsonSubTypes.Type(name = "ONLINE", value = FieldOnline.class),
         @JsonSubTypes.Type(name = "INSIDE", value = FieldInside.class),
+        @JsonSubTypes.Type(name = "CUSTOM", value = FieldCustomText.class),
         @JsonSubTypes.Type(name = "GENERATE_DATE", value = FieldGeneratedDate.class)
 })
 @JsonPropertyOrder({"type", "tag", "code", "customizations"})
@@ -52,7 +58,7 @@ public abstract class TemplateField {
      * Final text that should be inserted into template
      * (before customizations e.g. bold/italic/uppercase)
      */
-    public abstract String getData();
+    public abstract String obtainTextualData();
 
     /**
      * Override this method if there are fields that need to be wiped between usages.

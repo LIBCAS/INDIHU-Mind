@@ -9,7 +9,7 @@ public class FieldOnline extends TemplateField {
     @Getter private final TemplateFieldType type = TemplateFieldType.ONLINE;
 
     @Override
-    public String getData() {
+    public String obtainTextualData() {
         return "[online]";
     }
 }

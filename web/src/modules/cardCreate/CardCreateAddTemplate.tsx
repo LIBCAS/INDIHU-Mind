@@ -17,7 +17,7 @@ import { AttributeProps } from "../../types/attribute";
 import { onSubmitTemplate } from "./_utils";
 
 const initialValues = {
-  name: ""
+  name: "",
 };
 
 interface CardCreateAddTemplateProps {
@@ -29,7 +29,7 @@ interface CardCreateAddTemplateProps {
 export const CardCreateAddTemplate: React.FC<CardCreateAddTemplateProps> = ({
   setTemplateOpen,
   attributes,
-  loadTemplates
+  loadTemplates,
 }) => {
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
@@ -42,7 +42,7 @@ export const CardCreateAddTemplate: React.FC<CardCreateAddTemplateProps> = ({
       {error && <MessageSnackbar setVisible={setError} />}
       <Formik
         initialValues={initialValues}
-        onSubmit={values => {
+        onSubmit={(values) => {
           if (loading) return false;
           setError(false);
           setLoading(true);
@@ -75,7 +75,7 @@ export const CardCreateAddTemplate: React.FC<CardCreateAddTemplateProps> = ({
                     field={field}
                     form={form}
                     label="Název"
-                    inputProps={{ autoFocus: true }}
+                    inputProps={{ autoFocus: false }}
                   />
                 )}
               />

@@ -9,8 +9,14 @@ export function useWindowHeight(percent: number) {
 
   // Store current value in ref
   useEffect(() => {
-    ref.current = window.innerHeight * 0.01 * percent;
-  }, [percent, window.innerHeight]); // Only re-run if value changes
+    const handler = () => {
+      ref.current = window.innerHeight * 0.01 * percent;
+    };
+
+    window.addEventListener("resize", handler);
+
+    return () => window.removeEventListener("resize", handler);
+  }, [percent]);
 
   // Return previous value (happens before update in useEffect above)
   return ref.current;

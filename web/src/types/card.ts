@@ -10,6 +10,14 @@ export interface LinkedCardProps {
   note: string;
 }
 
+export interface CardComment {
+  id: string;
+  ordinalNumber?: number;
+  text: string;
+  created?: string;
+  updated?: string;
+}
+
 export interface CardProps {
   id: string;
   pid: number;
@@ -23,8 +31,9 @@ export interface CardProps {
   attributes: AttributeProps[];
   linkedCards: LinkedCardProps[];
   linkingCards: LinkedCardProps[];
-  files: FileProps[];
+  documents: FileProps[];
   records: RecordProps[];
+  comments: CardComment[];
   [key: string]:
     | number
     | null
@@ -34,7 +43,8 @@ export interface CardProps {
     | AttributeProps[]
     | LinkedCardProps[]
     | FileProps[]
-    | RecordProps[];
+    | RecordProps[]
+    | CardComment[];
 }
 
 export interface CardContentProps {
@@ -46,7 +56,7 @@ export interface CardContentProps {
   attributes: AttributeProps[];
   // linkedCards: LinkedCardProps[];
   // linkingCards: LinkedCardProps[];
-  // files: FileProps[];
+  // documents: FileProps[];
   lastVersion: boolean;
   [key: string]:
     | CardProps

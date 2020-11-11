@@ -7,7 +7,7 @@ import IconButton from "@material-ui/core/IconButton";
 import { GlobalContext } from "../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { LabelProps } from "../../types/label";
 import { api } from "../../utils/api";
@@ -32,7 +32,7 @@ export const LabelsActions: React.FC<LabelsActionsProps> = ({
   setActiveLabel,
   loadLabels,
   setEditLabel,
-  setEditOpen
+  setEditOpen,
 }) => {
   const classes = useStyles();
   const classesEffect = useEffectStyles();
@@ -49,7 +49,7 @@ export const LabelsActions: React.FC<LabelsActionsProps> = ({
       .then(() => {
         dispatch({
           type: STATUS_ERROR_TEXT_SET,
-          payload: `Štítek ${label.name} byl úspěšně odstraněn`
+          payload: `Štítek ${label.name} byl úspěšně odstraněn`,
         });
         dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
         setLoading(false);
@@ -83,7 +83,7 @@ export const LabelsActions: React.FC<LabelsActionsProps> = ({
       <Popconfirm
         confirmText="Opravdu chcete smazat tento štítek"
         onConfirmClick={onDelete}
-        Button={() => (
+        Button={
           <Tooltip title="Smazat">
             <IconButton
               color="inherit"
@@ -94,7 +94,7 @@ export const LabelsActions: React.FC<LabelsActionsProps> = ({
               <Delete style={{ fontSize: "18px" }} />
             </IconButton>
           </Tooltip>
-        )}
+        }
       />
     </div>
   );

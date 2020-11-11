@@ -7,6 +7,13 @@ export interface CategoryProps {
   // when dto model
   parentId?: string;
   // when normal model
-  parent?: { id: string };
+  parent?: CategoryParent;
+  subCategories?: CategoryProps[];
+}
+
+interface CategoryParent {
+  id: string;
+  name?: string;
+  parent?: CategoryParent;
   subCategories?: CategoryProps[];
 }

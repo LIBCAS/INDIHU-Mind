@@ -29,14 +29,14 @@ interface NavbarProps {
 
 const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
   setLeftPanelOpen,
-  history
+  history,
 }) => {
   const classes = useStyles();
   const classesText = useTextStyles();
   const theme: Theme = useTheme();
   const matchesSmall = useMediaQuery("(max-width:400px)");
-  const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
   const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
+  const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
@@ -58,7 +58,7 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
       <Toolbar className={classes.toolbar}>
         <div
           className={classNames(classes.menuIconWrapper, {
-            [classes.menuIconWrapperMobile]: matchesSmall
+            [classes.menuIconWrapperMobile]: matchesSmall,
           })}
           onClick={() => setLeftPanelOpen((prev: boolean) => !prev)}
         >
@@ -87,15 +87,15 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               noWrap
               style={{ marginRight: "25px" }}
             >
-              {matchesLg ? "indihu-mind" : "IM"}
+              {matchesMd ? "indihu-mind" : "IM"}
             </Typography>
           </div>
         </div>
-        <NavbarItems matchesMd={matchesMd} />
+        <NavbarItems matchesMd={matchesLg} />
         <div
           className={classNames({
             [classes.searchWrapper]: true,
-            [classes.searchWrapperFullWidth]: showSearch && !matchesMd
+            [classes.searchWrapperFullWidth]: showSearch && !matchesLg,
           })}
         >
           <div
@@ -104,18 +104,18 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               showSearch ? { marginRight: 0, right: "0" } : { right: "80px" }
             }
             onClick={() => {
-              setShowSearch(prev => !prev);
+              setShowSearch((prev) => !prev);
             }}
           >
             {showSearch ? (
-              <Fade in={showSearch} timeout={2000}>
+              <Fade in={showSearch} timeout={500}>
                 <Cancel
                   color="secondary"
                   style={{
                     position: "absolute",
                     left: 0,
                     cursor: "pointer",
-                    zIndex: 1
+                    zIndex: 1,
                   }}
                 />
               </Fade>
@@ -125,11 +125,12 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               />
             )}
           </div>
-          <Fade in={showSearch || matchesMd} mountOnEnter unmountOnExit>
+          <Fade in={showSearch || matchesLg} mountOnEnter unmountOnExit>
             <div className={classNames(classes.search, classesText.textGrey)}>
               <form style={{ position: "relative" }} onSubmit={onSubmit}>
                 <InputBase
-                  onFocus={() => setShowSearchIcon(false)}
+                  className={classes.searchInput}
+                  onFocus={() => setShowSearchIcon(true)}
                   onBlur={() => setShowSearchIcon(true)}
                   inputRef={searchRef}
                   value={search}
@@ -137,14 +138,14 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
                   placeholder="Vyhledat karty"
                   classes={{
                     root: classes.inputRoot,
-                    input: classes.inputInput
+                    input: classes.inputInput,
                   }}
                 />
-                {matchesMd && (
+                {matchesLg && (
                   <SearchIcon
                     color="inherit"
                     className={classNames({
-                      [classes.searchIconWrapperHide]: !showSearchIcon
+                      [classes.searchIconWrapperHide]: !showSearchIcon,
                     })}
                     style={{
                       position: "absolute",
@@ -152,15 +153,16 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
                       transition: ".3s ease opacity",
                       transform: "translate(0, -50%)",
                       right: "10px",
-                      cursor: "pointer"
+                      cursor: "pointer",
                     }}
+                    onClick={onSubmit}
                   />
                 )}
               </form>
             </div>
           </Fade>
-          {!(showSearch && !matchesMd) && <NavbarUser matchesMd={matchesMd} />}
-          {matchesMd && <DeleteCards />}
+          {!(showSearch && !matchesLg) && <NavbarUser matchesMd={matchesLg} />}
+          {matchesLg && <DeleteCards />}
         </div>
       </Toolbar>
     </AppBar>

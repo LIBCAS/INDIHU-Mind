@@ -47,15 +47,14 @@ public class FieldAuthor extends TemplateField {
     /**
      * Creates final String representation how should authors look like in generated output.
      *
-     * @param errorMessage string message to use in case no author field is found
      */
-    public void initializeAuthorsNames(Citation record, String errorMessage) {
+    public void initializeAuthorsNames(Citation record) {
         List<Datafield> primaryHumanAuthorFields = record.getDatafieldByTag("100");
         List<Datafield> primaryCompanyAuthorFields = record.getDatafieldByTag("110");
         List<Datafield> otherHumanAuthorsFields = record.getDatafieldByTag("700");
         List<Datafield> otherCompanyAuthorsFields = record.getDatafieldByTag("710");
 
-        if (primaryAuthorsAreNotValid(errorMessage, primaryHumanAuthorFields, primaryCompanyAuthorFields)) {
+        if (primaryAuthorsAreNotValid(primaryHumanAuthorFields, primaryCompanyAuthorFields)) {
             return;
         }
         extractAuthors(primaryHumanAuthorFields, primaryCompanyAuthorFields, otherHumanAuthorsFields, otherCompanyAuthorsFields);
@@ -103,10 +102,10 @@ public class FieldAuthor extends TemplateField {
 
     }
 
-    private boolean primaryAuthorsAreNotValid(String errorMessage, List<Datafield> primaryHumanAuthorFields, List<Datafield> primaryCompanyAuthorFields) {
+    private boolean primaryAuthorsAreNotValid(List<Datafield> primaryHumanAuthorFields, List<Datafield> primaryCompanyAuthorFields) {
         // if no primary author is present, use error message from application.yml
         if (primaryHumanAuthorFields.isEmpty() && primaryCompanyAuthorFields.isEmpty()) {
-            this.data = String.format(errorMessage, "100/100", "a");
+            this.data = "";
             return true;
         }
 
@@ -165,7 +164,7 @@ public class FieldAuthor extends TemplateField {
     }
 
     @Override
-    public String getData() {
+    public String obtainTextualData() {
         return data;
     }
 
@@ -177,11 +176,11 @@ public class FieldAuthor extends TemplateField {
         if (!super.equals(o)) return false;
         FieldAuthor that = (FieldAuthor) o;
         return getType() == that.getType() &&
-                Objects.equals(getData(), that.getData());
+                Objects.equals(obtainTextualData(), that.obtainTextualData());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getType(), getData());
+        return Objects.hash(super.hashCode(), getType(), obtainTextualData());
     }
 }

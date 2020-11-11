@@ -7,7 +7,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       display: "flex",
       alignItems: "center",
       opacity: 0,
-      transition: ".3s ease opacity"
+      transition: ".3s ease opacity",
     },
     card: {
       display: "flex",
@@ -22,18 +22,18 @@ export const useStyles = makeStyles((theme: Theme) => {
       padding: "10px 20px",
       cursor: "pointer",
       "&:hover": {
-        background: theme.purpleLight
+        background: theme.purpleLight,
       },
       "&:hover $button": {
-        opacity: 1
+        opacity: 1,
       },
       "& em": {
         fontWeight: 800,
-        fontStyle: "normal"
-      }
+        fontStyle: "normal",
+      },
     },
     highlight: {
-      width: "100%"
-    }
+      width: "100%",
+    },
   };
 });

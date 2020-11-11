@@ -1,23 +1,21 @@
 import React, { useContext, useState, useEffect } from "react";
-import { GlobalContext, StateProps } from "../../context/Context";
-import { OptionType } from "../../components/form/reactSelect/_reactSelectTypes";
-import { get } from "lodash";
-import { parseLabel } from "../cardCreate/_utils";
-import { Field, FieldProps, Formik, Form, FormikProps } from "formik";
-import { ReactSelect } from "../../components/form/reactSelect/ReactSelect";
-import { Loader } from "../../components/loader/Loader";
-import { Button, Typography } from "@material-ui/core";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import classNames from "classnames";
+import { Field, FieldProps, Formik, Form, FormikProps } from "formik";
+import { Button, Typography } from "@material-ui/core";
+
+import { GlobalContext, StateProps } from "../../context/Context";
+import { OptionType } from "../../components/select/_types";
+import { parseLabel } from "../cardCreate/_utils";
+import { Select } from "../../components/form/Select";
+import { Loader } from "../../components/loader/Loader";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { recordTemplateGet } from "../../context/actions/recordTemplate";
 import { Popover } from "../../components/portal/Popover";
 import { notEmpty } from "../../utils/form/validate";
-import * as store from "../../utils/store";
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { api } from "../../utils/api";
 
@@ -32,19 +30,20 @@ export const RecordsPdf: React.FC<RecordsPdfProps> = ({
   open,
   setOpen,
   anchorEl,
-  checkboxRows
+  checkboxRows,
 }) => {
   const classesText = useTextStyles();
-  const classesLayout = useLayoutStyles();
   const classesSpacing = useSpacingStyles();
   const context: any = useContext(GlobalContext);
   const state: StateProps = context.state;
   const dispatch: Function = context.dispatch;
   const [loading, setLoading] = useState(false);
   const [options, setOptions] = useState<OptionType[]>([]);
+
   useEffect(() => {
     recordTemplateGet(dispatch);
-  }, []);
+  }, [dispatch]);
+
   useEffect(() => {
     const templatesParsed = state.recordTemplate.recordsTemplates.map(
       parseLabel
@@ -57,16 +56,15 @@ export const RecordsPdf: React.FC<RecordsPdfProps> = ({
       return;
     }
     setLoading(true);
-    // const id = get(values, 'templates.value');
-    // const ids = checkboxRows.map(c => c.id);
+    const id = values.templates;
+    const ids = checkboxRows.map((c) => c.id);
 
-    const id = "6f86f02c-9d41-41b8-a8e6-7252462c8b55";
-    const ids = ["e7a8c70-1049-11ea-9a9f-362b9e155667"];
-    const payload = { templateId: id, ids };
     if (id) {
       api()
-        .post(`template/generate-pdf`, { body: JSON.stringify(payload) })
-        .then(response => {
+        .post(`template/generate-pdf`, {
+          body: JSON.stringify({ templateId: id, ids }),
+        })
+        .then((response: any) => {
           let filename = "";
           let disposition = response.headers.get("Content-Disposition");
           if (disposition && disposition.indexOf("attachment") !== -1) {
@@ -75,9 +73,11 @@ export const RecordsPdf: React.FC<RecordsPdfProps> = ({
             if (matches != null && matches[1])
               filename = matches[1].replace(/['"]/g, "");
           }
-          return response.blob().then(blob => ({ blob, name: filename }));
+          return response
+            .blob()
+            .then((blob: any) => ({ blob, name: filename }));
         })
-        .then(({ blob, name }) => {
+        .then(({ blob, name }: { blob: any; name: any }) => {
           const url = window.URL.createObjectURL(blob);
           let a = document.createElement("a");
           a.href = url;
@@ -86,17 +86,17 @@ export const RecordsPdf: React.FC<RecordsPdfProps> = ({
           a.click();
           dispatch({
             type: STATUS_ERROR_TEXT_SET,
-            payload: `PDF bylo úspěšně vygenerováno`
+            payload: `PDF bylo úspěšně vygenerováno`,
           });
           dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
           setLoading(false);
           a.remove();
         })
-        .catch(e => {
+        .catch((e: any) => {
           setLoading(false);
           dispatch({
             type: STATUS_ERROR_TEXT_SET,
-            payload: `PDF se nepovedlo vygenerovat`
+            payload: `PDF se nepovedlo vygenerovat`,
           });
           dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
         });
@@ -114,13 +114,13 @@ export const RecordsPdf: React.FC<RecordsPdfProps> = ({
           <div>
             <Formik
               initialValues={{
-                templates: null
+                templates: null,
               }}
               enableReinitialize
               onSubmit={onSubmit}
               render={(formikBag: FormikProps<any>) => (
                 <Form>
-                  <div>
+                  <div className={classesSpacing.p2}>
                     <Loader loading={loading} />
                     <Typography
                       className={classNames(
@@ -138,7 +138,7 @@ export const RecordsPdf: React.FC<RecordsPdfProps> = ({
                       validate={notEmpty}
                       render={({ field, form }: FieldProps<any>) => {
                         return (
-                          <div className={classNames(classesSpacing.m1)}>
+                          <div className={classNames(classesSpacing.mt1)}>
                             <div className={classesText.textCenter}>
                               <Button
                                 type="submit"
@@ -153,14 +153,13 @@ export const RecordsPdf: React.FC<RecordsPdfProps> = ({
                               </Button>
                             </div>
 
-                            <ReactSelect
+                            <Select
                               form={form}
                               field={field}
                               loading={false}
                               label="Citační šablona"
                               options={options}
-                              isMulti={false}
-                              autoFocus
+                              autoFocus={false}
                               menuIsOpen
                             />
                           </div>

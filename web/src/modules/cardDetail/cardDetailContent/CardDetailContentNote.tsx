@@ -1,21 +1,20 @@
 import React, { useState } from "react";
-import Typography from "@material-ui/core/Typography";
-import { FormikProps, FieldProps, Field, Form } from "formik";
+import MuiTooltip from "@material-ui/core/Tooltip";
+import { FormikProps, Field, Form } from "formik";
 import * as Yup from "yup";
 import ClickAwayListener from "@material-ui/core/ClickAwayListener";
 import Button from "@material-ui/core/Button";
-import classNames from "classnames";
 import Add from "@material-ui/icons/Add";
 
 import { ButtonGrey } from "../../../components/control/ButtonGrey";
 import { Formik } from "../../../components/form/Formik";
-import { InputText } from "../../../components/form/InputText";
 import { CardContentProps } from "../../../types/card";
 
-import { onEditCard } from "./_utils";
+import { onEditCard, isNoteTextEmpty } from "./_utils";
 import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
-
+import { useTooltipStyles } from "./_cardStyles";
+import { Editor } from "../../../components/editor";
 interface CardDetailContentNoteProps {
   card: CardContentProps;
   cardContent: CardContentProps[] | undefined;
@@ -30,19 +29,22 @@ interface FormValues {
 }
 
 const validationSchema = Yup.object().shape({
-  note: Yup.string()
+  note: Yup.string(),
 });
 
 export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
   card,
   setCardContent,
-  note
+  note,
 }) => {
   const [edit, setEdit] = useState<boolean>(false);
   const classesText = useTextStyles();
   const classesSpacing = useSpacingStyles();
+  const classesTooltip = useTooltipStyles();
   const onSubmit = (values: FormValues) => {
-    onEditCard("note", values.note, card, setCardContent);
+    isNoteTextEmpty(JSON.parse(values.note))
+      ? onEditCard("note", "", card, setCardContent)
+      : onEditCard("note", values.note, card, setCardContent);
     setEdit(false);
   };
   return (
@@ -65,33 +67,32 @@ export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
                   <div className={classesSpacing.mb1}>
                     <Field
                       name="note"
-                      render={({ field, form }: FieldProps<FormValues>) => (
-                        <InputText
-                          field={field}
-                          form={form}
-                          inputProps={{ autoFocus: true, rows: 4 }}
-                          multiline={true}
-                        />
-                      )}
+                      onChange={(value: string) =>
+                        formikBag.setFieldValue("note", value)
+                      }
+                      value={note}
+                      component={Editor}
                     />
-                    <Button
-                      className={classesSpacing.mr2}
-                      size="small"
-                      color="primary"
-                      variant="contained"
-                      type="submit"
-                    >
-                      OK
-                    </Button>
-                    <Button
-                      type="button"
-                      size="small"
-                      onClick={() => setEdit(false)}
-                      color="secondary"
-                      variant="outlined"
-                    >
-                      Zrušit
-                    </Button>
+                    <div className={classesSpacing.mt2}>
+                      <Button
+                        className={classesSpacing.mr2}
+                        size="small"
+                        color="primary"
+                        variant="contained"
+                        type="submit"
+                      >
+                        OK
+                      </Button>
+                      <Button
+                        type="button"
+                        size="small"
+                        onClick={() => setEdit(false)}
+                        color="secondary"
+                        variant="outlined"
+                      >
+                        Zrušit
+                      </Button>
+                    </div>
                   </div>
                 </ClickAwayListener>
               </Form>
@@ -99,15 +100,23 @@ export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
           }}
         />
       ) : note ? (
-        <Typography
-          onClick={() => (card.lastVersion ? setEdit(true) : undefined)}
-          variant="body1"
-          className={classNames(classesSpacing.mt2, classesText.cursor)}
+        <MuiTooltip
+          title="Kliknutím můžete editovat popis."
+          enterDelay={500}
+          leaveDelay={250}
+          arrow={true}
+          placement="bottom-start"
+          classes={classesTooltip}
         >
-          {note}
-        </Typography>
+          <div
+            className={classesText.cursor}
+            onClick={() => (card.lastVersion ? setEdit(true) : undefined)}
+          >
+            <Editor value={note} readOnly />
+          </div>
+        </MuiTooltip>
       ) : card.lastVersion ? (
-        <div className={classNames(classesSpacing.mt2)}>
+        <div className={classesSpacing.mt1}>
           <ButtonGrey
             text="Přidat popis"
             onClick={() => setEdit(true)}

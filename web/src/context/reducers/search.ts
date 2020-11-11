@@ -14,7 +14,7 @@ export const reducerSearch = (state: StateProps, action: ActionProps) => {
         labelName: "",
         label: "",
         categoryName: name,
-        category: query
+        category: query,
       };
     case SEARCH_LABEL_SET:
       return {
@@ -22,7 +22,7 @@ export const reducerSearch = (state: StateProps, action: ActionProps) => {
         categoryName: "",
         category: "",
         labelName: name,
-        label: query
+        label: query,
       };
     default:
       return { ...search };

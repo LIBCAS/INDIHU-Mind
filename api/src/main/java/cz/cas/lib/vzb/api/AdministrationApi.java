@@ -3,10 +3,12 @@ package cz.cas.lib.vzb.api;
 import core.index.global.GlobalReindexer;
 import core.store.Transactional;
 import cz.cas.lib.vzb.attachment.AttachmentFileService;
+import cz.cas.lib.vzb.card.CardService;
 import cz.cas.lib.vzb.card.CardStore;
 import cz.cas.lib.vzb.security.user.Roles;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
@@ -14,6 +16,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/administration")
 @RolesAllowed(Roles.ADMIN)
@@ -22,6 +25,7 @@ public class AdministrationApi {
     //    @Inject private TestDataFiller dataFiller;
     @Inject private GlobalReindexer globalReindexer;
     @Inject private CardStore cardStore;
+    @Inject private CardService cardService;
     @Inject private AttachmentFileService attachmentFileService;
 
     @Transactional
@@ -45,8 +49,10 @@ public class AdministrationApi {
     @ApiOperation(value = "Reindex everything")
     @PostMapping(value = "/reindex")
     public void reindexEverything() {
+        log.info("Reindex is beginning...");
         globalReindexer.reindex();
         cardStore.dropReindex();
+        log.info("Reindex is completed.");
     }
 
     @Transactional
@@ -71,6 +77,12 @@ public class AdministrationApi {
     @DeleteMapping(value = "/attachments/url")
     public void deleteUrl() {
         attachmentFileService.deleteAllUrlAttachmentsOfAllUsers();
+    }
+
+    @Transactional
+    @PostMapping(value = "/card-notes")
+    public void deleteCardNotes() {
+        cardService.wipeAllCardNotes();
     }
 
 //    @RolesAllowed(Roles.USER)

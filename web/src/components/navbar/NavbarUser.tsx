@@ -11,6 +11,7 @@ import { useUserToken } from "../../hooks/authHooks";
 
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { PasswordChange } from "../../modules/passwordChange/PasswordChange";
 
 interface NavbarUserProps {
   matchesMd: boolean;
@@ -21,9 +22,10 @@ export const NavbarUser: React.FC<NavbarUserProps> = ({ matchesMd }) => {
   const classesSpacing = useSpacingStyles();
   const iconRef = useRef(null);
   const [open, setOpen] = useState(false);
+  const [openPasswordChange, setOpenPasswordChange] = useState(false);
   const token = useUserToken();
 
-  const onClick = () => setOpen(prev => !prev);
+  const onClick = () => setOpen((prev) => !prev);
   const onClose = () => setOpen(false);
   const onLogout = () => remove("token");
   return (
@@ -45,8 +47,20 @@ export const NavbarUser: React.FC<NavbarUserProps> = ({ matchesMd }) => {
         <MenuItem disabled onClick={onLogout}>
           {token && token.email}
         </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setOpenPasswordChange(true);
+            onClose();
+          }}
+        >
+          Změnit heslo
+        </MenuItem>
         <MenuItem onClick={onLogout}>Odhlásit se</MenuItem>
       </Menu>
+      <PasswordChange
+        open={openPasswordChange}
+        setOpen={setOpenPasswordChange}
+      />
     </div>
   );
 };

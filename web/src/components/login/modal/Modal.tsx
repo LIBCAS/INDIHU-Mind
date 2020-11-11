@@ -3,13 +3,13 @@ import {
   createStyles,
   Theme,
   withStyles,
-  WithStyles
+  WithStyles,
 } from "@material-ui/core/styles";
 import {
   Dialog,
   DialogContent,
   Typography,
-  IconButton
+  IconButton,
 } from "@material-ui/core";
 import MuiDialogTitle from "@material-ui/core/DialogTitle";
 import CloseIcon from "@material-ui/icons/Close";
@@ -18,14 +18,14 @@ const styles = (theme: Theme) =>
   createStyles({
     root: {
       margin: 0,
-      padding: theme.spacing(2)
+      padding: theme.spacing(2),
     },
     closeButton: {
       position: "absolute",
       right: theme.spacing(1),
       top: theme.spacing(1),
-      color: theme.palette.grey[500]
-    }
+      color: theme.palette.grey[500],
+    },
   });
 
 export interface ModalProps {
@@ -59,7 +59,7 @@ const DialogTitle = withStyles(styles)((props: DialogTitleProps) => {
 
 export const Modal: React.SFC<ModalProps> = ({
   openModalInfo,
-  setOpenModalInfo
+  setOpenModalInfo,
 }) => {
   const handleClose = () => {
     setOpenModalInfo(false);

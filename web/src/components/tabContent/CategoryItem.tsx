@@ -26,7 +26,7 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({
   findCategoryById,
   categoriesExpanded,
   setCategoriesExpanded,
-  categoryActive
+  categoryActive,
 }) => {
   const classes = useStyles();
   const classesSpacing = useStylesSpacing();
@@ -37,7 +37,7 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({
       return true;
     }
     if (c.subCategories) {
-      return c.subCategories.some(cat => isParent(cat));
+      return c.subCategories.some((cat) => isParent(cat));
     }
     return false;
   };
@@ -71,7 +71,7 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({
             [classes.category]: true,
             [classes.categoryActive]:
               categoryActive && categoryActive.id === c.id,
-            [classes.categorySub]: c.parentId
+            [classes.categorySub]: c.parentId,
           })}
           variant="body1"
           color="inherit"
@@ -107,7 +107,7 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({
       {isExpanded && (
         <div className={classesSpacing.ml1}>
           {c.subCategories &&
-            c.subCategories.map(cSub => (
+            c.subCategories.map((cSub) => (
               <CategoryItem
                 key={cSub.id}
                 c={cSub}

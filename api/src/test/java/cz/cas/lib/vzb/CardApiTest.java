@@ -11,6 +11,8 @@ import cz.cas.lib.vzb.card.attribute.AttributeStore;
 import cz.cas.lib.vzb.card.attribute.AttributeType;
 import cz.cas.lib.vzb.card.category.Category;
 import cz.cas.lib.vzb.card.category.CategoryStore;
+import cz.cas.lib.vzb.card.comment.CardComment;
+import cz.cas.lib.vzb.card.comment.CardCommentStore;
 import cz.cas.lib.vzb.card.dto.CreateCardDto;
 import cz.cas.lib.vzb.card.dto.UpdateCardContentDto;
 import cz.cas.lib.vzb.card.dto.UpdateCardDto;
@@ -33,6 +35,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.time.Instant;
 import java.util.*;
 
 import static core.util.Utils.asList;
@@ -57,6 +60,7 @@ public class CardApiTest extends ApiTest {
     @Inject private CardContentStore cardContentStore;
     @Inject private AttributeStore attributeStore;
     @Inject private AttachmentFileStore fileStore;
+    @Inject private CardCommentStore commentStore;
 
     private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(false).build();
 
@@ -605,6 +609,41 @@ public class CardApiTest extends ApiTest {
         fromDbUrl = fileStore.find(urlFile.getId());
         assertThat(fromDbUrl).isNotNull();
         assertThat(fromDbUrl.getLinkedCards()).containsExactly(card);
+    }
+
+    @Test
+    public void deleteCardWithComments() throws Exception {
+        Card card = CardBuilder.builder().pid(1).name("card").owner(user).build();
+        transactionTemplate.execute(t -> cardStore.save(card));
+        CardComment comment = new CardComment("Text", 0, Instant.now(), card);
+        transactionTemplate.execute(t -> commentStore.save(comment));
+        assertThat(commentStore.find(comment.getId())).isNotNull();
+        assertThat(cardStore.find(card.getId())).isNotNull();
+        assertThat(cardStore.find(card.getId()).getComments()).containsExactlyInAnyOrder(comment);
+
+        BulkFlagSetDto cardsDto = new BulkFlagSetDto();
+        cardsDto.setIds(asList(card.getId()));
+        cardsDto.setValue(Boolean.TRUE);
+
+        securedMvc().perform(
+                post(CARD_API_URL + "set-softdelete")
+                        .content(objectMapper.writeValueAsString(cardsDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk());
+
+        String contentAsString = securedMvc().perform(
+                delete(CARD_API_URL + "soft-deleted")
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(Long.parseLong(contentAsString)).isEqualTo(1L);
+
+        Card fromDb = cardStore.find(card.getId());
+        assertThat(fromDb).isNull();
+        CardComment deletedComment = commentStore.find(comment.getId());
+        assertThat(deletedComment).isNull();
     }
 
 }

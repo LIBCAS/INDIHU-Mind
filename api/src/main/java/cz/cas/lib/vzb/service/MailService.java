@@ -9,6 +9,11 @@ import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,6 +29,7 @@ public class MailService {
     public void sendDummyEmails(String email) {
         sendResetPasswordEmail(email, UUID.randomUUID().toString());
         sendUserCreatedEmail(email, "generated-password");
+        sendPasswordChangedEmail(email);
     }
 
     public void sendResetPasswordEmail(String email, String tokenId) {
@@ -41,6 +47,21 @@ public class MailService {
 
         createEmail(email, templateName, emailSubject, params);
     }
+
+    public void sendPasswordChangedEmail(String email) {
+        String currentDateTimeFormatted = DateTimeFormatter
+                .ofLocalizedDateTime(FormatStyle.MEDIUM)
+                .withLocale(Locale.forLanguageTag("cs-CZ"))
+                .withZone(ZoneId.systemDefault())
+                .format(Instant.now());
+
+        Map<String, Object> params = asMap("datetime", currentDateTimeFormatted);
+        String templateName = "mail/passwordChanged.ftlh";
+        String emailSubject = "Změna hesla";
+
+        createEmail(email, templateName, emailSubject, params);
+    }
+
 
     /**
      * Creates and sends email

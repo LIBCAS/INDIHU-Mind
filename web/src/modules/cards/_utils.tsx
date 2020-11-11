@@ -1,46 +1,13 @@
-import React from "react";
-import moment from "moment";
-
-import { ColumnProps } from "../../components/tableCard/_types";
 import { CategoryProps } from "../../types/category";
-
-export const columns: ColumnProps[] = [
-  {
-    id: "1",
-    path: "name",
-    name: "Název",
-    format: (row: any) => {
-      return <span style={{ fontWeight: 800 }}>{row.name}</span>;
-    }
-  },
-  {
-    id: "2",
-    path: "updated",
-    name: "Poslední úprava",
-    format: (row: any) => {
-      return moment(row.updated).format("DD. MM. YYYY");
-    }
-  },
-  {
-    id: "3",
-    path: "note",
-    name: "Popis",
-    unsortable: true
-  },
-  {
-    id: "4",
-    path: "labels",
-    name: "Štítky",
-    unsortable: true
-  }
-];
+import { api } from "../../utils/api";
+import { CardProps } from "../../types/card";
 
 export const getPathToCategory = (
   cat: CategoryProps,
   categories: CategoryProps[]
 ): CategoryProps[] => {
   let result: CategoryProps[] = [];
-  categories.forEach(c => {
+  categories.forEach((c) => {
     if (c.id === cat.id) {
       result = [c];
     }
@@ -53,3 +20,59 @@ export const getPathToCategory = (
   });
   return result;
 };
+
+export const getCards = async (text?: string, page = 0, pageSize = 10) => {
+  try {
+    const response = await api().post("card/parametrized", {
+      json: {
+        page,
+        pageSize,
+        filter:
+          text && text.length
+            ? [{ field: "name", operation: "CONTAINS", value: text }]
+            : [],
+      },
+    });
+
+    return await response.json();
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+};
+
+const cardArrays: string[] = [
+  "categories",
+  "labels",
+  "linkedCards",
+  "linkingCards",
+  "documents",
+  "records",
+  "attributes",
+];
+
+const parseArrayIds = (name: string, array: any) => ({
+  [name]: (array || []).map((item: any) => item.id),
+});
+
+export const flattenCardArrays = (c: CardProps) => ({
+  ...c,
+  ...cardArrays.reduce(
+    (object, arrayName: string) => ({
+      ...object,
+      ...parseArrayIds(arrayName, c[arrayName]),
+    }),
+    {}
+  ),
+});
+
+export const concatCardArrays = (c: CardProps, arrays: any) => ({
+  ...c,
+  ...cardArrays.reduce(
+    (object, arrayName: string) => ({
+      ...object,
+      [arrayName]: (arrays[arrayName] || []).concat(c[arrayName]),
+    }),
+    {}
+  ),
+});

@@ -17,7 +17,7 @@ interface SnackbarProps {
 export const Snackbar: React.FC<SnackbarProps> = ({
   open,
   onClose,
-  message
+  message,
 }) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
@@ -29,7 +29,7 @@ export const Snackbar: React.FC<SnackbarProps> = ({
       onClose={() => onClose()}
       className={classes.root}
       ContentProps={{
-        "aria-describedby": "message-id"
+        "aria-describedby": "message-id",
       }}
       message={<div id="message-id">{message}</div>}
       action={

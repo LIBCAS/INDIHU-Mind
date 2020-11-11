@@ -4,51 +4,63 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 export const useStyles = makeStyles((theme: Theme) => {
   return {
     flex: {
-      display: "flex"
+      display: "flex",
     },
     flexWrap: {
-      flexWrap: "wrap"
+      flexWrap: "wrap",
     },
     flexGrow: {
-      flexGrow: 1
+      flexGrow: 1,
     },
     directionRowReverse: {
-      flexDirection: "row-reverse"
+      flexDirection: "row-reverse",
     },
     directionColumn: {
-      flexDirection: "column"
+      flexDirection: "column",
     },
     justifyCenter: {
-      justifyContent: "center"
+      justifyContent: "center",
+    },
+    justifyEnd: {
+      justifyContent: "flex-end",
     },
     alignCenter: {
-      alignItems: "center"
+      alignItems: "center",
     },
     alignStart: {
-      alignItems: "flex-start"
+      alignItems: "flex-start",
     },
     alignEnd: {
-      alignItems: "flex-end"
+      alignItems: "flex-end",
     },
     spaceBetween: {
-      justifyContent: "space-between"
+      justifyContent: "space-between",
     },
     halfItems: {
       "& > *": {
-        width: "50%"
-      }
+        width: "50%",
+      },
+    },
+    halfItemsWithSpaceBetween: {
+      justifyContent: "space-between",
+      "& > *": {
+        width: "49%",
+      },
     },
     fullItemsMobile: {
       [theme.breakpoints.down("md")]: {
         "& > *": {
-          width: "100%"
-        }
-      }
+          minWidth: "100%",
+        },
+      },
     },
     directionColumnMobile: {
       [theme.breakpoints.down("md")]: {
-        flexDirection: "column"
-      }
-    }
+        flexDirection: "column",
+      },
+    },
+    fullWidth: {
+      width: "100%",
+    },
   };
 });

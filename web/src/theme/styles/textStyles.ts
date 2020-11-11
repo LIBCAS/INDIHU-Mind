@@ -4,22 +4,25 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 export const useStyles = makeStyles((theme: Theme) => {
   return {
     textGreyLight: {
-      color: theme.greyLight
+      color: theme.greyLight,
     },
     textGrey: {
-      color: theme.greyText
+      color: theme.greyText,
+    },
+    textGreyDark: {
+      color: theme.greyDark,
     },
     textWhite: {
-      color: "#fff"
+      color: "#fff",
     },
     textBold: {
-      fontWeight: 800
+      fontWeight: 800,
     },
     text600: {
-      fontWeight: 600
+      fontWeight: 600,
     },
     textUppercase: {
-      textTransform: "uppercase"
+      textTransform: "uppercase",
     },
     textLink: {
       color: "#fff",
@@ -27,53 +30,62 @@ export const useStyles = makeStyles((theme: Theme) => {
       whiteSpace: "nowrap",
       cursor: "pointer",
       "&:hover": {
-        textDecoration: "none"
+        textDecoration: "none",
       },
       "&:not(:last-child)": {
-        marginRight: theme.spacing(4)
-      }
+        marginRight: theme.spacing(4),
+      },
     },
     noWrap: {
       whiteSpace: "nowrap",
       textOverflow: "ellipsis",
-      overflow: "hidden"
+      overflow: "hidden",
     },
     textLeft: {
-      textAlign: "left"
+      textAlign: "left",
+    },
+    textRight: {
+      textAlign: "right",
     },
     textCenter: {
-      textAlign: "center"
+      textAlign: "center",
     },
     subtitle: {
       color: theme.greyText,
       fontWeight: 800,
       textTransform: "uppercase",
-      fontSize: 14
+      fontSize: 14,
     },
     cursor: {
-      cursor: "pointer"
+      cursor: "pointer",
     },
     icon: {
       display: "flex",
-      color: theme.greyText,
-      background: theme.greyLightUltra,
+      color: theme.blackIconColor,
+      background: "white", //theme.greyLightUltra,
       borderRadius: "50%",
       transition: ".3s ease color",
       "&:hover": {
-        color: theme.palette.primary.main
-      }
+        color: theme.palette.primary.main,
+      },
+    },
+    iconChangedBg: {
+      background: theme.blueLight,
     },
     iconBig: {
-      fontSize: 28
+      fontSize: 28,
     },
     error: {
-      color: theme.red
+      color: theme.red,
     },
     small: {
-      fontSize: 12
+      fontSize: 12,
     },
     normal: {
-      fontSize: 16
-    }
+      fontSize: 16,
+    },
+    textBlack: {
+      color: "#000",
+    },
   };
 });

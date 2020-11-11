@@ -15,11 +15,11 @@ interface SearchItemProps {
 
 export const SearchItem: React.FC<SearchItemProps> = ({
   searchCard,
-  history
+  history,
 }) => {
   const classes = useStyles();
   const onClick = () => {
-    history.push(`card/${searchCard.card.id}`);
+    history.push(`/card/${searchCard.card.id}`);
   };
   return (
     <div className={classes.card} onClick={onClick}>
@@ -30,21 +30,21 @@ export const SearchItem: React.FC<SearchItemProps> = ({
         <KeyboardArrowRight color="primary" />
       </div>
 
-      {Object.keys(searchCard.highlightMap).map(key => (
+      {Object.keys(searchCard.highlightMap).map((key) => (
         <div
           key={key}
           className={classes.highlight}
           dangerouslySetInnerHTML={{
-            __html: `${translate(key)}: ${searchCard.highlightMap[key]}`
+            __html: `${translate(key)}: ${searchCard.highlightMap[key]}`,
           }}
         />
       ))}
-      {searchCard.highlightedAttributes.map(att => (
+      {searchCard.highlightedAttributes.map((att) => (
         <div
           key={att.id}
           className={classes.highlight}
           dangerouslySetInnerHTML={{
-            __html: `${att.name}: ${att.highlight}`
+            __html: `${att.name}: ${att.highlight}`,
           }}
         />
       ))}

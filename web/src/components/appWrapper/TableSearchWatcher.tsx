@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { flatten } from "lodash";
 
 import {
   searchCategorySet,
-  searchLabelSet
+  searchLabelSet,
 } from "../../context/actions/search";
 import { labelActiveSet } from "../../context/actions/label";
 import { categoryActiveSet } from "../../context/actions/category";
@@ -20,7 +20,7 @@ interface TableSearchWatcherProps {
 export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
   dispatch,
   categoryActive,
-  labelActive
+  labelActive,
 }) => {
   // is categoryActive inside subCategories tree
   // const isParent = (c: CategoryProps): boolean => {
@@ -33,13 +33,13 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
   //   return false;
   // };
 
-  const getSubIds = (c: CategoryProps): string[] => {
+  const getSubIds = useCallback((c: CategoryProps): string[] => {
     let result: string[] = [];
     if (c.subCategories) {
-      result = flatten(c.subCategories.map(cat => getSubIds(cat)));
+      result = flatten(c.subCategories.map((cat) => getSubIds(cat)));
     }
     return [...result, c.id];
-  };
+  }, []);
 
   // when active label or category changes then change POST payload to filter table results
   // also set active label or category to undefined if new value is selected
@@ -50,17 +50,17 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
       const filterQuery: any = [
         {
           operation: "OR",
-          filter: subIds.map(id => ({
+          filter: subIds.map((id) => ({
             field: "category_ids",
             operation: "CONTAINS",
-            value: id
-          }))
-        }
+            value: id,
+          })),
+        },
       ];
       searchCategorySet(
         {
           name: categoryActive.name,
-          query: filterQuery
+          query: filterQuery,
         },
         dispatch
       );
@@ -68,7 +68,7 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
     if (categoryActive === undefined && labelActive === undefined) {
       searchCategorySet({ name: "", query: {} }, dispatch);
     }
-  }, [categoryActive]);
+  }, [categoryActive, dispatch, getSubIds, labelActive]);
 
   useEffect(() => {
     if (labelActive) {
@@ -80,9 +80,9 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
             {
               field: "labels",
               value: labelActive.name,
-              operation: "EQ"
-            }
-          ]
+              operation: "CONTAINS",
+            },
+          ],
         },
         dispatch
       );
@@ -90,6 +90,6 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
     if (labelActive === undefined && categoryActive === undefined) {
       searchLabelSet({ name: "", query: {} }, dispatch);
     }
-  }, [labelActive]);
+  }, [labelActive, categoryActive, dispatch]);
   return null;
 };

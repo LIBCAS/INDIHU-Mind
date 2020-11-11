@@ -22,15 +22,15 @@ export const useStyles = makeStyles((theme: Theme) => {
       "&:hover, &:focus, &:active": {
         outline: "none",
         background: theme.palette.secondary.main,
-        color: "#fff"
+        color: "#fff",
       },
-      zIndex: 999
+      zIndex: 999,
     },
     variantPopover: {
-      transform: "translate(0%, -0%)"
+      transform: "translate(0%, -0%)",
     },
     cancelIcon: {
-      fontSize: 18
-    }
+      fontSize: 18,
+    },
   };
 });

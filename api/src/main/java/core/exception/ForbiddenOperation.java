@@ -29,7 +29,8 @@ public class ForbiddenOperation extends RestGeneralException {
     public enum ErrorCode implements RestErrorCodeEnum {
         INVALID_TOKEN("Neplatný token"),
         FILE_NOT_STORED_ON_SERVER("Soubor není uložen na serveru"),
-        ARGUMENT_IS_NULL("Argument je NULL");
+        ARGUMENT_IS_NULL("Argument je NULL"),
+        USER_NOT_LOGGED_IN("Uživatel není přihlášen");
 
         @Getter private final String message;
 

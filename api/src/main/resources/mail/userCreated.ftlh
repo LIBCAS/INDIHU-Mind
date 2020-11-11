@@ -10,4 +10,4 @@
 
 <hr>
 <p>Systém Indihu Mind</p>
-<p style="color: #666666">Tento e-mail byl vygenerován automaticky, prosím neodpovídejte na něj.</p>
+<p style="color: #666666">Tento e-mail byl vygenerován automaticky, prosím, neodpovídejte na něj.</p>

@@ -17,8 +17,6 @@ import static cz.cas.lib.vzb.util.IndihuMindUtils.AUTHOR_NAME_ENCODING;
 @Component
 public class CitationTestData implements TestDataRemovable {
 
-//    "92e0844d-4774-4d79-9260-41ed9a8003e3", "baaebbee-e96f-4f75-870c-693b2f49a181", "193936ed-b941-4d7f-9831-ca89bc672646", "0cb44dd5-f339-4418-a9db-58d921045b17", "ba1b339d-1825-47c2-8fdf-9b95c39ec159", "i7a8c70-1049-11ea-9a9f-362b9e155667", "e635e4ae-081a-4ba4-b099-d7788471c984", "e7a8c70-1049-11ea-9a9f-362b9e155667"
-
     @Inject private CitationStore recordStore;
 
     public Citation recordMovieMLissUsa(User owner) {
@@ -80,7 +78,7 @@ public class CitationTestData implements TestDataRemovable {
 
     public Citation recordIsbn(User owner) {
         Citation record = new Citation();
-        record.setId("i7a8c70-1049-11ea-9a9f-362b9e155667");
+        record.setId("b689cd5d-2014-45e4-911f-f65197f70d44");
         record.setOwner(owner);
         record.setName("Citation, with only ISBN 020a");
         record.setDataFields(asList(new Datafield("020", 'a', "0786808772")));

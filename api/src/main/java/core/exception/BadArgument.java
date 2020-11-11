@@ -29,11 +29,14 @@ public class BadArgument extends RestGeneralException {
 
     public enum ErrorCode implements RestErrorCodeEnum {
         ARGUMENT_IS_NULL("Argument je NULL"),
+        ARGUMENT_IS_BLANK("Argument je prádný"),
         ARGUMENT_FAILED_COMPARISON("Argument chyboval ve srovnání"),
         INVALID_UUID("Neplatné UUID"),
         UNEXPECTED_ARGUMENT("Neočekávaný argument"),
         UNSUPPORTED_URL_FORMAT("URL odkaz není v podporovaném formátu"),
-        WRONG_MARC_FORMAT("Špatný formát MARC");
+        WRONG_MARC_FORMAT("Špatný formát MARC"),
+        WRONG_PASSWORD("Špatné heslo");
+
 
         @Getter private final String message;
 

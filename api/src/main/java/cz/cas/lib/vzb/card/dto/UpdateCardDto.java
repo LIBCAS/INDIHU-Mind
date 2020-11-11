@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,9 +21,11 @@ public class UpdateCardDto {
     @ApiModelProperty(value = "Name of the card", required = true, example = "Test Name for Card")
     private String name;
 
-    @Size(max = 2000)
-    @ApiModelProperty(value = "Note of the card, max size is 2000 characters.", example = "Text of note.")
+    @ApiModelProperty(value = "Note of the card, in JSON structure created by FE")
     private String note;
+
+    @ApiModelProperty(value = "Raw note text for BE", example = "Text of note.")
+    private String rawNote;
 
     @ApiModelProperty(value = "IDs of categories for card.")
     private List<@Uuid String> categories = new ArrayList<>();

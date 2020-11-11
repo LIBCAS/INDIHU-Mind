@@ -3,12 +3,13 @@ import { FormikProps, Field, FieldProps } from "formik";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import * as Yup from "yup";
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
+import { get } from "lodash";
 
 import { GlobalContext } from "../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { Formik } from "../form/Formik";
 import { api } from "../../utils/api";
@@ -30,29 +31,27 @@ interface CreateLabelProps {
 }
 
 const CategorySchema = Yup.object().shape({
-  name: Yup.string()
-    .max(50, "Příliš dlouhé")
-    .required("Povinné"),
-  color: Yup.string().required("Povinné")
+  name: Yup.string().max(50, "Příliš dlouhé").required("Povinné"),
+  color: Yup.string().required("Povinné"),
 });
 
 export const CreateLabel: React.FC<CreateLabelProps> = ({
   loadLabels,
   setOpen,
   previousLabel,
-  name
+  name,
 }) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<boolean | string>(false);
   const [initialValues, setInitialValues] = useState({
     id: uuid(),
     name: name ? name : "",
     owner: {},
-    color: ""
+    color: "",
   });
 
   useEffect(() => {
@@ -62,7 +61,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
         id,
         name,
         color,
-        owner: {}
+        owner: {},
       });
     }
   }, [previousLabel]);
@@ -73,37 +72,39 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     const label = {
       id: values.id,
       name: values.name,
-      color: values.color
+      color: values.color,
     };
     api()
       .put(`label/${values.id}`, {
-        json: label
+        json: label,
       })
 
       .json<any[]>()
-      .then(res => {
+      .then((res: any) => {
         dispatch({
           type: STATUS_ERROR_TEXT_SET,
           payload: previousLabel
             ? `Štítek ${values.name} byl úspěšně změněn`
-            : `Nový štítek ${values.name} byl úspěšně vytvořen`
+            : `Nový štítek ${values.name} byl úspěšně vytvořen`,
         });
         dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
         setLoading(false);
         loadLabels(res);
         setOpen(false);
       })
-      .catch(() => {
-        setError(true);
+      .catch((err) => {
         setLoading(false);
-        setOpen(false);
+        setError(
+          get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
+            ? "Štítek se zvoleným názvem již existuje."
+            : true
+        );
       });
   };
-
   return (
     <>
       <Loader loading={loading} />
-      {error && <MessageSnackbar setVisible={setError} />}
+      {error && <MessageSnackbar setVisible={setError} message={error} />}
       <Formik
         initialValues={initialValues}
         enableReinitialize
@@ -135,7 +136,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
                     field={field}
                     form={form}
                     label="Název"
-                    autoFocus
+                    autoFocus={false}
                   />
                 )}
               />
@@ -144,9 +145,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
                 render={({ form }: FieldProps<LabelProps>) => (
                   <ColorPicker
                     defaultColor={previousLabel && previousLabel.color}
-                    onChange={(color: any) => {
-                      form.setFieldValue("color", color);
-                    }}
+                    form={form}
                   />
                 )}
               />

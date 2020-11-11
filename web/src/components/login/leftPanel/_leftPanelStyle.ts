@@ -4,7 +4,7 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 export const useStyles = makeStyles((theme: Theme) => {
   return {
     list: {
-      width: 250
-    }
+      width: 250,
+    },
   };
 });

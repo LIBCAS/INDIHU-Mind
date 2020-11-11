@@ -9,10 +9,7 @@ import javax.persistence.Embeddable;
 import javax.validation.constraints.Size;
 
 /**
- * MARC4J counterpart is {@link org.marc4j.marc.impl.SubfieldImpl}.
- * <p>
  * Note that `Some subfields are repeatable` according to https://www.loc.gov/marc/umb/um07to10.html
- * </p>
  */
 @Getter
 @Setter

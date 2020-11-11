@@ -78,6 +78,8 @@ public class ReferenceTemplateApi {
      *     { "type":"GENERATE_DATE", "customizations":["ITALIC"] },
      *     { "type":"COLON" },
      *     { "type":"SPACE" },
+     *     { "type":"CUSTOM", "text":"User's text" },
+     *     { "type":"SPACE" },
      *     { "type":"MARC", "tag":"020", "code":"a" }
      *   ]
      * }
@@ -108,7 +110,32 @@ public class ReferenceTemplateApi {
         service.delete(id);
     }
 
+    /**
+     * Test data
+     * <pre>
+     * {
+     *   "ids": [
+     *     "b357f25c-2a8c-48e8-b553-d55b00fbe761",
+     *     "92e0844d-4774-4d79-9260-41ed9a8003e3",
+     *     "baaebbee-e96f-4f75-870c-693b2f49a181",
+     *     "193936ed-b941-4d7f-9831-ca89bc672646",
+     *     "0cb44dd5-f339-4418-a9db-58d921045b17",
+     *     "ba1b339d-1825-47c2-8fdf-9b95c39ec159",
+     *     "b689cd5d-2014-45e4-911f-f65197f70d44",
+     *     "e635e4ae-081a-4ba4-b099-d7788471c984",
+     *     "e7a8c70-1049-11ea-9a9f-362b9e155667"
+     *   ],
+     *   "templateId": "11744c72-2270-11eb-adc1-0242ac120002"
+     * }
+     * </pre>
+     */
     @ApiOperation(value = "Generates formatted citation PDF and sends it to user's browser for download")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully generated PDF"),
+            @ApiResponse(code = 400, message = "Validation of incoming DTO has failed."),
+            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
+            @ApiResponse(code = 404, message = "Entity not found for given ID")
+    })
     @PostMapping(value = "/generate-pdf", produces = MediaType.APPLICATION_PDF_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<InputStreamResource> generatePdf(@ApiParam(value = "DTO with template ID and records IDs", required = true) @Valid @RequestBody GeneratePdfDto dto) {
         return service.generatePdf(dto);

@@ -5,36 +5,36 @@ export const useStyles = makeStyles((theme: Theme) => {
   return {
     root: {
       left: "50%",
-      transform: "translateX(-50%)"
+      transform: "translateX(-50%)",
     },
     toolbar: {
       position: "relative",
-      display: "flex"
+      display: "flex",
       // flexWrap: "wrap"
     },
     menuIconWrapper: {
       borderRadius: "0",
       justifyContent: "flex-start",
       flex: "1",
-      [theme.breakpoints.up("md")]: {
-        display: "none"
-      }
+      [theme.breakpoints.up("lg")]: {
+        display: "none",
+      },
     },
     menuIconWrapperMobile: {
-      flex: "0"
+      flex: "0",
     },
     titleWrapper: {
       display: "flex",
       alignItems: "center",
       flexBasis: "auto",
-      [theme.breakpoints.up("md")]: {
-        flexBasis: 250
-      }
+      [theme.breakpoints.up("lg")]: {
+        flexBasis: 250,
+      },
     },
     titleWrapperChild: {
       display: "flex",
       alignItems: "center",
-      cursor: "pointer"
+      cursor: "pointer",
     },
     logo: {
       // marginRight: theme.spacing(1)
@@ -45,27 +45,27 @@ export const useStyles = makeStyles((theme: Theme) => {
       alignItems: "center",
       flex: "1",
       justifyContent: "end",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         marginLeft: "auto",
-        flex: "0"
-      }
+        flex: "0",
+      },
     },
     searchWrapperFullWidth: {
       position: "absolute",
-      width: "95%"
+      width: "95%",
     },
     search: {
       borderRadius: "350px",
       backgroundColor: theme.palette.common.white,
       "&:hover": {
-        backgroundColor: theme.palette.common.white
+        backgroundColor: theme.palette.common.white,
       },
       marginLeft: "0",
       width: "100%",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         marginLeft: theme.spacing(1),
-        width: "auto"
-      }
+        width: "auto",
+      },
     },
     searchIconWrapper: {
       position: "absolute",
@@ -77,14 +77,14 @@ export const useStyles = makeStyles((theme: Theme) => {
       justifyContent: "flex-end",
       cursor: "pointer",
       flex: "1",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         display: "none",
-        marginRight: theme.spacing(2)
-      }
+        marginRight: theme.spacing(2),
+      },
     },
     inputRoot: {
       color: `${theme.palette.grey}`,
-      width: "100%"
+      width: "100%",
     },
     inputInput: {
       paddingTop: theme.spacing(1.5),
@@ -92,22 +92,25 @@ export const useStyles = makeStyles((theme: Theme) => {
       paddingBottom: theme.spacing(1.5),
       paddingLeft: theme.spacing(3),
       width: "100%",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         paddingRight: theme.spacing(3),
         transition: theme.transitions.create("width"),
-        width: 120
+        width: 120,
       },
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
         "&:focus": {
-          width: 200
-        }
-      }
+          width: 200,
+        },
+      },
     },
     navItems: {
-      flex: "1"
+      flex: "1",
     },
     searchIconWrapperHide: {
-      opacity: 0
-    }
+      opacity: 0,
+    },
+    searchInput: {
+      width: `calc(100% - 8px)`,
+    },
   };
 });

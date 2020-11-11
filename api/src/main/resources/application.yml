@@ -25,8 +25,8 @@ spring:
         jdbc.lob.non_contextual_creation: true
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10250KB # 10MB + 10KB buffer for request fields
+      max-file-size: 50MB
+      max-request-size: 50250KB # 50MB + 10KB buffer for request fields
   jackson:
     serialization:
       write-dates-as-timestamps: false
@@ -91,3 +91,7 @@ vzb:
       placeholder: ${?}
       missing-data: (%s%s NENALEZENO)
     pdf-name: citace # without extension .pdf
+  attachment:
+    local:
+      file:
+        path: local-attachment-files

@@ -27,7 +27,7 @@ export class DropboxChooser extends Component<DropboxChooserProps> {
     cancel: () => {},
     linkType: "preview",
     multiselect: false,
-    disabled: false
+    disabled: false,
   };
 
   constructor(props: DropboxChooserProps) {
@@ -41,8 +41,8 @@ export class DropboxChooser extends Component<DropboxChooserProps> {
       loadScript(DROPBOX_SDK_URL, {
         attrs: {
           id: SCRIPT_ID,
-          "data-app-key": this.props.appKey
-        }
+          "data-app-key": this.props.appKey,
+        },
       });
     }
   }
@@ -64,7 +64,7 @@ export class DropboxChooser extends Component<DropboxChooserProps> {
       cancel,
       linkType,
       multiselect,
-      extensions
+      extensions,
     });
   }
 

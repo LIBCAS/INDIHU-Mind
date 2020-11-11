@@ -1,15 +1,9 @@
-export type CardTemplateAttributeType =
-  | ""
-  | "INTEGER"
-  | "DATETIME"
-  | "BOOLEAN"
-  | "STRING"
-  | "DOUBLE";
+import { AttributeType } from "../enums";
 
 export interface CardTemplateAttribute {
   id: string;
   name: string;
-  type: CardTemplateAttributeType;
+  type: AttributeType;
   ordinalNumber: number;
   [key: string]: string | number;
 }

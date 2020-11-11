@@ -2,12 +2,11 @@ import React, { useContext, useEffect } from "react";
 
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { GlobalContext, StateProps } from "../../context/Context";
 import { Loader } from "../../components/loader/Loader";
 import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
-import { RECORD_MARC_GET } from "../../context/reducers/record";
 import { recordGetMarc } from "../../context/actions/record";
 
 export const Status: React.FC = () => {
@@ -27,7 +26,7 @@ export const Status: React.FC = () => {
     } else {
       recordGetMarc(dispatch);
     }
-  }, [marc]);
+  }, [marc, dispatch]);
   return (
     <>
       <Loader loading={state.status.loadingCount !== 0} />

@@ -1,5 +1,6 @@
 package cz.cas.lib.vzb.security.user;
 
+import core.exception.BadArgument;
 import core.exception.ConflictObject;
 import core.exception.ForbiddenOperation;
 import core.exception.MissingObject;
@@ -13,6 +14,7 @@ import core.sequence.Sequence;
 import core.sequence.SequenceStore;
 import core.store.Transactional;
 import cz.cas.lib.vzb.dto.BulkFlagSetDto;
+import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.password.PasswordToken;
 import cz.cas.lib.vzb.security.password.PasswordTokenService;
 import cz.cas.lib.vzb.service.MailService;
@@ -25,8 +27,11 @@ import javax.inject.Inject;
 import javax.validation.constraints.Email;
 import java.util.*;
 
+import static core.exception.BadArgument.ErrorCode.ARGUMENT_IS_BLANK;
+import static core.exception.BadArgument.ErrorCode.WRONG_PASSWORD;
 import static core.exception.ConflictObject.ErrorCode.EMAIL_TAKEN;
 import static core.exception.ForbiddenOperation.ErrorCode.INVALID_TOKEN;
+import static core.exception.ForbiddenOperation.ErrorCode.USER_NOT_LOGGED_IN;
 import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.*;
 import static cz.cas.lib.vzb.card.CardService.getPidSequenceId;
@@ -41,6 +46,7 @@ public class UserService {
     private GoodPasswordGenerator goodPasswordGenerator;
     private AssignedRoleService assignedRoleService;
     private MailService mailService;
+    private UserDelegate userDelegate;
 
     @Transactional
     public void register(String email, @Nullable String password) {
@@ -105,13 +111,30 @@ public class UserService {
     }
 
     @Transactional
-    public void setNewPassword(String tokenId, String newPlainPassword) {
+    public void setNewPassword(String tokenId, String newRawPassword) {
         PasswordToken token = tokenService.find(tokenId);
         eq(Boolean.TRUE, tokenService.isTokenValid(token), () -> new ForbiddenOperation(INVALID_TOKEN, PasswordToken.class, tokenId));
         User user = token.getOwner();
-        user.setPassword(passwordEncoder.encode(newPlainPassword));
+        user.setPassword(passwordEncoder.encode(newRawPassword));
         tokenService.utilizeToken(token);
         store.save(user);
+    }
+
+    @Transactional
+    public void changePassword(String oldRawPassword, String newRawPassword) {
+        User loggedInUser = userDelegate.getUser();
+        notNull(loggedInUser, () -> new ForbiddenOperation(USER_NOT_LOGGED_IN));
+        ne(Boolean.TRUE, newRawPassword.isBlank(), () -> new BadArgument(ARGUMENT_IS_BLANK, "New password cannot be blank"));
+
+        User user = store.findByEmail(loggedInUser.getEmail());
+        notNull(user, () -> new MissingObject(ENTITY_IS_NULL, User.class, loggedInUser.getEmail()));
+        notNull(user.getPassword(), () -> new MissingObject(ENTITY_IS_NULL, "Password is null, cannot be changed."));
+        eq(Boolean.TRUE, passwordEncoder.matches(oldRawPassword, user.getPassword()), () -> new BadArgument(WRONG_PASSWORD, "Old password does not match with provided."));
+
+        user.setPassword(passwordEncoder.encode(newRawPassword));
+        store.save(user);
+
+        mailService.sendPasswordChangedEmail(user.getEmail());
     }
 
     public Result<User> findAll(Params params) {
@@ -164,4 +187,8 @@ public class UserService {
         this.tokenService = tokenService;
     }
 
+    @Inject
+    public void setUserDelegate(UserDelegate userDelegate) {
+        this.userDelegate = userDelegate;
+    }
 }

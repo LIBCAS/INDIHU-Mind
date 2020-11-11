@@ -5,30 +5,29 @@ export const useStyles = makeStyles((theme: Theme) => {
   return {
     actionsWrapper: {
       display: "flex",
-      width: "100%"
+      width: "100%",
     },
     actionsIcon: {
       marginLeft: theme.spacing(1),
-      color: theme.greyText,
       transition: ".3s ease color",
       cursor: "pointer",
       "&:hover": {
-        color: theme.palette.primary.main
-      }
+        color: theme.palette.primary.main,
+      },
     },
     actionsBack: {
       marginLeft: 0,
-      marginRight: "auto"
+      marginRight: "auto",
     },
     contentName: {
       marginBottom: theme.spacing(1),
-      marginRight: "15px"
+      marginRight: "15px",
     },
     contentCategory: {
       display: "inline-block",
       fontWeight: 800,
       fontSize: 14,
-      marginRight: theme.spacing(1)
+      marginRight: theme.spacing(1),
     },
     contentLabel: {
       display: "inline-flex",
@@ -37,10 +36,10 @@ export const useStyles = makeStyles((theme: Theme) => {
       padding: theme.spacing(0.5),
       marginRight: theme.spacing(1.5),
       background: theme.greyLightUltra,
-      borderRadius: "10px"
+      borderRadius: "10px",
     },
     contentLabelText: {
-      fontSize: 14
+      fontSize: 14,
     },
     contentLabelDot: {
       display: "inline-block",
@@ -48,11 +47,11 @@ export const useStyles = makeStyles((theme: Theme) => {
       height: "8px",
       marginLeft: "8px",
       marginRight: "8px",
-      borderRadius: "50%"
+      borderRadius: "50%",
     },
     contentAttributeTitle: {
       fontWeight: 800,
-      marginRight: theme.spacing(1)
+      marginRight: theme.spacing(1),
     },
     columnsWrapper: {
       display: "flex",
@@ -61,13 +60,13 @@ export const useStyles = makeStyles((theme: Theme) => {
       "& > div": {
         width: "100%",
         [theme.breakpoints.up("lg")]: {
-          width: "calc(50% - 8px)"
-        }
-      }
+          width: "calc(50% - 8px)",
+        },
+      },
     },
     fileIcons: {
       opacity: 0,
-      transition: ".3s ease opacity"
+      transition: ".3s ease opacity",
     },
     fileWrapper: {
       display: "flex",
@@ -82,9 +81,15 @@ export const useStyles = makeStyles((theme: Theme) => {
         boxShadow: "0 0 0 1px rgba(0,0,0,.1)",
 
         "& $fileIcons": {
-          opacity: 1
-        }
-      }
-    }
+          opacity: 1,
+        },
+      },
+    },
+    attributeItem: {
+      border: `1px solid ${theme.greyLight}`,
+      margin: theme.spacing(0.5),
+      minWidth: 150,
+      borderRadius: 5,
+    },
   };
 });

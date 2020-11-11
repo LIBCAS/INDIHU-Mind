@@ -47,9 +47,12 @@ spec:
             - name: shared-storage
               mountPath: /usr/solr/server/solr/card
               subPath: vzb-api/solr/card
+            - name: shared-storage
+              mountPath: /usr/src/local-attachment-files
+              subPath: vzb-api/uploads
 
         - name: solr
-          image: solr:7.7.1-alpine
+          image: solr:8.6.2-slim
           resources:
             requests:
               cpu: "20m"
@@ -66,10 +69,10 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: shared-storage
-              mountPath: /opt/solr/server/solr/uas
+              mountPath: /var/solr/data/uas
               subPath: vzb-api/solr/uas
             - name: shared-storage
-              mountPath: /opt/solr/server/solr/card
+              mountPath: /var/solr/data/card
               subPath: vzb-api/solr/card
 
       volumes:

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import Button from "@material-ui/core/Button";
@@ -27,16 +27,16 @@ export const Labels: React.FC<LabelsProps> = ({ activeTab }) => {
   const [open, setOpen] = useState<boolean>(false);
   const classes = useStyles();
 
-  const loadLabels = () => {
+  const loadLabels = useCallback(() => {
     labelGet(dispatch);
-  };
+  }, [dispatch]);
   useEffect(() => {
     loadLabels();
-  }, []);
+  }, [loadLabels]);
 
   useEffect(() => {
     if (activeTab !== "label") labelActiveSet(dispatch, undefined);
-  }, [activeTab]);
+  }, [activeTab, dispatch]);
 
   const setActiveLabel = (label: LabelProps | undefined) =>
     labelActiveSet(dispatch, label);
@@ -65,7 +65,7 @@ export const Labels: React.FC<LabelsProps> = ({ activeTab }) => {
           />
         }
       />
-      {state.label.labels.map(l => {
+      {state.label.labels.map((l) => {
         const isActive = labelActive && l.id === labelActive.id;
         const { color } = l;
         return (
@@ -78,14 +78,14 @@ export const Labels: React.FC<LabelsProps> = ({ activeTab }) => {
             key={l.name}
             className={classNames({
               [classes.wrapper]: true,
-              [classes.wrapperActive]: isActive
+              [classes.wrapperActive]: isActive,
             })}
           >
             <div className={classes.innerWrapper}>
               <Typography
                 className={classNames({
                   [classes.label]: true,
-                  [classes.labelActive]: isActive
+                  [classes.labelActive]: isActive,
                 })}
                 variant="body1"
                 color="inherit"
@@ -96,7 +96,7 @@ export const Labels: React.FC<LabelsProps> = ({ activeTab }) => {
               <span
                 className={classes.dot}
                 style={{
-                  background: `${color}`
+                  background: `${color}`,
                 }}
               />
 

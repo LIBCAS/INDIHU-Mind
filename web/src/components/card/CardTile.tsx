@@ -5,87 +5,119 @@ import classNames from "classnames";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 
 import { useStyles } from "./_cardStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
+
+import { theme } from "../../theme/theme";
+import Card from "@material-ui/core/Card";
+import { CardActionArea } from "@material-ui/core";
+import { LabelProps } from "../../types/label";
+import { Label } from "./Label";
+import { parseCardNoteText } from "./_utils";
 
 interface CardCreateAddCardItemProps {
-  card: { id: string; name: string; note: string };
-  text?: string | any;
+  card: { id: string; name: string; note: string; labels?: LabelProps[] };
   onSelect?: (card: any) => void;
   onRestore?: (card: any) => void;
   onRemove?: (card: any) => void;
   onRemoveText?: string;
+  topMargin?: number;
+  showLabels?: boolean;
 }
 
-const CardTileView: React.FC<CardCreateAddCardItemProps &
-  RouteComponentProps> = ({
+const CardTileView: React.FC<
+  CardCreateAddCardItemProps & RouteComponentProps
+> = ({
   card,
   onSelect,
   onRestore,
   onRemove,
   onRemoveText,
-  text,
-  history
+  history,
+  topMargin = 1.5,
+  showLabels = false,
 }) => {
   const classes = useStyles();
-  const { note } = card;
+  const classesText = useTextStyles();
+
+  const { note, labels } = card;
+
   return (
-    <div style={{ display: "flex", flexWrap: "wrap" }}>
-      <div
-        className={classNames(classes.cardLinked, {
-          [classes.cardLinkedNote]: note
-        })}
-      >
-        <Typography variant="h6" display="block" style={{ width: "100%" }}>
-          {card.name}
-        </Typography>
-        {note && (
-          <Typography variant="body1" display="inline">
-            {note}
+    <Card
+      className={classes.customScrollbar}
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        marginTop: theme.spacing(topMargin),
+      }}
+      onClick={() => {
+        if (onSelect) {
+          onSelect(card);
+        } else {
+          history.push(`/card/${card.id}`);
+        }
+      }}
+    >
+      {" "}
+      <CardActionArea>
+        <div
+          className={classNames(classes.cardLinked, {
+            [classes.cardLinkedNote]: note,
+          })}
+        >
+          <Typography
+            variant="h6"
+            display="block"
+            className={classNames(classesText.textBold, classes.cardTileTitle)}
+          >
+            {card.name}
           </Typography>
-        )}
-      </div>
-      <Button
-        onClick={() => {
-          if (onSelect) {
-            onSelect(card);
-          } else {
-            history.push(`/card/${card.id}`);
-          }
-        }}
-        className={classNames(classes.cardLinkedButton, {
-          [classes.cardLinkedButtonLast]: onRemove === undefined
-        })}
-        fullWidth
-      >
-        {text ? text : "Zobrazit kartu"}
-      </Button>
-      {onRestore && (
-        <Button
-          onClick={() => {
-            onRestore(card);
-          }}
-          className={classNames(classes.cardLinkedButton)}
-          fullWidth
-          color="primary"
-        >
-          Obnovit kartu
-        </Button>
-      )}
-      {onRemove && (
-        <Button
-          onClick={() => {
-            onRemove(card);
-          }}
-          className={classNames(
-            classes.cardLinkedButton,
-            classes.cardLinkedButtonLast
+          {note && (
+            <Typography
+              variant="body1"
+              className={classNames(classesText.noWrap, classes.cardTileNote)}
+            >
+              {parseCardNoteText(note)}
+            </Typography>
           )}
-          fullWidth
-          color="secondary"
-        >
-          {onRemoveText ? onRemoveText : "Odebrat kartu"}
-        </Button>
-      )}
-    </div>
+          {showLabels && labels && (
+            <div className={classes.cardTileLabelsContainer}>
+              {labels.map((label) => (
+                <Label key={label.id} label={label}></Label>
+              ))}
+            </div>
+          )}
+        </div>
+        {onRestore && (
+          <Button
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.stopPropagation();
+              onRestore(card);
+            }}
+            className={classNames(classes.cardLinkedButton)}
+            fullWidth
+            color="primary"
+          >
+            Obnovit kartu
+          </Button>
+        )}
+        {onRemove && (
+          <Button
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+              e.stopPropagation();
+              onRemove(card);
+            }}
+            className={classNames(
+              classes.cardLinkedButton,
+              classes.cardLinkedButtonLast
+            )}
+            fullWidth
+            color="secondary"
+          >
+            {onRemoveText ? onRemoveText : "Odebrat kartu"}
+          </Button>
+        )}
+      </CardActionArea>
+    </Card>
   );
 };
 

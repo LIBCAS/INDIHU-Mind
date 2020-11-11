@@ -6,23 +6,26 @@ export const useStyles = makeStyles((theme: Theme) => {
     actionsWrapper: {
       display: "flex",
       width: "100%",
-      alignItems: "center"
+      alignItems: "center",
     },
     actionsIcon: {
       marginLeft: theme.spacing(1),
-      color: theme.greyText,
       transition: ".3s ease color",
       cursor: "pointer",
       "&:hover": {
-        color: theme.palette.primary.main
-      }
+        color: theme.palette.primary.main,
+      },
     },
     actionsBack: {
       marginLeft: 0,
-      marginRight: "auto"
+      marginRight: "auto",
+    },
+    actions: {
+      display: "flex",
+      alignItems: "center",
     },
     contentCategoryCreate: {
-      display: "inline-block"
+      display: "inline-block",
     },
     contentLabel: {
       display: "inline-flex",
@@ -31,10 +34,10 @@ export const useStyles = makeStyles((theme: Theme) => {
       padding: theme.spacing(0.5),
       marginRight: theme.spacing(1.5),
       background: theme.greyLightUltra,
-      borderRadius: "10px"
+      borderRadius: "10px",
     },
     contentLabelText: {
-      fontSize: 14
+      fontSize: 14,
     },
     contentLabelDot: {
       display: "inline-block",
@@ -42,11 +45,11 @@ export const useStyles = makeStyles((theme: Theme) => {
       height: "8px",
       marginLeft: "8px",
       marginRight: "8px",
-      borderRadius: "50%"
+      borderRadius: "50%",
     },
     contentAttributeTitle: {
       fontWeight: 800,
-      marginRight: theme.spacing(1)
+      marginRight: theme.spacing(1),
     },
     columnsWrapper: {
       display: "flex",
@@ -55,21 +58,21 @@ export const useStyles = makeStyles((theme: Theme) => {
       "& > div": {
         width: "100%",
         [theme.breakpoints.up("md")]: {
-          width: "calc(50% - 8px)"
+          width: "calc(50% - 8px)",
         },
         [theme.breakpoints.up("lg")]: {
           width: "calc(33% - 15px)",
-          marginRight: "15px"
-        }
+          marginRight: "15px",
+        },
       },
       [theme.breakpoints.up("lg")]: {
         justifyContent: "flex-start",
-        marginRight: "-15px"
-      }
+        marginRight: "-15px",
+      },
     },
     fileIcons: {
       opacity: 0,
-      transition: ".3s ease opacity"
+      transition: ".3s ease opacity",
     },
     fileWrapper: {
       display: "flex",
@@ -84,17 +87,64 @@ export const useStyles = makeStyles((theme: Theme) => {
         boxShadow: "0 0 0 1px rgba(0,0,0,.1)",
 
         "& $fileIcons": {
-          opacity: 1
-        }
-      }
+          opacity: 1,
+        },
+      },
     },
     iconSecondary: {
       transition: ".3s ease color",
       cursor: "pointer",
-      color: theme.greyText,
+      color: theme.blackIconColor,
       "&:hover": {
-        color: theme.palette.secondary.main
-      }
-    }
+        color: theme.palette.secondary.main,
+      },
+    },
+    cardPrint: {
+      padding: 12,
+    },
+    cardPrintRow: {
+      display: "flex",
+      marginBottom: 6,
+    },
+    cardPrintLabel: {
+      width: 80,
+      marginRight: 8,
+      textAlign: "right",
+    },
+    cardPrintValue: {
+      fontWeight: "bold",
+    },
+    commentWrapper: {
+      position: "relative",
+      maxWidth: "100%",
+      minWidth: 150,
+      paddingBottom: theme.spacing(1),
+      "&:hover": {
+        "& $commentActions": {
+          display: "block",
+        },
+      },
+    },
+    commentActions: {
+      display: "none",
+      position: "absolute",
+      top: -12,
+      right: 0,
+      paddingRight: 4,
+      cursor: "pointer",
+    },
+    commentInnerWrapper: {
+      padding: theme.spacing(1.5),
+      border: `1px solid ${theme.greyLight}`,
+      borderRadius: 5,
+      width: "100%",
+    },
+    updatedWrapper: {
+      maxWidth: "calc(100% - 4px)",
+      paddingRight: 4,
+      display: "flex",
+      justifyContent: "flex-end",
+      fontSize: 11,
+    },
   };
 });

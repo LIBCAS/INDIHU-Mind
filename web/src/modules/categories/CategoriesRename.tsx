@@ -3,10 +3,11 @@ import { Form, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
 import * as Yup from "yup";
 import classNames from "classnames";
+import { get } from "lodash";
 
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { Formik } from "../../components/form/Formik";
 import { api } from "../../utils/api";
@@ -32,11 +33,11 @@ interface CategoiresRenameProps {
 }
 
 const initialValues = {
-  name: ""
+  name: "",
 };
 
 const CategoriesRenameSchema = Yup.object().shape({
-  name: Yup.string().required("Povinné")
+  name: Yup.string().required("Povinné"),
 });
 
 export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
@@ -44,17 +45,17 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
   setContent,
   loadCategories,
   setOpen,
-  dispatch
+  dispatch,
 }) => {
   const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
   const classesText = useTextStyles();
   const [loading, setLoading] = useState<boolean>(false);
-  const [errorShow, setErrorShow] = useState<boolean>(false);
+  const [error, setError] = useState<boolean | string>(false);
   return (
     <>
       <Loader loading={loading} />
-      {errorShow && <MessageSnackbar setVisible={setErrorShow} />}
+      {error && <MessageSnackbar setVisible={setError} message={error} />}
       <Formik
         initialValues={initialValues}
         validationSchema={CategoriesRenameSchema}
@@ -63,19 +64,19 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
           setLoading(true);
           let transformedCategory = {
             ...category,
-            name: values.name
+            name: values.name,
           };
           if (category.parentId) {
             transformedCategory.parent = { id: category.parentId };
           }
           api()
             .put(`category/${category.id}`, {
-              json: transformedCategory
+              json: transformedCategory,
             })
             .then(() => {
               dispatch({
                 type: STATUS_ERROR_TEXT_SET,
-                payload: `Kategorie ${category.name} byla úspěšně přejmenována`
+                payload: `Kategorie ${category.name} byla úspěšně přejmenována`,
               });
               dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
               setLoading(false);
@@ -83,9 +84,13 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
               setContent("menu");
               setOpen(false);
             })
-            .catch(() => {
+            .catch((err) => {
               setLoading(false);
-              setErrorShow(true);
+              setError(
+                get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
+                  ? "Kategorie se zvoleným názvem již existuje."
+                  : true
+              );
             });
         }}
         render={() => (
@@ -96,26 +101,28 @@ export const CategoriesRename: React.FC<CategoiresRenameProps> = ({
                 classesLayout.flex,
                 classesLayout.flexWrap,
                 classesLayout.justifyCenter,
-                classesSpacing.m1
+                classesSpacing.p2,
+                classesSpacing.pt1,
+                classesSpacing.pb1
               )}
             >
               <Field
                 name="name"
                 render={({
                   field,
-                  form
+                  form,
                 }: FieldProps<CategoriesRenameValues>) => (
                   <InputText
                     label="Přejmenovat kategorii"
                     field={field}
                     form={form}
-                    autoFocus
+                    autoFocus={false}
                   />
                 )}
               />
               <div
                 className={classNames(
-                  classesSpacing.mt2,
+                  classesSpacing.mt1,
                   classesLayout.flex,
                   classesLayout.spaceBetween,
                   classesLayout.flexGrow,

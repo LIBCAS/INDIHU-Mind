@@ -9,5 +9,5 @@ interface ConditionalWrapperProps {
 export const ConditionalWrapper: React.FC<ConditionalWrapperProps> = ({
   condition,
   wrap,
-  children
+  children,
 }) => (condition ? wrap(children) : children);

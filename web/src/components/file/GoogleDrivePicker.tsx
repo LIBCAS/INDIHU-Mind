@@ -44,7 +44,7 @@ export class GoogleDrivePicker extends Component<GoogleDrivePickerProps> {
     authImmediate: false,
     multiselect: false,
     navHidden: false,
-    disabled: false
+    disabled: false,
   };
   componentDidMount() {
     if (this.isGoogleReady()) {
@@ -82,7 +82,7 @@ export class GoogleDrivePicker extends Component<GoogleDrivePickerProps> {
       {
         client_id: this.props.clientId, // eslint-disable-line @typescript-eslint/camelcase
         scope: this.props.scope,
-        immediate: this.props.authImmediate
+        immediate: this.props.authImmediate,
       },
       callback
     );

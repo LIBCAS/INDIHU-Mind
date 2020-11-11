@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ReactDOM from "react-dom";
 import { ChromePicker } from "react-color";
 import ClickAwayListener from "@material-ui/core/ClickAwayListener";
@@ -6,41 +6,48 @@ import InputLabel from "@material-ui/core/InputLabel";
 import Button from "@material-ui/core/Button";
 import Fade from "@material-ui/core/Fade";
 
-import { useStyles } from "./_formStyles";
+import { useStyles } from "./_styles";
+import { FormValues } from "../table/TableGroupActions";
+import { FormikProps } from "formik";
 
 interface ColorPickerProps {
-  onChange: Function;
+  form: FormikProps<FormValues>;
   defaultColor?: string;
 }
 
 export const ColorPicker: React.FC<ColorPickerProps> = ({
-  onChange,
-  defaultColor
+  form,
+  defaultColor,
 }) => {
   const classes = useStyles();
   const [show, setShow] = useState<boolean>(false);
-  const [previousColor, setPreviousColor] = useState("");
-  const [color, setColor] = useState();
+  const [previousColor, setPreviousColor] = useState<string>();
+  const [color, setColor] = useState<string>();
   const randomColor = () =>
     "#" + ((Math.random() * (1 << 24)) | 0).toString(16);
-  const setRandom = () => {
+  const setFieldMemo = useMemo(() => form.setFieldValue, [form]);
+  const onChangeCallback = useCallback(
+    (color?: string) => setFieldMemo("color", color),
+    [setFieldMemo]
+  );
+  const setRandom = useCallback(() => {
     const newColor = randomColor();
     setColor(newColor);
     setPreviousColor(newColor);
-    onChange(newColor);
-  };
+    onChangeCallback(newColor);
+  }, [onChangeCallback]);
   useEffect(() => {
     if (defaultColor) {
       setPreviousColor(defaultColor);
       setColor(defaultColor);
-      onChange(defaultColor);
+      onChangeCallback(defaultColor);
     } else {
       setRandom();
     }
-  }, []);
+  }, [defaultColor, setRandom, onChangeCallback]);
 
   const handleClick = () => {
-    setShow(prev => !prev);
+    setShow((prev) => !prev);
     setColor(previousColor);
   };
 
@@ -50,7 +57,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
 
   const onSubmit = () => {
     setPreviousColor(color);
-    onChange(color);
+    onChangeCallback(color);
     setShow(false);
   };
 
@@ -66,7 +73,7 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
         <div
           className={classes.colorPickerColor}
           style={{
-            background: `${color}`
+            background: `${color}`,
           }}
         />
       </div>
@@ -77,16 +84,20 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
                 <div className={classes.chromePickerContent}>
                   <ClickAwayListener onClickAway={handleClick}>
                     <div>
-                      <ChromePicker color={color} onChange={handleChange} />
+                      <ChromePicker
+                        color={color}
+                        onChange={handleChange}
+                        disableAlpha={true}
+                      />
                       <div className={classes.chromePickerActions}>
-                        <div>
-                          <Button color="primary" onClick={onSubmit}>
-                            Zvolit barvu
-                          </Button>
-                        </div>
                         <div>
                           <Button color="secondary" onClick={onCancel}>
                             Zrušit
+                          </Button>
+                        </div>
+                        <div>
+                          <Button color="primary" onClick={onSubmit}>
+                            Zvolit barvu
                           </Button>
                         </div>
                       </div>

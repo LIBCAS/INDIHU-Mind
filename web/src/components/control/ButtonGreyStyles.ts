@@ -12,13 +12,13 @@ export const useStyles = makeStyles((theme: Theme) => {
       "&:hover": {
         border: `1px solid ${theme.palette.primary.main}`,
         color: theme.palette.primary.main,
-        background: "#fff"
-      }
+        background: "#fff",
+      },
     },
     big: {
       display: "flex",
       justifyContent: "center",
-      padding: "60px 45px"
-    }
+      padding: "60px 45px",
+    },
   };
 });

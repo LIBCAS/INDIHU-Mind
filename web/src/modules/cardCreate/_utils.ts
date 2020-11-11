@@ -1,23 +1,22 @@
-import uuid from "uuid/v4";
-import { api } from "../../utils/api";
-import { flattenDeep } from "lodash";
+import { v4 as uuid } from "uuid";
+import { flattenDeep, isArray, pick, isEmpty, get } from "lodash";
 
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 
+import { api } from "../../utils/api";
 import { AttributeProps } from "../../types/attribute";
 import { CardTemplateProps } from "../../types/cardTemplate";
 import { CategoryProps } from "../../types/category";
 import { LabelProps } from "../../types/label";
 import { FileProps } from "../../types/file";
-import { OptionType } from "../../components/form/reactSelect/_reactSelectTypes";
-import {
-  translateFileError,
-  FileErrors,
-  parseAttributeForApi
-} from "../../utils/card";
+import { OptionType } from "../../components/select/_types";
+import { parseAttributeForApi } from "../../utils/card";
+import { createErrorMessage, uploadFile } from "../attachments/_utils";
+import { getAttributeTypeDefaultValue } from "../../utils/attribute";
+import { Attachment } from "../attachments/_types";
 
 export const deleteAttribute = (
   formikBagParent: any,
@@ -50,90 +49,56 @@ export const onSubmitAttribute = (
     const merged = [...attributes, values];
     orderedAttributes = merged.map((att: AttributeProps, i: number) => ({
       ...att,
-      ordinalNumber: i
+      ordinalNumber: i,
     }));
   }
   formikBagParent.setFieldValue("attributes", orderedAttributes, false);
   setOpen(false);
 };
 
-export const onChangeType = (formikBag: any, e: any) => {
-  switch (e.target.value) {
-    case "STRING":
-    case "DOUBLE":
-      return formikBag.setFieldValue("value", "");
-    case "BOOLEAN":
-      return formikBag.setFieldValue("value", false);
-    case "DATETIME":
-      return formikBag.setFieldValue("value", new Date());
-  }
+export const onChangeType = (formikBag: any, value: any) => {
+  formikBag.setFieldValue("value", getAttributeTypeDefaultValue(value));
 };
 
-const newCard = (values: any, cardId: string) => {
-  const formData = new FormData();
-  const {
-    attributes,
-    categories,
-    labels,
-    name,
-    note,
-    linkedCards,
-    records
-  } = values;
-
-  formData.append("id", cardId);
-  formData.append("name", name);
-  formData.append("note", note);
-  categories.forEach((opt: any, i: number) =>
-    formData.append(`categories[${i}]`, opt.value)
-  );
-  labels.forEach((opt: any, i: number) =>
-    formData.append(`labels[${i}]`, opt.value)
-  );
-  if (records) {
-    records.forEach((opt: any, i: number) =>
-      formData.append(`records[${i}]`, opt.value)
-    );
+const newCard = (values: any, cardId: string, documents?: Attachment[]) => {
+  const mapArrayValue = (field: any, mapField: string = "value") => {
+    const value = values[`${field}`];
+    const arr = isArray(value) ? value : value ? [value] : [];
+    return !isEmpty(arr)
+      ? {
+          [`${field}`]: arr.map((opt: any) => opt[`${mapField}`]),
+        }
+      : {};
+  };
+  const { note } = values;
+  let noteRaw;
+  if (note) {
+    try {
+      noteRaw = get(JSON.parse(note), "blocks", [])
+        .map(({ text }: { text: string }) => text)
+        .join(" ");
+    } catch {
+      noteRaw = undefined;
+    }
   }
-  linkedCards.forEach((card: any, i: number) =>
-    formData.append(`linkedCards[${i}]`, card.id)
-  );
-  const attributesParsed = attributes.map(parseAttributeForApi);
-  attributesParsed.forEach((att: any, i: number) => {
-    formData.append(`attributes[${i}].name`, att.name);
-    formData.append(`attributes[${i}].ordinalNumber`, att.ordinalNumber);
-    formData.append(`attributes[${i}].type`, att.type);
-    formData.append(`attributes[${i}].value`, att.value);
-  });
-  return formData;
+  return {
+    id: cardId,
+    ...pick(values, ["name", "note"]),
+    ...(noteRaw ? { noteRaw } : {}),
+    attributes: values.attributes.map(parseAttributeForApi),
+    categories: values.categories,
+    labels: values.labels,
+    files: documents,
+    ...mapArrayValue("records", "id"),
+    ...mapArrayValue("linkedCards", "id"),
+  };
 };
 
 export const filesUpload = (files: FileProps[], cardId: string) => {
   if (files) {
-    return files.map((file: FileProps, i: number) => {
-      const formData = new FormData();
-      formData.append(`cardId`, cardId);
-      formData.append(`id`, file.id);
-      formData.append(`name`, file.name);
-      formData.append(`type`, file.type);
-      formData.append(`ordinalNumber`, file.ordinalNumber.toString());
-      if (file.providerType === "LOCAL" && file.content) {
-        formData.append(`providerType`, file.providerType);
-        formData.append(`content`, file.content);
-      }
-      if (
-        file.providerType &&
-        file.providerType !== "LOCAL" &&
-        file.providerId
-      ) {
-        formData.append(`providerType`, file.providerType);
-        formData.append(`providerId`, file.providerId);
-        formData.append(`link`, file.link);
-      }
-      return api({ noContentType: true })
-        .post(`attachment-file`, { body: formData })
-        .json<any>();
-    });
+    return files.map((file: FileProps) =>
+      uploadFile({ ...file, linkedCards: [cardId] })
+    );
   }
   return [];
 };
@@ -150,23 +115,28 @@ export const onSubmitCard = (
 ) => {
   setErrorMessage(undefined);
   const cardId = uuid();
-  const cardBody = newCard(values, cardId);
-  const { files } = values;
-  api({ noContentType: true })
-    .post(`card`, { body: cardBody })
+  const { documents = [] } = values;
+  const existingDocuments = documents
+    .filter((doc: Attachment) => doc.id)
+    .map((doc: Attachment) => doc.id);
+  const newDocuments = documents.filter((doc: Attachment) => !doc.id);
+  const cardBody = newCard(values, cardId, existingDocuments);
+  api()
+    .post(`card`, { json: cardBody })
     .json<any[]>()
     .then(() => {
-      const filesPromises = filesUpload(files, cardId);
-      return Promise.all(filesPromises.map(p => p.catch(e => e)));
+      const documentsPromises = filesUpload(newDocuments, cardId);
+      return Promise.all(documentsPromises.map((p) => p.catch((e: any) => e)));
     })
     .then((results: any) => {
-      let filesErrors = "";
+      let documentsErrors = "";
       results.forEach((r: any, i: number) => {
-        if (r.response && r.response.errorType) {
-          filesErrors += `| ${translateFileError(r.response
-            .errorType as FileErrors)}: ${
-            r.response.errorType === "FILE_TOO_BIG" ? `${files[i].name} ` : ""
-          }${r.response.errorMessage} `;
+        if (r.response && r.response.error) {
+          documentsErrors += `| ${createErrorMessage(
+            r,
+            documents[i].name,
+            true
+          )} `;
           // setErrorMessage(translated);
           // history.push(`/card/${cardId}`);
           // if (afterEdit) {
@@ -180,9 +150,9 @@ export const onSubmitCard = (
       dispatch({
         type: STATUS_ERROR_TEXT_SET,
         payload:
-          filesErrors === ""
+          documentsErrors === ""
             ? "Nová karta byla úspěšně vytvořena"
-            : `Nová karta byla vytvořena. ${filesErrors}`
+            : `Nová karta byla vytvořena. ${documentsErrors}`,
       });
       dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       history.push(`/card/${cardId}`);
@@ -211,14 +181,14 @@ export const onSubmitTemplate = (
       json: {
         id,
         name: values.name,
-        attributeTemplates: attributes
-      }
+        attributeTemplates: attributes,
+      },
     })
     .json<any[]>()
     .then(() => {
       dispatch({
         type: STATUS_ERROR_TEXT_SET,
-        payload: "Vytvoření nové šablony proběhlo úspěšně"
+        payload: "Vytvoření nové šablony proběhlo úspěšně",
       });
       dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       setLoading(false);
@@ -239,10 +209,10 @@ export const getTemplateName = (
   let templateExisting = undefined;
   const formAttributesLength = formikBag.values.attributes.length;
   if (formAttributesLength === 0) return undefined;
-  templates.forEach(template => {
+  templates.forEach((template) => {
     let attributeMatch = 0;
     const templateAttributesLength = template.attributeTemplates.length;
-    template.attributeTemplates.forEach(attributeTemplate => {
+    template.attributeTemplates.forEach((attributeTemplate) => {
       formikBag.values.attributes.forEach((attribute: AttributeProps) => {
         if (
           attribute.name === attributeTemplate.name &&
@@ -262,25 +232,12 @@ export const getTemplateName = (
   return templateExisting;
 };
 
-export const defaultValue = (type: string) => {
-  switch (type) {
-    case "STRING":
-      return "";
-    case "DOUBLE":
-      return 0;
-    case "BOOLEAN":
-      return false;
-    case "DATETIME":
-      return new Date();
-  }
-};
-
 export const getPathToCategory = (
   cat: CategoryProps,
   categories: CategoryProps[]
 ): string => {
   let result = "";
-  categories.forEach(c => {
+  categories.forEach((c) => {
     if (c.id === cat.id) {
       result = `<b>${c.name}</b>`;
     }
@@ -300,7 +257,7 @@ export const parseCategory = (
 ): OptionType => {
   let option: OptionType = {
     label: getPathToCategory(cat, categories),
-    value: cat.id
+    value: cat.id,
   };
   // if (cat.subCategories && cat.subCategories.length > 0) {
   //   option.subOptions = cat.subCategories.map(parseCategory);
@@ -314,7 +271,7 @@ const parseSubCategory = (
 ): OptionType[] => {
   if (cat.subCategories) {
     const parsedSubcategories = flattenDeep(
-      cat.subCategories.map(cat => parseSubCategory(cat, categories))
+      cat.subCategories.map((cat) => parseSubCategory(cat, categories))
     ) as OptionType[];
     return [parseCategory(cat, categories), ...parsedSubcategories];
   } else {
@@ -324,7 +281,7 @@ const parseSubCategory = (
 
 export const flattenCategory = (categories: CategoryProps[]): OptionType[] => {
   let result: OptionType[] = [];
-  categories.forEach(cat => {
+  categories.forEach((cat) => {
     result = [...result, ...parseSubCategory(cat, categories)];
   });
   return result;
@@ -333,7 +290,7 @@ export const flattenCategory = (categories: CategoryProps[]): OptionType[] => {
 export const parseLabel = (cat: any): OptionType => {
   let option: OptionType = {
     label: cat.name,
-    value: cat.id
+    value: cat.id,
   };
   return option;
 };
@@ -355,7 +312,7 @@ export const getFlatCategories = (
   categories: CategoryProps[]
 ): CategoryProps[] => {
   let result: CategoryProps[] = [];
-  categories.forEach(c => {
+  categories.forEach((c) => {
     if (c.subCategories) {
       result = [...result, ...getFlatCategories(c.subCategories)];
     }

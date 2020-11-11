@@ -4,7 +4,7 @@ import { debounce } from "lodash";
 export const useWindowSize = (): { width: number; height: number } => {
   const [windowSize, setWindowSize] = useState(() => ({
     width: window.innerWidth,
-    height: window.innerHeight
+    height: window.innerHeight,
   }));
 
   useEffect(() => {

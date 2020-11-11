@@ -16,11 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * MARC4J counterpart is {@link org.marc4j.marc.impl.DataFieldImpl}.
- * But instead of extending {@link org.marc4j.marc.impl.VariableFieldImpl} for its attribute tag, the tag is already in
- * this class
- *
- * Note that {@link Datafield} with same tag can occur multiple times in one {@link MarcRecord}.
+ * Note that {@link Datafield} with same tag can occur multiple times in one {@link Citation}.
  * (`if a tag can appear more than once in one bibliographic record, it is labeled repeatable (R)` according to
  * https://www.loc.gov/marc/umb/um07to10.html)
  *
@@ -54,7 +50,7 @@ public class Datafield {
     }
 
     /**
-     * @see MarcRecord#setDataFields(List)
+     * @see Citation#setDataFields(List)
      */
     public void setSubfields(List<Subfield> subfields) {
         subfields.sort(Comparator.comparing(Subfield::getCode));

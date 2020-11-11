@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RouteComponentProps } from "react-router";
 import { Loader } from "../../components/loader/Loader";
 import classNames from "classnames";
@@ -9,11 +9,10 @@ import { RecordTemplateDetailActions } from "./RecordTemplateDetailActions";
 import { RecordTemplateDetailContent } from "./RecordTemplateDetailContent";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { RecordTemplateProps } from "../../types/recordTemplate";
-import { parseTemplate } from "../recordsTemplates/_utils";
 
 export const RecordTemplateDetail: React.FC<RouteComponentProps> = ({
   history,
-  match
+  match,
 }) => {
   // @ts-ignore
   const recordTemplateId = match.params.id;
@@ -22,11 +21,11 @@ export const RecordTemplateDetail: React.FC<RouteComponentProps> = ({
   const [recordTemplate, setRecord] = useState<RecordTemplateProps | null>(
     null
   );
-  const loadRecordTemplate = () => {
+  const loadRecordTemplate = useCallback(() => {
     api()
       .get(`template/${recordTemplateId}`)
       .json<RecordTemplateProps>()
-      .then(res => {
+      .then((res: any) => {
         setLoading(false);
         if (res) {
           setRecord(res);
@@ -37,10 +36,11 @@ export const RecordTemplateDetail: React.FC<RouteComponentProps> = ({
         setLoading(false);
         // TODO error
       });
-  };
+  }, [recordTemplateId]);
+
   useEffect(() => {
     loadRecordTemplate();
-  }, [recordTemplateId]);
+  }, [loadRecordTemplate]);
 
   return (
     <>
@@ -56,7 +56,7 @@ export const RecordTemplateDetail: React.FC<RouteComponentProps> = ({
           <Typography variant="h5" className={classNames(classesSpacing.mb1)}>
             Citační šablona {recordTemplate.name}
           </Typography>
-          <RecordTemplateDetailContent recordTemplate={recordTemplate} />
+          <RecordTemplateDetailContent item={recordTemplate} />
         </>
       )}
     </>

@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from "react";
+import React, { useEffect, useContext, useState, useCallback } from "react";
 import { RouteComponentProps } from "react-router-dom";
 import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
@@ -20,17 +20,20 @@ export const Categories: React.FC<RouteComponentProps> = () => {
   const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
   const [open, setOpen] = useState(false);
+  const [openedCategory, setOpenedCategory] = useState(undefined);
   const context: any = useContext(GlobalContext);
   const state: StateProps = context.state;
   const dispatch: Function = context.dispatch;
-  const loadCategories = () => {
+  const loadCategories = useCallback(() => {
     categoryGet(dispatch);
-  };
+  }, [dispatch]);
+
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [loadCategories]);
+
   return (
-    <>
+    <div id="categories-section">
       <Fade in>
         <div>
           <div
@@ -55,13 +58,17 @@ export const Categories: React.FC<RouteComponentProps> = () => {
           </div>
           {state.category.categories.length === 0 &&
             state.status.loadingCount === 0 && <div>Žádné kategorie</div>}
-          {state.category.categories.map(cat => (
-            <CategoriesItem
-              key={cat.id}
-              category={cat}
-              loadCategories={loadCategories}
-            />
-          ))}
+          <div className={classes.categoriesContainer}>
+            {state.category.categories.map((cat) => (
+              <CategoriesItem
+                openedCategory={openedCategory}
+                setOpenedCategory={setOpenedCategory}
+                key={cat.id}
+                category={cat}
+                loadCategories={loadCategories}
+              />
+            ))}
+          </div>
         </div>
       </Fade>
       <Modal
@@ -75,7 +82,7 @@ export const Categories: React.FC<RouteComponentProps> = () => {
           />
         }
       />
-    </>
+    </div>
   );
 };
 

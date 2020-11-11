@@ -1,3 +1,5 @@
+import { FileType } from "../enums";
+
 export interface FileProps {
   id: string;
   name: string;
@@ -5,9 +7,12 @@ export interface FileProps {
   link: string;
   ordinalNumber: number;
   providerId?: string;
-  providerType?: "DROPBOX" | "GOOGLE_DRIVE" | "LOCAL";
+  providerType?: FileType;
+  linkedCards?: string[];
+  records?: string[];
   // if providerType LOCAL, then file has content
   content?: File;
+  location?: "WEB" | "SERVER";
 }
 
 export interface FileDropboxProps {

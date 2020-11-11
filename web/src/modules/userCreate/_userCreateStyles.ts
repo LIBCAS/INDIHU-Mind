@@ -6,8 +6,8 @@ export const useStyles = makeStyles((theme: Theme) => {
     createUserButton: {
       width: "100%",
       [theme.breakpoints.up("md")]: {
-        width: "auto"
-      }
-    }
+        width: "auto",
+      },
+    },
   };
 });

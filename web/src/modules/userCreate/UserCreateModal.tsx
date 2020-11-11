@@ -12,7 +12,7 @@ interface UserCreateModalProps {
 
 export const UserCreateModal: React.FC<UserCreateModalProps> = ({
   open,
-  setOpen
+  setOpen,
 }) => {
   const [userCreated, setUserCreated] = useState(false);
   return (

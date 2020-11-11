@@ -6,87 +6,91 @@ export const useStyles = makeStyles((theme: Theme) => {
     tabContentWrapper: {
       display: "flex",
       height: "100%",
-      // justifyContent: "center",
+      justifyContent: "start",
+      [theme.breakpoints.up("md")]: {
+        maxHeight: "calc(100vh - 196px)",
+        justifyContent: "space-between",
+      },
       flexDirection: "column",
-      padding: theme.spacing(2)
+      padding: theme.spacing(2),
     },
     createButton: {
-      marginBottom: theme.spacing(1)
+      marginBottom: theme.spacing(1),
     },
     categoriesContainer: {
       overflow: "auto",
       "&::-webkit-scrollbar": {
         width: "6px",
-        backgroundColor: "#F5F5F5"
+        backgroundColor: "#F5F5F5",
       },
       "&::-webkit-scrollbar-track": {
         "-webkit-box-shadow": "inset 0 0 6px rgba(0,0,0,0.3)",
-        backgroundColor: "#F5F5F5"
+        backgroundColor: "#F5F5F5",
       },
       "&::-webkit-scrollbar-thumb": {
-        backgroundColor: "#093d77"
-      }
+        backgroundColor: "#093d77",
+      },
     },
     category: {
       display: "flex",
       alignItems: "center",
       cursor: "pointer",
       marginBottom: theme.spacing(1),
-      borderBottom: `1px solid transparent`
+      borderBottom: `1px solid transparent`,
     },
     categorySub: {
-      fontSize: "14px"
+      fontSize: "14px",
     },
     categoryActive: {
       // fontSize: "18px",
-      borderBottom: `1px solid #fff`
+      borderBottom: `1px solid #fff`,
     },
     subcategory: {
       display: "block",
-      paddingLeft: theme.spacing(2)
+      paddingLeft: theme.spacing(2),
     },
     categoryWrapper: {
       display: "flex",
       flexDirection: "column",
       padding: theme.spacing(4),
       [theme.breakpoints.up("md")]: {
-        padding: theme.spacing(2)
-      }
+        padding: theme.spacing(3),
+      },
     },
     label: {
-      marginRight: theme.spacing(1)
+      marginRight: theme.spacing(1),
     },
     wrapper: {
       display: "flex",
       alignItems: "center",
       cursor: "pointer",
       padding: `4px`,
-      marginBottom: theme.spacing(1)
+      marginBottom: theme.spacing(1),
     },
     wrapperActive: {
       borderRadius: "350px",
-      background: "#313840"
+      background: "#313840",
     },
     labelLabel: {
       color: "#A0A1A3",
-      paddingLeft: theme.spacing(1)
+      paddingLeft: theme.spacing(1),
     },
     labelActive: {
-      color: "#fff"
+      color: "#fff",
     },
     dot: {
       display: "inline-block",
       width: 5,
       height: 5,
       borderRadius: "50%",
-      marginLeft: theme.spacing(1)
+      marginLeft: theme.spacing(1),
     },
     cardOpened: {
       whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis",
       cursor: "pointer",
-      marginTop: theme.spacing(1)
-    }
+      marginTop: theme.spacing(1),
+    },
   };
 });

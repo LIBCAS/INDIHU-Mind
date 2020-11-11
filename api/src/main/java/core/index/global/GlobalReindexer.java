@@ -34,7 +34,7 @@ public class GlobalReindexer {
                 .map(Utils::unwrap)
                 .filter(store -> storeClasses == null || storeClasses.contains(store.getClass()))
                 .forEach(store -> {
-                    log.info("Reindexing store {}", store.getClass().getName());
+                    log.info("Reindexing entity:'{}', store {}", store.getUType().getSimpleName(), store.getClass().getName());
                     store.dropReindex();
                     log.info("Reindexing complete");
                 });

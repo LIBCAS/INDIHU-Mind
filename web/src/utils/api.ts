@@ -1,4 +1,5 @@
-import ky, { HTTPError } from "ky";
+import ky from "ky";
+import { map } from "lodash";
 
 import * as store from "./store";
 
@@ -12,40 +13,36 @@ export const api = (opts: ApiProps = {}, headers: any = {}) => {
   return ky.extend({
     prefixUrl: "/api",
     timeout: 20000,
-    // throwHttpErrors: false,
     hooks: {
       beforeRequest: [
-        options => {
-          // no headers in options
-          // https://github.com/sindresorhus/ky/pull/115
-          options.headers = {
-            ...(!opts.noContentType && { "Content-type": "application/json" }),
-            ...headers
-          };
+        (request: any) => {
+          if (!opts.noContentType) {
+            request.headers.set("Content-type", "application/json");
+          }
+
+          map(headers, (value, key) => request.headers.set(key, value));
+
           if (!skipToken) {
             // If we have token, use it in request
             const token = store.get("token", undefined);
             if (token) {
-              options.headers = {
-                Authorization: `Bearer ${token}`,
-                ...options.headers
-              };
+              request.headers.set("Authorization", `Bearer ${token}`);
             }
           }
-        }
+        },
       ],
       afterResponse: [
-        async response => {
+        async (_: any, __: any, response: any) => {
           // If response contains bearer, save it as token
           if (response.headers.has("bearer")) {
             store.set("token", response.headers.get("bearer"));
           }
           if (!response.ok) {
             const body = await response.json();
-            throw new HTTPError(body);
+            throw new ky.HTTPError(body);
           }
-        }
-      ]
-    }
+        },
+      ],
+    },
   });
 };

@@ -7,18 +7,18 @@ export const useStyles = makeStyles((theme: Theme) => {
       cursor: "pointer",
       transition: ".3s ease color",
       "&:hover": {
-        color: theme.palette.primary.main
-      }
+        color: theme.palette.primary.main,
+      },
     },
     hoverSecondary: {
       cursor: "pointer",
       transition: ".3s ease color",
       "&:hover": {
-        color: theme.palette.secondary.main
-      }
+        color: theme.palette.secondary.main,
+      },
     },
     active: {
-      color: theme.palette.primary.main
-    }
+      color: theme.palette.primary.main,
+    },
   };
 });

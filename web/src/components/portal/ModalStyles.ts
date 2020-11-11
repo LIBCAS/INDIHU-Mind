@@ -12,15 +12,15 @@ export const useStyles = makeStyles((theme: Theme) => {
       left: `50%`,
       transform: `translate(-50%, -50%)`,
       "&:focus": {
-        outline: "none"
+        outline: "none",
       },
       [theme.breakpoints.up("sm")]: {
         width: "auto",
-        minWidth: "300px"
+        minWidth: "300px",
       },
       [theme.breakpoints.up("md")]: {
-        width: "auto"
-      }
+        width: "auto",
+      },
     },
     cancelWrapper: {
       display: "flex",
@@ -41,27 +41,54 @@ export const useStyles = makeStyles((theme: Theme) => {
       "&:hover, &:focus, &:active": {
         outline: "none",
         background: theme.palette.secondary.main,
-        color: "#fff"
+        color: "#fff",
       },
-      zIndex: 999
+      zIndex: 999,
     },
     cancelIcon: {
-      fontSize: 18
+      fontSize: 18,
     },
     modalContentWrapper: {
       maxHeight: "85vh",
       overflowX: "visible",
       overflowY: "auto",
       [theme.breakpoints.up("md")]: {
-        maxHeight: "95vh"
-      }
+        maxHeight: "95vh",
+      },
+    },
+    modalContentWrapperFull: {
+      maxHeight: "90vh",
+      minHeight: "90vh",
+      maxWidth: "90vw",
+      minWidth: "90vw",
+      [theme.breakpoints.up("md")]: {
+        maxHeight: "85vh",
+        minHeight: "85vh",
+        maxWidth: "85vw",
+        minWidth: "85vw",
+      },
     },
     modalContent: {
       position: "relative",
       // overflowX: "visible",
       overflowX: "hidden",
       overflowY: "auto",
-      background: "#fff"
-    }
+      background: "#fff",
+    },
+    modalContentFull: {
+      maxHeight: "90vh",
+      minHeight: "90vh",
+      maxWidth: "90vw",
+      minWidth: "90vw",
+      [theme.breakpoints.up("md")]: {
+        maxHeight: "85vh",
+        minHeight: "85vh",
+        maxWidth: "85vw",
+        minWidth: "85vw",
+      },
+    },
+    modalWithPadding: {
+      padding: theme.spacing(2),
+    },
   };
 });

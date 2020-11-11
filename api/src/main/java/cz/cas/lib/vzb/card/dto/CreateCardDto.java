@@ -22,8 +22,8 @@ public class CreateCardDto {
     private String id;
     @NotNull
     private String name;
-    @Size(max = 2000)
     private String note;
+    private String rawNote;
     private List<String> categories = new ArrayList<>();
     private List<String> labels = new ArrayList<>();
     // TODO: Add Records to CardApiTest

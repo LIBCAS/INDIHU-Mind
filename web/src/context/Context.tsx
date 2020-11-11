@@ -56,34 +56,34 @@ export const initialState: StateProps = {
     categoryName: "",
     labelName: "",
     category: {},
-    label: {}
+    label: {},
   },
   category: {
     categoryActive: undefined,
-    categories: []
+    categories: [],
   },
   label: {
     labelActive: undefined,
-    labels: []
+    labels: [],
   },
   template: {
-    templates: []
+    templates: [],
   },
   status: {
     loadingCount: 0,
     errorCount: 0,
-    errorText: ""
+    errorText: "",
   },
   users: {
-    updated: false
+    updated: false,
   },
   record: {
     marc: null,
-    records: []
+    records: [],
   },
   recordTemplate: {
-    recordsTemplates: []
-  }
+    recordsTemplates: [],
+  },
 };
 
 export const GlobalContext = React.createContext({});

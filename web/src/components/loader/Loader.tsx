@@ -15,7 +15,7 @@ interface LoaderProps {
 export const Loader: React.FC<LoaderProps> = ({
   loading,
   local,
-  className
+  className,
 }) => {
   const classes = useStyles();
   return (
@@ -25,7 +25,7 @@ export const Loader: React.FC<LoaderProps> = ({
           <LinearProgress
             className={classNames(classes.root, {
               [classes.local]: local,
-              [className]: className
+              [className]: className,
             })}
           />
         </Fade>

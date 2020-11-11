@@ -22,13 +22,11 @@ interface UserCreateFormValues {
 }
 
 const initialValues = {
-  email: ""
+  email: "",
 };
 
 const UserCreateSchema = Yup.object().shape({
-  email: Yup.string()
-    .email("Špatný formát emailu")
-    .required("Povinné")
+  email: Yup.string().email("Špatný formát emailu").required("Povinné"),
 });
 
 interface UserCreateFormProps {
@@ -38,7 +36,7 @@ interface UserCreateFormProps {
 
 export const UserCreateForm: React.FC<UserCreateFormProps> = ({
   setOpen,
-  setUserCreated
+  setUserCreated,
 }) => {
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
@@ -79,39 +77,47 @@ export const UserCreateForm: React.FC<UserCreateFormProps> = ({
               className={classNames(
                 classesLayout.flex,
                 classesLayout.flexWrap,
-                classesLayout.justifyCenter,
-                classesSpacing.m1
+                classesLayout.justifyCenter
               )}
             >
-              <Typography
-                variant="h5"
-                color="primary"
-                align="center"
-                gutterBottom
-              >
-                Registrace uživatele
-              </Typography>
-              <Field
-                name="email"
-                render={({ field, form }: FieldProps<UserCreateFormValues>) => (
-                  <InputText
-                    label="Email"
-                    type="email"
-                    field={field}
-                    form={form}
-                    autoFocus
-                  />
+              <div
+                style={{ width: "100%" }}
+                className={classNames(
+                  classesLayout.flex,
+                  classesLayout.directionColumn,
+                  classesSpacing.p3
                 )}
-              />
-              <Divider className={classesSpacing.mt3} />
-              <Button
-                className={classesSpacing.mt3}
-                variant="contained"
-                color="primary"
-                type="submit"
               >
-                Registrovat
-              </Button>
+                <Typography
+                  variant="h5"
+                  color="primary"
+                  align="center"
+                  gutterBottom
+                >
+                  Registrace uživatele
+                </Typography>
+                <Field
+                  name="email"
+                  render={({
+                    field,
+                    form,
+                  }: FieldProps<UserCreateFormValues>) => (
+                    <InputText
+                      label="Email"
+                      type="email"
+                      field={field}
+                      form={form}
+                      autoFocus={false}
+                    />
+                  )}
+                />
+              </div>
+              <Divider />
+              <div className={classesSpacing.p3}>
+                <Button variant="contained" color="primary" type="submit">
+                  Registrovat
+                </Button>
+              </div>
             </div>
           </Form>
         )}

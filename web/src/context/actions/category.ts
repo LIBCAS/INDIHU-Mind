@@ -3,7 +3,7 @@ import { api } from "../../utils/api";
 import { CATEGORY_GET, CATEGORY_ACTIVE_SET } from "../reducers/category";
 import {
   STATUS_LOADING_COUNT_CHANGE,
-  STATUS_ERROR_COUNT_CHANGE
+  STATUS_ERROR_COUNT_CHANGE,
 } from "../reducers/status";
 import { CategoryProps } from "../../types/category";
 
@@ -12,7 +12,7 @@ export const categoryGet = (dispatch: any) => {
   api()
     .get("category")
     .json()
-    .then(res => {
+    .then((res: any) => {
       dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: -1 });
       dispatch({ type: CATEGORY_GET, payload: res });
     })

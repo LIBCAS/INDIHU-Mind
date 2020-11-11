@@ -103,13 +103,7 @@ public class TestDataFiller {
         refTemplateProvider.euroScience(testUser);
         refTemplateProvider.authors(testUser);
         refTemplateProvider.recordNameWithAuthors(testUser);
-
-        // -- ADMIN --
-        refTemplateProvider.locationWithAuthor(adminUser);
-        refTemplateProvider.euroScience(adminUser);
-        refTemplateProvider.authors(adminUser);
-        refTemplateProvider.recordNameWithAuthors(adminUser);
-        // -----------
+        refTemplateProvider.allFieldsTemplate(testUser);
 
         card1.setRecords(asSet(recordHumanAuthor));
         card4.setRecords(asSet(recordHumanAuthor, recordCompanyAuthor));
@@ -118,7 +112,6 @@ public class TestDataFiller {
         card4.setDocuments(asSet(urlFile, extFile1, extFile2));
         card5.setDocuments(asSet(extFile2, locFile));
         cardProvider.getCardStore().save(asSet(card1, card2, card3, card4, card5));
-
     }
 
 

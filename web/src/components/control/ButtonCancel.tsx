@@ -10,13 +10,13 @@ interface ButtonCancelProps {
 
 export const ButtonCancel: React.FC<ButtonCancelProps> = ({
   onClick,
-  variant
+  variant,
 }) => {
   const classes = useStyles();
   return (
     <button
       className={classNames(classes.cancelWrapper, {
-        [classes.variantPopover]: variant === "popover"
+        [classes.variantPopover]: variant === "popover",
       })}
       onClick={onClick}
     >

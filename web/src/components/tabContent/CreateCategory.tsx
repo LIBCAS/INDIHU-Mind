@@ -3,12 +3,13 @@ import { FormikProps, Field, FieldProps } from "formik";
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import * as Yup from "yup";
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
+import { get } from "lodash";
 
 import { GlobalContext } from "../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { Formik } from "../form/Formik";
 import { api } from "../../utils/api";
@@ -29,16 +30,14 @@ interface CreateCategoryProps {
 }
 
 const CategorySchema = Yup.object().shape({
-  name: Yup.string()
-    .max(150, "Příliš dlouhé")
-    .required("Povinné")
+  name: Yup.string().max(150, "Příliš dlouhé").required("Povinné"),
 });
 
 export const CreateCategory: React.FC<CreateCategoryProps> = ({
   setOpen,
   activeCategory,
   loadCategories,
-  name
+  name,
 }) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
@@ -50,10 +49,10 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
     ordinalNumber: 0,
     owner: {},
     subCategories: [],
-    cardsCount: 0
+    cardsCount: 0,
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<boolean | string>(false);
   useEffect(() => {
     if (name) {
       setInitialValues({
@@ -62,7 +61,7 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
         ordinalNumber: 0,
         owner: {},
         subCategories: [],
-        cardsCount: 0
+        cardsCount: 0,
       });
     }
   }, [name]);
@@ -78,42 +77,45 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
       ordinalNumber: 0,
       owner: {},
       subCategories: [],
-      cardsCount: 0
+      cardsCount: 0,
     };
     let request;
     if (activeCategory) {
       request = {
         ...category,
-        parent: activeCategory
+        parent: activeCategory,
       };
     } else {
       request = category;
     }
     api()
       .put(`category/${id}`, {
-        json: request
+        json: request,
       })
       .json<CategoryProps>()
-      .then(res => {
+      .then((res: any) => {
         setLoading(false);
         dispatch({
           type: STATUS_ERROR_TEXT_SET,
-          payload: `Nová kategorie ${name} byla úspěšně vytvořena`
+          payload: `Nová kategorie ${name} byla úspěšně vytvořena`,
         });
         dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
         loadCategories(res);
         setOpen(false);
       })
-      .catch(() => {
+      .catch((err) => {
         setLoading(false);
-        setError(true);
-        setOpen(false);
+        setError(
+          get(err, "response.errorType") === "ERR_NAME_ALREADY_EXISTS"
+            ? "Kategorie se zvoleným názvem již existuje."
+            : true
+        );
       });
   };
   return (
     <>
       <Loader loading={loading} />
-      {error && <MessageSnackbar setVisible={setError} />}
+      {error && <MessageSnackbar setVisible={setError} message={error} />}
       <Formik
         initialValues={initialValues}
         enableReinitialize
@@ -157,7 +159,7 @@ export const CreateCategory: React.FC<CreateCategoryProps> = ({
                     label="Název"
                     field={field}
                     form={form}
-                    autoFocus
+                    autoFocus={false}
                   />
                 )}
               />

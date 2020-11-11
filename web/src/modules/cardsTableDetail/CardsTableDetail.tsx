@@ -8,14 +8,10 @@ import { Loader } from "../../components/loader/Loader";
 import { CardsTableDetailContent } from "./CardsTableDetailContent";
 
 interface CardsTableDetailProps {
-  selectedCard: CardProps;
-  onCancel(e: React.MouseEvent): void;
+  item: CardProps;
 }
 
-export const CardsTableDetail: React.FC<CardsTableDetailProps> = ({
-  selectedCard,
-  onCancel
-}) => {
+export const CardsTableDetail: React.FC<CardsTableDetailProps> = ({ item }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [cardContent, setCardContent] = useState<CardProps | undefined>(
     undefined
@@ -23,7 +19,7 @@ export const CardsTableDetail: React.FC<CardsTableDetailProps> = ({
   useEffect(() => {
     setLoading(true);
     api()
-      .get(`card/${selectedCard.id}/content`)
+      .get(`card/${item.id}/content`)
       .json()
       .then((res: any) => {
         setLoading(false);
@@ -36,12 +32,12 @@ export const CardsTableDetail: React.FC<CardsTableDetailProps> = ({
         setLoading(false);
         // TODO error
       });
-  }, [selectedCard]);
+  }, [item]);
   return (
     <div style={{ position: "relative" }}>
       <Loader loading={loading} local />
       {cardContent && !loading && (
-        <CardsTableDetailContent card={cardContent} onCancel={onCancel} />
+        <CardsTableDetailContent card={cardContent} />
       )}
     </div>
   );

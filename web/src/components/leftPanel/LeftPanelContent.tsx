@@ -4,8 +4,6 @@ import useMediaQuery from "@material-ui/core/useMediaQuery";
 import { useTheme } from "@material-ui/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
 
-import { CardCreateButton } from "../../modules/cardCreate/CardCreateButton";
-
 import { DeleteCards } from "../deleteCards/DeleteCards";
 
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
@@ -15,63 +13,64 @@ import { TabContent } from "../tabContent/TabContent";
 
 interface LeftPanelContentProps {
   setLeftPanelOpen?: any;
+  enableCards?: boolean;
 }
 
 export type TabProps = "category" | "label" | undefined;
 
 export const LeftPanelContent: React.FC<LeftPanelContentProps> = ({
-  setLeftPanelOpen
+  setLeftPanelOpen,
+  enableCards = true,
 }) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
   const [activeTab, setActiveTab] = useState<TabProps>("category");
   const theme: Theme = useTheme();
-  const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
+  const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
   return (
-    <>
-      <div className={classes.buttonWrapper}>
-        {matchesMd ? (
-          <CardCreateButton />
-        ) : (
-          <React.Fragment>
-            <Links setLeftPanelOpen={setLeftPanelOpen} />
-            <div className={classesSpacing.mt1} />
-            <DeleteCards />
-            <div className={classesSpacing.mt1} />
-            <CardCreateButton />
-          </React.Fragment>
-        )}
-      </div>
-      <div className={classes.tabsWrapper}>
-        <div
-          id="category"
-          onClick={() => {
-            if (activeTab === "category") {
-              setActiveTab(undefined);
-            } else {
-              setActiveTab("category");
-            }
-          }}
-          className={classNames({
-            [classes.tab]: true,
-            [classes.activeTab]:
-              "category" === activeTab || undefined === activeTab
-          })}
-        >
-          Kategorie
+    <div className={classes.leftPanelContent}>
+      {matchesLg ? (
+        <div className={classesSpacing.mt3} />
+      ) : (
+        <div className={classes.buttonWrapper}>
+          <Links setLeftPanelOpen={setLeftPanelOpen} />
+          <DeleteCards setLeftPanelOpen={setLeftPanelOpen} />
         </div>
-        <div
-          id="label"
-          onClick={() => setActiveTab("label")}
-          className={classNames({
-            [classes.tab]: true,
-            [classes.activeTab]: "label" === activeTab
-          })}
-        >
-          Štítky
+      )}
+      {enableCards && (
+        <div className={classes.tabsWrapper}>
+          <div
+            id="category"
+            onClick={() => {
+              if (activeTab === "category") {
+                setActiveTab(undefined);
+              } else {
+                setActiveTab("category");
+              }
+            }}
+            className={classNames({
+              [classes.tab]: true,
+              [classes.activeTab]:
+                "category" === activeTab || undefined === activeTab,
+            })}
+          >
+            Kategorie
+          </div>
+          <div
+            id="label"
+            onClick={() => setActiveTab("label")}
+            className={classNames({
+              [classes.tab]: true,
+              [classes.activeTab]: "label" === activeTab,
+            })}
+          >
+            Štítky
+          </div>
         </div>
-      </div>
-      <TabContent activeTab={activeTab} setActiveTab={setActiveTab} />
-    </>
+      )}
+      {enableCards && (
+        <TabContent activeTab={activeTab} setActiveTab={setActiveTab} />
+      )}
+    </div>
   );
 };

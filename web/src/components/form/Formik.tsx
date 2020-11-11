@@ -2,12 +2,12 @@ import React from "react";
 import {
   Formik as FormikDefault,
   FormikProps as FormikDefaultProps,
-  FormikActions
+  FormikHelpers,
 } from "formik";
 
 interface FormikProps {
   initialValues: any;
-  onSubmit: (values: any, formikActions: FormikActions<any>) => void;
+  onSubmit: (values: any, formikHelpers: FormikHelpers<any>) => void;
   render: ((props: FormikDefaultProps<any>) => React.ReactNode) | undefined;
   validationSchema?: any;
   enableReinitialize?: boolean | undefined;
@@ -22,7 +22,7 @@ export const Formik: React.FC<FormikProps> = ({
   render,
   enableReinitialize,
   validateOnBlur,
-  validateOnChange
+  validateOnChange,
 }) => {
   return (
     <FormikDefault

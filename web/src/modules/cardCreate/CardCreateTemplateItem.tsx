@@ -24,7 +24,7 @@ interface CardCreateTemplateItemProps {
 export const CardCreateTemplateItem: React.FC<CardCreateTemplateItemProps> = ({
   template,
   Icon,
-  selectTemplate
+  selectTemplate,
 }) => {
   const classes = useStyles();
   const classesEffect = useEffectStyles();
@@ -64,9 +64,7 @@ export const CardCreateTemplateItem: React.FC<CardCreateTemplateItemProps> = ({
             <Modal
               open={open}
               setOpen={setOpen}
-              content={
-                <TemplatesForm setShowModal={setOpen} template={template} />
-              }
+              content={<TemplatesForm setShowModal={setOpen} item={template} />}
             />
           </>
         )}

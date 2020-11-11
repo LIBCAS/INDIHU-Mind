@@ -6,7 +6,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     divider: {
       width: "100%",
       height: "1px",
-      background: theme.greyLight
-    }
+      background: theme.greyLight,
+    },
   };
 });

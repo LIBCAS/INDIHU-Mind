@@ -1,15 +1,15 @@
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
 
 import {
   STATUS_LOADING_COUNT_CHANGE,
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 
 import { api } from "../../utils/api";
 import {
   CardTemplateAttribute,
-  CardTemplateProps
+  CardTemplateProps,
 } from "../../types/cardTemplate";
 
 export const onDeleteTemplate = (
@@ -23,7 +23,7 @@ export const onDeleteTemplate = (
     .then(() => {
       dispatch({
         type: STATUS_ERROR_TEXT_SET,
-        payload: "Šablona byla úspěšně odstraněna"
+        payload: "Šablona byla úspěšně odstraněna",
       });
       dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: -1 });
@@ -71,7 +71,7 @@ export const onSubmitAttribute = (
     const merged = [...attributeTemplates, values];
     orderedAttributes = merged.map((att: CardTemplateAttribute, i: number) => ({
       ...att,
-      ordinalNumber: i
+      ordinalNumber: i,
     }));
   }
   formikBagParent.setFieldValue("attributeTemplates", orderedAttributes, false);
@@ -94,7 +94,7 @@ export const onSubmitTemplate = (
   const body = {
     id,
     name: values.name,
-    attributeTemplates: values.attributeTemplates
+    attributeTemplates: values.attributeTemplates,
   };
   api()
     .put(`card/template/${id}`, { json: body })
@@ -104,7 +104,7 @@ export const onSubmitTemplate = (
         type: STATUS_ERROR_TEXT_SET,
         payload: template
           ? `Šablona ${values.name} byla úspěšně změněna`
-          : `Šablona ${values.name} byla úspěšně vytvořena`
+          : `Šablona ${values.name} byla úspěšně vytvořena`,
       });
       dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       setLoading(false);

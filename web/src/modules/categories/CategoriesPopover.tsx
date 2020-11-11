@@ -7,12 +7,16 @@ import Button from "@material-ui/core/Button";
 import MoreVert from "@material-ui/icons/MoreVert";
 import Edit from "@material-ui/icons/Edit";
 import Delete from "@material-ui/icons/Delete";
+import Add from "@material-ui/icons/Add";
+import ArrowForward from "@material-ui/icons/ArrowForward";
+import OpenWith from "@material-ui/icons/OpenWith";
 import classNames from "classnames";
 
 import { GlobalContext } from "../../context/Context";
+import { categoryActiveSet } from "../../context/actions/category";
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { api } from "../../utils/api";
 import { Loader } from "../../components/loader/Loader";
@@ -25,20 +29,25 @@ import { Popover } from "../../components/portal/Popover";
 import { CategoryProps } from "../../types/category";
 
 import { CategoriesRename } from "./CategoriesRename";
-
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { CreateCategory } from "../../components/tabContent/CreateCategory";
+import { CategoriesMove } from "./CategoriesMove";
 interface CategoriesPopoverProps {
   category: CategoryProps;
   loadCategories: Function;
+  iconBgChange?: boolean;
+  parentCategory?: CategoryProps;
 }
 
-export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
-  category,
-  loadCategories
-}) => {
+const CategoriesPopoverView: React.FC<
+  CategoriesPopoverProps & RouteComponentProps
+> = ({ category, loadCategories, history, iconBgChange, parentCategory }) => {
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
   const [open, setOpen] = useState(false);
-  const [content, setContent] = useState<"menu" | "rename" | "delete">("menu");
+  const [content, setContent] = useState<
+    "menu" | "rename" | "delete" | "addSubcategory" | "move"
+  >("menu");
   const [errorShow, setErrorShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const menuRef = useRef(null);
@@ -51,6 +60,11 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
     setOpen(open);
   };
 
+  const showCardsOfCategory = (category: CategoryProps) => {
+    categoryActiveSet(dispatch, category);
+    history.push("/cards");
+  };
+
   const handleDelete = () => {
     if (loading) return false;
     setLoading(true);
@@ -59,7 +73,7 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
       .then(() => {
         dispatch({
           type: STATUS_ERROR_TEXT_SET,
-          payload: `Kategorie ${category.name} byla úspěšně odstraněna`
+          payload: `Kategorie ${category.name} byla úspěšně odstraněna`,
         });
         dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
         setLoading(false);
@@ -73,7 +87,7 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
       });
   };
   return (
-    <>
+    <div onClick={(e: React.MouseEvent) => e.stopPropagation()}>
       <Loader loading={loading} />
       {errorShow && <MessageSnackbar setVisible={setErrorShow} />}
       <div
@@ -82,7 +96,9 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
           e.stopPropagation();
           handleOpen(!open);
         }}
-        className={classNames(classesText.icon, classesText.iconBig)}
+        className={classNames(classesText.icon, classesText.iconBig, {
+          [classesText.iconChangedBg]: iconBgChange,
+        })}
       >
         <MoreVert fontSize="inherit" />
       </div>
@@ -91,15 +107,38 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
         open={open}
         setOpen={handleOpen}
         width={300}
+        overflowVisible={true}
         content={
           <div onClick={(e: any) => e.stopPropagation()}>
             {content === "menu" && (
               <MenuList>
+                <MenuItem onClick={() => showCardsOfCategory(category)}>
+                  <ListItemIcon>
+                    <ArrowForward />
+                  </ListItemIcon>
+                  <ListItemText primary="Zobrazit karty kategorie" />
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setContent("addSubcategory");
+                  }}
+                >
+                  <ListItemIcon>
+                    <Add />
+                  </ListItemIcon>
+                  <ListItemText primary="Přidat subkategorii" />
+                </MenuItem>
                 <MenuItem onClick={() => setContent("rename")}>
                   <ListItemIcon>
                     <Edit />
                   </ListItemIcon>
                   <ListItemText primary="Přejmenovat" />
+                </MenuItem>
+                <MenuItem onClick={() => setContent("move")}>
+                  <ListItemIcon>
+                    <OpenWith />
+                  </ListItemIcon>
+                  <ListItemText primary="Přesunout" />
                 </MenuItem>
                 <MenuItem onClick={() => setContent("delete")}>
                   <ListItemIcon>
@@ -109,6 +148,13 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
                 </MenuItem>
               </MenuList>
             )}
+            {content === "addSubcategory" && (
+              <CreateCategory
+                setOpen={handleOpen}
+                activeCategory={category}
+                loadCategories={loadCategories}
+              />
+            )}
             {content === "rename" && (
               <CategoriesRename
                 category={category}
@@ -116,6 +162,14 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
                 loadCategories={loadCategories}
                 setOpen={handleOpen}
                 dispatch={dispatch}
+              />
+            )}
+            {content === "move" && (
+              <CategoriesMove
+                category={category}
+                parentCategory={parentCategory}
+                setOpen={handleOpen}
+                loadCategories={loadCategories}
               />
             )}
             {content === "delete" && (
@@ -129,9 +183,10 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
               >
                 <div
                   className={classNames(
-                    classesText.textGrey,
                     classesText.textBold,
-                    classesText.textCenter
+                    classesText.textCenter,
+                    classesSpacing.p2,
+                    classesSpacing.pb1
                   )}
                 >
                   Opravdu chcete smazat kategorii {category.name}
@@ -141,14 +196,18 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
                 </div>
                 <div
                   className={classNames(
-                    classesSpacing.mt2,
+                    classesSpacing.mt1,
                     classesLayout.flex,
                     classesLayout.spaceBetween,
                     classesLayout.flexGrow,
                     classesLayout.directionRowReverse
                   )}
                 >
-                  <Button variant="text" color="primary" onClick={handleDelete}>
+                  <Button
+                    variant="text"
+                    color="secondary"
+                    onClick={handleDelete}
+                  >
                     Smazat
                   </Button>
                   <Button
@@ -164,6 +223,7 @@ export const CategoriesPopover: React.FC<CategoriesPopoverProps> = ({
           </div>
         }
       />
-    </>
+    </div>
   );
 };
+export const CategoriesPopover = withRouter(CategoriesPopoverView);

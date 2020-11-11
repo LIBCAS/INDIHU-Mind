@@ -26,7 +26,7 @@ public class FieldGeneratedDate extends TemplateField {
     }
 
     @Override
-    public String getData() {
+    public String obtainTextualData() {
         return data;
     }
 
@@ -37,7 +37,7 @@ public class FieldGeneratedDate extends TemplateField {
         if (!super.equals(o)) return false;
         FieldGeneratedDate that = (FieldGeneratedDate) o;
         return getType() == that.getType() &&
-                Objects.equals(getData(), that.getData());
+                Objects.equals(obtainTextualData(), that.obtainTextualData());
     }
 
     @Override

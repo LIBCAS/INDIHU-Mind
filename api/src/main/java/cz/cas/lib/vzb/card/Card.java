@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import core.domain.NamedObject;
 import cz.cas.lib.vzb.attachment.AttachmentFile;
 import cz.cas.lib.vzb.card.category.Category;
+import cz.cas.lib.vzb.card.comment.CardComment;
 import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.reference.marc.record.Citation;
 import cz.cas.lib.vzb.security.user.User;
@@ -18,7 +19,9 @@ import lombok.NonNull;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -35,8 +38,20 @@ public class Card extends NamedObject {
     @JsonIgnore
     private User owner;
 
-    @Column(length = 2000)
+    /**
+     * Note in JSON structure that FE uses to display note in format editor.
+     */
     private String note;
+
+    /**
+     * Raw text of note, used in BE for searching, indexing etc.
+     */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String rawNote;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "card")
+    @OrderBy("ordinalNumber")
+    private List<CardComment> comments = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "vzb_card_category",

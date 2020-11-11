@@ -9,7 +9,7 @@ public class FieldInside extends TemplateField {
     @Getter private final TemplateFieldType type = TemplateFieldType.INSIDE;
 
     @Override
-    public String getData() {
+    public String obtainTextualData() {
         return "In:";
     }
 }

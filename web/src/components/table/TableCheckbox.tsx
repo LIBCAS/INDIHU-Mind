@@ -11,7 +11,7 @@ interface TableCheckboxProps {
 }
 
 export const TableCheckbox: React.FC<TableCheckboxProps> = ({
-  checked
+  checked,
   // onClick
 }) => {
   return (
@@ -26,7 +26,7 @@ export const TableCheckbox: React.FC<TableCheckboxProps> = ({
           style={{
             color: theme.palette.primary.main,
             borderRadius: "3px",
-            fontSize: "16px"
+            fontSize: "16px",
           }}
         />
       }
@@ -36,7 +36,7 @@ export const TableCheckbox: React.FC<TableCheckboxProps> = ({
             color: "#fff",
             background: theme.palette.primary.main,
             borderRadius: "3px",
-            fontSize: "16px"
+            fontSize: "16px",
           }}
         />
       }

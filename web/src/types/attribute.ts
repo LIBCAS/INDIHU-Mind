@@ -1,15 +1,9 @@
-export type AttributeTypeProps =
-  | ""
-  | "INTEGER"
-  | "DATETIME"
-  | "BOOLEAN"
-  | "STRING"
-  | "DOUBLE";
+import { AttributeType } from "../enums";
 
 export interface AttributeProps {
   id: string;
   name: string;
-  type: AttributeTypeProps;
+  type: AttributeType;
   value: undefined | string | number | boolean | Date;
   ordinalNumber: number;
   [key: string]: number | string | undefined | boolean | Date;

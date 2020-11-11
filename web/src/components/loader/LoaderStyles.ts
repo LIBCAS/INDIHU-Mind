@@ -8,13 +8,13 @@ export const useStyles = makeStyles(() => {
       bottom: "0",
       left: "0",
       zIndex: 999999,
-      width: "100%"
+      width: "100%",
     },
     local: {
       position: "absolute",
       top: 0,
       left: 0,
-      zIndex: 1200
-    }
+      zIndex: 1200,
+    },
   };
 });

@@ -1,37 +1,15 @@
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
+import { get } from "lodash";
 
 import { api } from "../../../utils/api";
 // import { parseAttributeForApi } from "../../../utils/card";
 import { CardContentProps } from "../../../types/card";
 import { AttributeProps } from "../../../types/attribute";
-import { FileProps } from "../../../types/file";
+import { getAttributeTypeDefaultValue } from "../../../utils/attribute";
+import { AttributeType } from "../../../enums";
+import { parseAttributeForApi } from "../../../utils/card";
 // import { CategoryProps } from "../../types/category";
 // import { STATUS_ERROR_COUNT_CHANGE, STATUS_ERROR_TEXT_SET, STATUS_LOADING_COUNT_CHANGE } from '../../context/reducers/status';
-
-export const fileUpload = (file: FileProps, cardId: string) => {
-  const formData = new FormData();
-  formData.append(`cardId`, cardId);
-  formData.append(`id`, file.id);
-  formData.append(`name`, file.name);
-  formData.append(`type`, file.type);
-  formData.append(`ordinalNumber`, file.ordinalNumber.toString());
-  if (file.providerType === "LOCAL" && file.content) {
-    formData.append(`providerType`, file.providerType);
-    formData.append(`content`, file.content);
-  }
-  if (file.providerType && file.providerType !== "LOCAL" && file.providerId) {
-    formData.append(`providerType`, file.providerType);
-    formData.append(`providerId`, file.providerId);
-    formData.append(`link`, file.link);
-  }
-  return api({ noContentType: true })
-    .post(`attachment-file`, { body: formData })
-    .json<any>();
-};
-
-export const fileDelete = (id: string) => {
-  api().delete(`attachment-file/${id}`);
-};
 
 const transformCardContent = (
   field: string,
@@ -41,16 +19,17 @@ const transformCardContent = (
 ) => {
   // fields with version history
   const outsideCardFields = ["attributes"];
+
   if (prevCardContent) {
-    const transformed = prevCardContent.map(c => {
+    const transformed = prevCardContent.map((c) => {
       if (c.id === card.id) {
         return {
           ...c,
           ...(outsideCardFields.includes(field) && { [field]: value }),
           card: {
             ...c.card,
-            ...(!outsideCardFields.includes(field) && { [field]: value })
-          }
+            ...(!outsideCardFields.includes(field) && { [field]: value }),
+          },
         };
       } else {
         // do not update attributes for older versions
@@ -59,11 +38,12 @@ const transformCardContent = (
           ...(!outsideCardFields.includes(field) && { [field]: value }),
           card: {
             ...c.card,
-            ...(!outsideCardFields.includes(field) && { [field]: value })
-          }
+            ...(!outsideCardFields.includes(field) && { [field]: value }),
+          },
         };
       }
     });
+
     return transformed;
   } else {
     return undefined;
@@ -80,7 +60,7 @@ export const updateCardContent = (
     React.SetStateAction<CardContentProps[] | undefined>
   >
 ) => {
-  setCardContent(prevCardContent => {
+  setCardContent((prevCardContent) => {
     return transformCardContent(field, value, prevCardContent, card);
   });
 };
@@ -91,13 +71,25 @@ export const onEditCard = (
   card: CardContentProps,
   setCardContent: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
-  >
+  >,
+  onSuccess = () => {}
 ) => {
   updateCardContent(field, value, card, setCardContent);
 
-  const { id, name, note, categories, labels, linkedCards } = card.card;
-
   const createIds = (o: any) => o.id;
+
+  const mapFieldValue = (field: string, newField?: string) => {
+    const fieldValue = card.card[`${field}`];
+    const value =
+      fieldValue &&
+      typeof fieldValue !== "string" &&
+      typeof fieldValue !== "number"
+        ? (fieldValue as any).map(createIds)
+        : null;
+    return value ? { [`${newField || field}`]: value } : {};
+  };
+
+  const { id, name, note, comments } = card.card;
 
   const fieldsVersioned = ["attributes"];
 
@@ -106,7 +98,9 @@ export const onEditCard = (
     "labels",
     "linkedCards",
     "linkingCards",
-    "records"
+    "records",
+    "documents",
+    "files",
   ];
 
   const hasVersions = fieldsVersioned.includes(field);
@@ -120,25 +114,45 @@ export const onEditCard = (
   if (hasVersions) {
     const body = {
       newVersion: true,
-      [field]: value
+      [field]: value,
     };
-    api().put(`card/${card.card.id}/content`, {
-      json: body,
-      signal: controller.signal
-    });
+    api()
+      .put(`card/${card.card.id}/content`, {
+        json: body,
+        signal: controller.signal,
+      })
+      .then(onSuccess);
   } else {
+    let noteRaw;
+    if (note) {
+      try {
+        noteRaw = get(JSON.parse(note), "blocks", [])
+          .map(({ text }: { text: string }) => text)
+          .join(" ");
+      } catch {
+        noteRaw = undefined;
+      }
+    }
     const body = {
-      categories: categories && categories.map(createIds),
-      labels: labels && labels.map(createIds),
-      linkedCards: linkedCards && linkedCards.map(createIds),
+      ...mapFieldValue("categories"),
+      ...mapFieldValue("labels"),
+      ...mapFieldValue("linkedCards"),
+      ...mapFieldValue("files"),
+      ...mapFieldValue("documents", "files"),
+      ...mapFieldValue("records"),
       name,
       note,
-      [field]: arrayIdFields.includes(field) ? value.map(createIds) : value
+      comments,
+      ...(noteRaw ? { noteRaw } : {}),
+      [field]: arrayIdFields.includes(field) ? value.map(createIds) : value,
     };
-    api().put(`card/${id}`, {
-      json: body,
-      signal: controller.signal
-    });
+
+    api()
+      .put(`card/${id}`, {
+        json: body,
+        signal: controller.signal,
+      })
+      .then(onSuccess);
   }
 };
 
@@ -163,6 +177,9 @@ export const onSubmitAttribute = (
   previousAttribute?: AttributeProps
 ) => {
   const { attributes } = card;
+  if (values.type === AttributeType.DATE || AttributeType.DATETIME) {
+    values = parseAttributeForApi(values);
+  }
   let orderedAttributes;
   if (previousAttribute) {
     const attributesPreviousId = attributes.map((att: AttributeProps) =>
@@ -176,7 +193,7 @@ export const onSubmitAttribute = (
     const merged = [...attributes, values];
     orderedAttributes = merged.map((att: AttributeProps, i: number) => ({
       ...att,
-      ordinalNumber: i
+      ordinalNumber: i,
     }));
   }
   onEditCard("attributes", orderedAttributes, card, setCardContent);
@@ -203,14 +220,13 @@ export const onDeleteAttribute = (
   setOpen(false);
 };
 
-export const onChangeType = (formikBag: any, e: any) => {
-  switch (e.target.value) {
-    case "STRING":
-    case "DOUBLE":
-      return formikBag.setFieldValue("value", "");
-    case "BOOLEAN":
-      return formikBag.setFieldValue("value", false);
-    case "DATETIME":
-      return formikBag.setFieldValue("value", new Date());
-  }
+export const onChangeType = (formikBag: any, value: any) => {
+  formikBag.setFieldValue("value", getAttributeTypeDefaultValue(value));
 };
+
+export const isNoteTextEmpty = (note: any): boolean =>
+  note.blocks.reduce(
+    (previousEmpty: boolean, block: any) =>
+      previousEmpty && block.text.length === 0,
+    true
+  );

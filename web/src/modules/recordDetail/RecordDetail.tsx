@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RouteComponentProps } from "react-router";
 import { RecordProps } from "../../types/record";
 import { Loader } from "../../components/loader/Loader";
@@ -12,32 +12,39 @@ import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles"
 
 export const RecordDetail: React.FC<RouteComponentProps> = ({
   history,
-  match
+  match,
 }) => {
   // @ts-ignore
   const recordId = match.params.id;
   const classesSpacing = useSpacingStyles();
   const [loading, setLoading] = useState<boolean>(true);
+  const [detailContentKey, setDetailContentKey] = useState<boolean>(true);
   const [record, setRecord] = useState<RecordProps | null>(null);
-  const loadRecord = () => {
-    api()
-      .get(`record/${recordId}`)
-      .json<RecordProps>()
-      .then(res => {
-        setLoading(false);
-        if (res) {
-          setRecord(res);
-        }
-        return;
-      })
-      .catch(() => {
-        setLoading(false);
-        // TODO error
-      });
-  };
+  const loadRecord = useCallback(
+    (refresh?: boolean) => {
+      api()
+        .get(`record/${recordId}`)
+        .json<RecordProps>()
+        .then((res: any) => {
+          setLoading(false);
+          if (res) {
+            setRecord(res);
+            if (refresh) {
+              setDetailContentKey((detailContentKey) => !detailContentKey);
+            }
+          }
+          return;
+        })
+        .catch(() => {
+          setLoading(false);
+          // TODO error
+        });
+    },
+    [recordId]
+  );
   useEffect(() => {
     loadRecord();
-  }, [recordId]);
+  }, [loadRecord]);
   return (
     <>
       <Loader loading={loading} />
@@ -46,13 +53,13 @@ export const RecordDetail: React.FC<RouteComponentProps> = ({
         <>
           <RecordDetailActions
             record={record}
-            loadRecord={loadRecord}
+            refresh={() => loadRecord(true)}
             history={history}
           />
           <Typography variant="h5" className={classNames(classesSpacing.mb1)}>
             Citace {record.name}
           </Typography>
-          <RecordDetailContent record={record} />
+          <RecordDetailContent key={`${detailContentKey}`} item={record} />
         </>
       )}
     </>

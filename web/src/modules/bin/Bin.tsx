@@ -9,7 +9,7 @@ import Grid from "@material-ui/core/Grid";
 import { GlobalContext } from "../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
-  STATUS_ERROR_TEXT_SET
+  STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
 import { plural } from "../../utils/lang";
 import { CardProps } from "../../types/card";
@@ -36,8 +36,9 @@ export const Bin: React.FC<RouteComponentProps> = () => {
     controller = new AbortController();
     setLoading(true);
     api()
-      .get(`card/deleted?page=0&pageSize=30`, {
-        signal: controller.signal
+      .post(`card/deleted`, {
+        signal: controller.signal,
+        json: { page: 0, pageSize: 30 },
       })
       .json()
       .then((res: any) => {
@@ -48,19 +49,19 @@ export const Bin: React.FC<RouteComponentProps> = () => {
         dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
         setLoading(false);
       });
-  }, []);
+  }, [dispatch, loading]);
 
   const onRestore = (card: any) => {
     api().post(`card/set-softdelete`, {
       json: {
         ids: [card.id],
-        value: false
-      }
+        value: false,
+      },
     });
-    setCards(prevCards => prevCards.filter(c => c.id !== card.id));
+    setCards((prevCards) => prevCards.filter((c) => c.id !== card.id));
     dispatch({
       type: STATUS_ERROR_TEXT_SET,
-      payload: `Karta ${card.name} byla obnovena`
+      payload: `Karta ${card.name} byla obnovena`,
     });
     dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
   };
@@ -71,10 +72,10 @@ export const Bin: React.FC<RouteComponentProps> = () => {
       .then(() => {
         loadCards();
       });
-    setCards(prevCards => prevCards.filter(c => c.id !== card.id));
+    setCards((prevCards) => prevCards.filter((c) => c.id !== card.id));
     dispatch({
       type: STATUS_ERROR_TEXT_SET,
-      payload: `Karta ${card.name} byla vysypána z koše`
+      payload: `Karta ${card.name} byla vysypána z koše`,
     });
     dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
   };
@@ -84,7 +85,7 @@ export const Bin: React.FC<RouteComponentProps> = () => {
     api()
       .delete(`card/soft-deleted`)
       .json<number>()
-      .then(res => {
+      .then((res: any) => {
         setLoading(false);
         setCards([]);
         dispatch({
@@ -92,9 +93,9 @@ export const Bin: React.FC<RouteComponentProps> = () => {
           payload: `${res} ${plural(res, [
             "karta byla vysypána",
             "karty byly vysypány",
-            "karet bylo vysypáno"
+            "karet bylo vysypáno",
           ])} 
-          z koše`
+          z koše`,
         });
         dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
       })
@@ -106,7 +107,7 @@ export const Bin: React.FC<RouteComponentProps> = () => {
 
   useEffect(() => {
     loadCards();
-  }, []);
+  }, [loadCards]);
   return (
     <Fade in>
       <div>
@@ -115,24 +116,20 @@ export const Bin: React.FC<RouteComponentProps> = () => {
         >
           <Typography
             display="inline"
-            className={classNames(
-              classesSpacing.mb2,
-              classesSpacing.mt2,
-              classesSpacing.mrAuto
-            )}
+            className={classNames(classesSpacing.mb2, classesSpacing.mt2)}
             variant="h5"
           >
-            Koš
+            <p className={classNames(classesSpacing.mr2)}>Koš</p>
           </Typography>
           <Popconfirm
             confirmText="Vysypat koš?"
             acceptText="Ano"
             onConfirmClick={() => onRemoveAll()}
-            Button={() => (
-              <Button color="secondary" variant="outlined">
+            Button={
+              <Button color="secondary" variant="contained">
                 Vysypat koš
               </Button>
-            )}
+            }
           />
         </div>
         <div style={{ position: "relative" }}>
@@ -142,17 +139,18 @@ export const Bin: React.FC<RouteComponentProps> = () => {
           <Typography>Žádné karty v koši</Typography>
         )}
         <Grid container spacing={3}>
-          {cards.map(c => (
+          {cards.map((c) => (
             <Grid key={c.id} item xs={12} md={6} lg={4}>
               <CardTile
                 card={{
                   id: c.id,
                   name: c.name,
-                  note: c.note as string
+                  note: c.note as string,
                 }}
                 onRestore={onRestore}
                 onRemove={onRemove}
                 onRemoveText="Vysypat kartu z koše"
+                topMargin={0}
               />
             </Grid>
           ))}

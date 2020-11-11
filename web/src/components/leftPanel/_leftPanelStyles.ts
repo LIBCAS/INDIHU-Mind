@@ -5,30 +5,27 @@ export const useStyles = makeStyles((theme: Theme) => {
   return {
     drawerPlaceholder: {
       minHeight: "100%",
-      width: 250
+      width: 250,
     },
     drawerRoot: {
       position: "fixed",
       top: 64,
-      height: "100%"
+      height: "100%",
     },
     buttonWrapper: {
       display: "flex",
       flexDirection: "column",
-      marginTop: theme.spacing(5),
-      marginBottom: theme.spacing(4),
-      marginLeft: "auto",
-      marginRight: "auto"
+      margin: "20px 30px",
     },
     buttonRegister: {
       display: "flex",
       justifyContent: "center",
-      marginBottom: theme.spacing(4)
+      marginBottom: theme.spacing(4),
     },
     tabsWrapper: {
       display: "flex",
       justifyContent: "center",
-      borderBottom: "1px solid #fff"
+      borderBottom: "1px solid #fff",
     },
     tab: {
       cursor: "pointer",
@@ -36,11 +33,11 @@ export const useStyles = makeStyles((theme: Theme) => {
       color: "#fff",
       background: "transparent",
       borderTopLeftRadius: "3px",
-      borderTopRightRadius: "3px"
+      borderTopRightRadius: "3px",
     },
     activeTab: {
       color: "#212121",
-      background: "#fff"
+      background: "#fff",
     },
     paper: {
       height: "100%",
@@ -52,14 +49,16 @@ export const useStyles = makeStyles((theme: Theme) => {
       flexDirection: "column",
       background: "#212121",
       color: "#fff",
-      [theme.breakpoints.up("md")]: {
-        minHeight: "calc(100vh - 64px)"
-      }
+      [theme.breakpoints.up("lg")]: {
+        minHeight: "calc(100vh - 64px)",
+        maxHeight: "calc(100vh - 64px)",
+        marginTop: 64,
+      },
     },
     wrapper: {
       display: "flex",
       flexDirection: "column",
-      textAlign: "center"
+      textAlign: "center",
     },
     link: {
       width: "100%",
@@ -67,14 +66,20 @@ export const useStyles = makeStyles((theme: Theme) => {
       fontSize: 16,
       paddingBottom: theme.spacing(0.5),
       "&:hover": {
-        textDecoration: "none"
+        textDecoration: "none",
       },
       "&:not(:last-child)": {
-        marginBottom: theme.spacing(1.5)
-      }
+        marginBottom: theme.spacing(1.5),
+      },
     },
     linkActive: {
-      borderBottom: "1px solid #fff"
-    }
+      borderBottom: "1px solid #fff",
+    },
+    leftPanelContent: {
+      height: "50vh",
+      [theme.breakpoints.up("lg")]: {
+        minHeight: "calc(100vh - 64px)",
+      },
+    },
   };
 });

@@ -18,6 +18,6 @@ export const reducerGlobal = (state: StateProps, action: ActionProps) => {
     status: reducerStatus(state, action),
     users: reducerUsers(state, action),
     record: reducerRecord(state, action),
-    recordTemplate: reducerRecordTemplate(state, action)
+    recordTemplate: reducerRecordTemplate(state, action),
   };
 };

@@ -1,17 +1,16 @@
 import React, { useRef, useEffect } from "react";
 import InputLabel from "@material-ui/core/InputLabel";
-import moment from "moment";
-import "moment/locale/cs";
-import MomentUtils from "@date-io/moment";
+import DateFnsUtils from "@date-io/date-fns";
+import csLocale from "date-fns/locale/cs";
 import {
+  DatePicker as MaterialDatePicker,
   DateTimePicker as MaterialDateTimePicker,
-  MuiPickersUtilsProvider
+  MuiPickersUtilsProvider,
 } from "@material-ui/pickers";
 import classNames from "classnames";
 
-import { useStyles as useFormStyles } from "./_formStyles";
-
-moment.locale("cs");
+import { useStyles as useFormStyles } from "./_styles";
+import { toDate } from "date-fns";
 
 interface DateTimePickerProps {
   field: any;
@@ -21,6 +20,7 @@ interface DateTimePickerProps {
   autoFocus?: boolean;
   onClose?: () => void;
   onAccept?: (date: any) => void;
+  dateOnly?: boolean;
 }
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = ({
@@ -30,7 +30,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   onChange,
   autoFocus,
   onClose,
-  onAccept
+  onAccept,
+  dateOnly = false,
 }) => {
   const classesForm = useFormStyles();
   const inputRef = useRef<HTMLElement>(null);
@@ -39,6 +40,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       inputRef.current.click();
     }
   }, [autoFocus, inputRef]);
+  const Component = dateOnly ? MaterialDatePicker : MaterialDateTimePicker;
   return (
     <>
       {label && (
@@ -50,28 +52,28 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
           {label}
         </InputLabel>
       )}
-      <MuiPickersUtilsProvider utils={MomentUtils} locale={"cs"}>
-        <MaterialDateTimePicker
+      <MuiPickersUtilsProvider utils={DateFnsUtils} locale={csLocale}>
+        <Component
           {...field}
           onChange={
             onChange
               ? onChange
-              : date => {
-                  form.setFieldValue(field.name, date ? date.toDate() : null);
+              : (date) => {
+                  form.setFieldValue(field.name, date ? toDate(date) : null);
                 }
           }
           onAccept={onAccept}
           onClose={onClose}
           cancelLabel="Zrušit"
-          format="DD. MM. YYYY, HH:mm"
+          format={dateOnly ? "dd. MM. yyyy" : "dd. MM. yyyy, HH:mm"}
           ampm={false}
           InputProps={{
-            disableUnderline: true
+            disableUnderline: true,
           }}
           inputRef={inputRef}
           inputProps={{
             name: field.name,
-            id: field.name
+            id: field.name,
           }}
           className={classNames(
             classesForm.default,

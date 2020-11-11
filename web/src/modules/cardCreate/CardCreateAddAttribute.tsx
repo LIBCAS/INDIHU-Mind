@@ -2,7 +2,8 @@ import React from "react";
 import { FormikProps, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
 
-import { AttributeProps, AttributeTypeProps } from "../../types/attribute";
+import { AttributeProps } from "../../types/attribute";
+import { AttributeTypeEnum } from "../../enums";
 import { notEmpty } from "../../utils/form/validate";
 
 import { Formik } from "../../components/form/Formik";
@@ -18,15 +19,8 @@ const initialValues = {
   name: "",
   type: "" as "",
   value: "",
-  ordinalNumber: 0
+  ordinalNumber: 0,
 };
-
-const types: { value: AttributeTypeProps; label: string }[] = [
-  { value: "STRING", label: "Text" },
-  { value: "DOUBLE", label: "Číslo" },
-  { value: "BOOLEAN", label: "Boolean" },
-  { value: "DATETIME", label: "Datum" }
-];
 
 interface CardCreateAddAttributeProp {
   formikBagParent: any;
@@ -37,13 +31,13 @@ interface CardCreateAddAttributeProp {
 export const CardCreateAddAttribute: React.FC<CardCreateAddAttributeProp> = ({
   formikBagParent,
   setOpen,
-  previousAttribute
+  previousAttribute,
 }) => {
   const classes = useStyles();
   return (
     <Formik
       initialValues={initialValues}
-      onSubmit={values =>
+      onSubmit={(values) =>
         onSubmitAttribute(values, formikBagParent, setOpen, previousAttribute)
       }
       render={(formikBag: FormikProps<AttributeProps>) => (
@@ -65,7 +59,7 @@ export const CardCreateAddAttribute: React.FC<CardCreateAddAttributeProp> = ({
                   field={field}
                   form={form}
                   label="Název"
-                  inputProps={{ autoFocus: true }}
+                  inputProps={{ autoFocus: false }}
                 />
               )}
             />
@@ -76,9 +70,9 @@ export const CardCreateAddAttribute: React.FC<CardCreateAddAttributeProp> = ({
                 <Select
                   field={field}
                   form={form}
-                  onChange={(e: any) => onChangeType(formikBag, e)}
+                  onChange={(value: any) => onChangeType(formikBag, value)}
                   label="Typ"
-                  options={types}
+                  options={AttributeTypeEnum}
                 />
               )}
             />

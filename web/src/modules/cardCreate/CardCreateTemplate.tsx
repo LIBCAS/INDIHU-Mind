@@ -16,7 +16,7 @@ const randomIcons = [
   <BrandingWatermark key="watermark" style={{ fontSize: 60 }} />,
   <CallToAction key="callToAction" style={{ fontSize: 60 }} />,
   <FeaturedPlayList key="playlist" style={{ fontSize: 60 }} />,
-  <FeaturedVideo key="featured" style={{ fontSize: 60 }} />
+  <FeaturedVideo key="featured" style={{ fontSize: 60 }} />,
 ];
 
 interface CardCreateTemplateProps {
@@ -26,7 +26,7 @@ interface CardCreateTemplateProps {
 
 export const CardCreateTemplate: React.FC<CardCreateTemplateProps> = ({
   templates,
-  setAttributes
+  setAttributes,
 }) => {
   const classes = useStyles();
 
@@ -45,7 +45,7 @@ export const CardCreateTemplate: React.FC<CardCreateTemplateProps> = ({
         </Typography>
         <Divider />
         <div className={classes.templateWrapper}>
-          {templates.map(template => {
+          {templates.map((template) => {
             iconCount++;
             if (iconCount >= randomIcons.length) iconCount = 0;
             const Icon = randomIcons[iconCount];

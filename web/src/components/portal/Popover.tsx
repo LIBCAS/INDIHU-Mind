@@ -17,6 +17,7 @@ interface PopoverProps {
   cancelButton?: boolean;
   width?: number;
   overflowVisible?: boolean;
+  anchorReference?: "anchorEl" | "none" | "anchorPosition";
 }
 
 export const Popover: React.FC<PopoverProps> = ({
@@ -27,7 +28,8 @@ export const Popover: React.FC<PopoverProps> = ({
   autoWidth,
   cancelButton,
   width,
-  overflowVisible
+  overflowVisible,
+  anchorReference = "anchorEl",
 }) => {
   const classes = useStyles();
   const onResize = () => {
@@ -39,30 +41,35 @@ export const Popover: React.FC<PopoverProps> = ({
       open={open}
       anchorEl={anchorEl}
       onClose={() => setOpen(false)}
+      anchorReference={anchorReference}
+      anchorPosition={{
+        top: window.innerHeight / 2 - 16,
+        left: window.innerWidth / 2,
+      }}
       // classes={cancelButton ? { paper: classes.popoverPaper } : {}}
       classes={{
         paper: classNames({
           [classes.popoverPaper]: cancelButton,
           [classes.overflowVisible]: overflowVisible,
-          root: classNames(classes.root) // TEST
-        })
+          root: classNames(classes.root), // TEST
+        }),
       }}
       style={{
-        overflow: "auto"
+        overflow: "auto",
       }}
       // Throws error, added root: classNames(classes.root) in classes props instead, ModalClasses={{ root: classNames(classes.root) }}
       anchorOrigin={{
         vertical: "top",
-        horizontal: "center"
+        horizontal: "center",
       }}
       transformOrigin={{
-        vertical: "top",
-        horizontal: "center"
+        vertical: "bottom",
+        horizontal: "center",
       }}
     >
       <Paper
         className={classNames(classes.paper, {
-          [classes.autoWidth]: autoWidth
+          [classes.autoWidth]: autoWidth,
         })}
         style={width ? { width } : {}}
       >

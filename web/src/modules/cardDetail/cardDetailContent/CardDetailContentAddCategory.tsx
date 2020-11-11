@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
-import Add from "@material-ui/icons/Add";
+import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
+import MuiIconButton from "@material-ui/core/IconButton";
+import MuiTooltip from "@material-ui/core/Tooltip";
 import { CardContentProps } from "../../../types/card";
-import { ButtonGrey } from "../../../components/control/ButtonGrey";
 
 import { CardDetailContentAddCategoryForm } from "./CardDetailContentAddCategoryForm";
 
@@ -13,24 +14,39 @@ interface CardDetailContentAddCategoryProps {
   setCardContent: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
+  refreshCard: () => void;
 }
 
-export const CardDetailContentAddCategory: React.FC<
-  CardDetailContentAddCategoryProps
-> = ({ card, cardContent, setCardContent }) => {
+export const CardDetailContentAddCategory: React.FC<CardDetailContentAddCategoryProps> = ({
+  card,
+  cardContent,
+  setCardContent,
+  refreshCard,
+}) => {
   const classesSpacing = useSpacingStyles();
+
   const anchorEl = useRef(null);
+
   const [openForm, setOpenForm] = useState(false);
+
+  const handleAddCategory = () => {
+    setOpenForm((prev) => !prev);
+  };
+
   return (
-    <>
+    <React.Fragment>
       <div className={classesSpacing.mt1} ref={anchorEl}>
-        <ButtonGrey
-          text="Přidat kategorii"
-          onClick={() => setOpenForm(prev => !prev)}
-          bold
-          inline
-          Icon={<Add fontSize="small" />}
-        />
+        <MuiTooltip title="Přidat kategorii" arrow={true}>
+          <MuiIconButton
+            style={{ marginTop: "8px" }}
+            color="primary"
+            aria-label="add-category"
+            component="span"
+            onClick={handleAddCategory}
+          >
+            <MuiAddCircleIcon fontSize="default" />
+          </MuiIconButton>
+        </MuiTooltip>
       </div>
       {openForm && (
         <CardDetailContentAddCategoryForm
@@ -40,8 +56,9 @@ export const CardDetailContentAddCategory: React.FC<
           openForm={openForm}
           setOpenForm={setOpenForm}
           anchorEl={anchorEl}
+          refreshCard={refreshCard}
         />
       )}
-    </>
+    </React.Fragment>
   );
 };

@@ -11,10 +11,13 @@ import { onDeleteCard } from "../../utils/card";
 import { CardContentProps } from "../../types/card";
 import { Popconfirm } from "../../components/portal/Popconfirm";
 import { CardCreateRoot } from "../cardCreate/CardCreateRoot";
+import { CardPrint } from "./CardPrint";
 
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { useStyles } from "./_cardDetailStyles";
+import { CardDetailContentId } from "./cardDetailContent/CardDetailContentId";
 
 interface CardDetailActionsProps {
   card: CardContentProps;
@@ -25,17 +28,20 @@ interface CardDetailActionsProps {
 export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
   card,
   history,
-  loadCard
+  loadCard,
 }) => {
   const classes = useStyles();
   const classesLayout = useLayoutStyles();
+  const classesSpacing = useSpacingStyles();
   const classesText = useTextStyles();
   const [showModal, setShowModal] = useState(false);
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
 
+  const cardInner = card.card;
+
   const handleDelete = () => {
-    onDeleteCard(card.card.id, dispatch, () => history.push("/cards"));
+    onDeleteCard(cardInner.id, dispatch, () => history.push("/cards"));
   };
 
   return (
@@ -49,23 +55,30 @@ export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
           <div className={classesText.normal}>Zpět</div>
         </IconButton>
       </div>
-      <Popconfirm
-        Button={() => (
-          <Tooltip title="Smazat">
-            <IconButton className={classes.iconSecondary}>
-              <Delete color="inherit" />
-            </IconButton>
-          </Tooltip>
-        )}
-        confirmText="Smazat kartu?"
-        onConfirmClick={() => {
-          handleDelete();
-        }}
-      />
+      <div className={classes.actions}>
+        <CardDetailContentId card={cardInner} />
+        <CardPrint
+          card={{ ...cardInner, attributes: card.attributes }}
+          className={classesSpacing.ml1}
+        />
+        <Popconfirm
+          Button={
+            <Tooltip title="Smazat">
+              <IconButton className={classes.iconSecondary}>
+                <Delete color="inherit" />
+              </IconButton>
+            </Tooltip>
+          }
+          confirmText="Smazat kartu?"
+          onConfirmClick={() => {
+            handleDelete();
+          }}
+        />
+      </div>
       <CardCreateRoot
-        showModal={showModal}
-        setShowModal={setShowModal}
-        selectedRow={card.card}
+        open={showModal}
+        setOpen={setShowModal}
+        item={card.card}
         edit
         afterEdit={() => loadCard()}
       />

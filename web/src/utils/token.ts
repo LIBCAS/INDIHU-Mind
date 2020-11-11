@@ -29,7 +29,7 @@ export const decodeToken = (token: string) => {
 export const renewToken = (url: string = "keepalive") => {
   return api()
     .get(url)
-    .then(response => {
+    .then((response) => {
       if (response.ok && response.headers.has("bearer")) {
         return response.headers.get("bearer");
       } else {
@@ -49,3 +49,6 @@ export const validateTokenExp = (user: ApiUser | null) => {
   // If exp date is not a number, its invalid
   return false;
 };
+
+export const isAdmin = (token: ReturnType<typeof decodeToken>) =>
+  token && token.authorities.indexOf("ROLE_ADMIN") !== -1;

@@ -31,13 +31,8 @@ public class FieldMarc extends TemplateField {
         this.customizations = Utils.asSet(customizations);
     }
 
-    public void initializeDataForTagAndCode(Citation record, String errorMessage) {
-        String dataForTagAndCode = record.getDataByTagAndCode(getTag(), getCode());
-        this.data = dataForTagAndCode;
-
-        if (dataForTagAndCode.isEmpty()) {
-            this.data = String.format(errorMessage, getTag(), getCode());
-        }
+    public void initializeDataForTagAndCode(Citation record) {
+        this.data = record.getDataByTagAndCode(getTag(), getCode());
     }
 
     @Override
@@ -50,7 +45,7 @@ public class FieldMarc extends TemplateField {
     }
 
     @Override
-    public String getData() {
+    public String obtainTextualData() {
         return data;
     }
 
@@ -68,7 +63,7 @@ public class FieldMarc extends TemplateField {
         return getCode() == fieldMarc.getCode() &&
                 getType() == fieldMarc.getType() &&
                 getTag().equals(fieldMarc.getTag()) &&
-                Objects.equals(getData(), fieldMarc.getData());
+                Objects.equals(obtainTextualData(), fieldMarc.obtainTextualData());
     }
 
     @Override

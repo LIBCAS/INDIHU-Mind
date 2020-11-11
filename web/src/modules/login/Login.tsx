@@ -3,15 +3,13 @@ import { RouteComponentProps } from "react-router-dom";
 
 import Navbar from "../../components/login/navbar/Navbar";
 import { LoginForm } from "../../components/login/login/LoginForm";
-import { Theme, Card, CardContent, Typography, Grid } from "@material-ui/core";
+import { Card, CardContent, Typography } from "@material-ui/core";
 import { useStyles } from "./_loginStyles";
-import { useTheme } from "@material-ui/styles";
 import { LeftPanel } from "../../components/login/leftPanel/LeftPanel";
 import { Modal } from "../../components/login/modal/Modal";
 
 export const Login: React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();
-  const theme: Theme = useTheme();
 
   const [leftPanelOpen, setLeftPanelOpen] = useState(false);
   const [openModalInfo, setOpenModalInfo] = React.useState(false);

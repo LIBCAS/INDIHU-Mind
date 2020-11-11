@@ -37,7 +37,7 @@
             <column name="name" type="nvarchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="note" type="nvarchar(2000)"/>
+            <column name="note" type="nvarchar(2000)"/> <!-- changed to 'clob' type in change set 13 -->
         </createTable>
         <addUniqueConstraint constraintName="vzb_pid_of_user_uniqueness" tableName="vzb_card"
                              columnNames="pid,owner_id"/>
@@ -719,5 +719,32 @@
             <column name="content" type="clob"/>
         </addColumn>
         <renameTable oldTableName="vzb_marc_citation_abstract" newTableName="vzb_marc_citation"/>
+    </changeSet>
+
+    <changeSet id="13" author="radvan">
+        <modifyDataType tableName="vzb_card" columnName="note" newDataType="clob"/>
+    </changeSet>
+    <changeSet id="14" author="radvan">
+        <createTable tableName="vzb_card_comment">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_comment_pkey" nullable="false"/>
+            </column>
+            <column name="card_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_comment_card_fk"
+                             referencedTableName="vzb_card" referencedColumnNames="id" deleteCascade="true"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="updated" type="datetime"/>
+            <column name="deleted" type="datetime"/>
+            <column name="text" type="clob"/>
+            <column name="text_updated" type="datetime"/>
+            <column name="ordinal_number" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addColumn tableName="vzb_card">
+            <column name="raw_note" type="clob"/>
+        </addColumn>
     </changeSet>
 </databaseChangeLog>

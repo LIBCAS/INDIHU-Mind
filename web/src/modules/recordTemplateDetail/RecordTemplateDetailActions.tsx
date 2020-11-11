@@ -13,7 +13,6 @@ import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles } from "./_recordTemplateDetailStyles";
 import { Modal } from "../../components/portal/Modal";
-import { RecordsForm } from "../records/RecordsForm";
 import { onDeleteRecord } from "../records/_utils";
 import { RecordTemplateProps } from "../../types/recordTemplate";
 import { RecordsTemplatesForm } from "../recordsTemplates/RecordsTemplatesForm";
@@ -24,9 +23,11 @@ interface RecordTemplateDetailActionsProps {
   loadRecordTemplate: () => void;
 }
 
-export const RecordTemplateDetailActions: React.FC<
-  RecordTemplateDetailActionsProps
-> = ({ recordTemplate, history, loadRecordTemplate }) => {
+export const RecordTemplateDetailActions: React.FC<RecordTemplateDetailActionsProps> = ({
+  recordTemplate,
+  history,
+  loadRecordTemplate,
+}) => {
   const classes = useStyles();
   const classesLayout = useLayoutStyles();
   const classesText = useTextStyles();
@@ -61,13 +62,13 @@ export const RecordTemplateDetailActions: React.FC<
         </IconButton>
       </Tooltip>
       <Popconfirm
-        Button={() => (
+        Button={
           <Tooltip title="Smazat">
             <IconButton className={classes.iconSecondary}>
               <Delete color="inherit" />
             </IconButton>
           </Tooltip>
-        )}
+        }
         confirmText="Smazat?"
         onConfirmClick={() => {
           handleDelete();
@@ -79,10 +80,11 @@ export const RecordTemplateDetailActions: React.FC<
         content={
           <RecordsTemplatesForm
             setShowModal={setShowModal}
-            recordTemplate={recordTemplate}
+            item={recordTemplate}
             afterEdit={loadRecordTemplate}
           />
         }
+        fullSize={true}
       />
     </div>
   );

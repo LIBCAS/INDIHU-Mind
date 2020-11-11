@@ -1,437 +1,553 @@
 import React, { useState, useEffect, useContext } from "react";
-import { FormikProps, Form, Field, FieldProps, FieldArray } from "formik";
-import Typography from "@material-ui/core/Typography";
+import { FormikProps, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
+import { Tooltip } from "@material-ui/core";
+import InfoIcon from "@material-ui/icons/Info";
 import classNames from "classnames";
-import Add from "@material-ui/icons/Add";
-import Remove from "@material-ui/icons/Remove";
-import { get } from "lodash";
+import { compact, get, find, filter, forEach } from "lodash";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 
 import { notEmpty } from "../../utils/form/validate";
-import { templateGet } from "../../context/actions/template";
 import { GlobalContext, StateProps } from "../../context/Context";
 import { Formik } from "../../components/form/Formik";
 import { Loader } from "../../components/loader/Loader";
 import { InputText } from "../../components/form/InputText";
+import { AsyncSelect } from "../../components/form/AsyncSelect";
+import { Editor } from "../../components/form/Editor";
 import { Divider } from "../../components/divider/Divider";
 import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
-
 import { useStyles } from "./_recordsStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 
-import { RecordProps } from "../../types/record";
-import { onSubmitRecord } from "./_utils";
-import { IconButton } from "@material-ui/core";
-import { recordGet } from "../../context/actions/record";
-
-const leaderValidate = (value: string) => {
-  let error;
-  if (value && value !== "" && value.length !== 24) {
-    error = "Leader musí mít 24 znaků";
-  }
-  return error;
-};
+import {
+  RecordProps,
+  MarcEntity,
+  DataFieldsEntity,
+  SubfieldsEntity,
+  FormDataField,
+} from "../../types/record";
+import { onSubmitRecord, contentNotEmpty } from "./_utils";
+import { recordGetMarc } from "../../context/actions/record";
+import { CreatorField } from "./CreatorField";
+import {
+  isCreator,
+  getCreatorLabel,
+  isCorporate,
+  clearCreatorValue,
+  createMarcLabel,
+} from "../recordsTemplates/_utils";
+import { getFiles } from "../attachments/_utils";
+import { FileProps } from "../../types/file";
+import { getCards } from "../cards/_utils";
+import { LinkedCardProps } from "../../types/card";
+import { Select } from "../../components/select";
+import { DefaultCreators, RecordTypes } from "./_enums";
+import { parseRecord, createCreatorRegex } from "./_utils";
 
 export interface RecordRequest {
-  created: string;
-  dataFields?: (DataFieldsEntity)[] | null;
-  deleted: string;
+  created?: string;
+  dataFields?: DataFieldsEntity[] | null;
+  content?: string;
+  deleted?: string;
   id: string;
-  leader: string;
   name: string;
-  updated: string;
+  documents?: FileProps[];
+  updated?: string;
+  linkedCards?: LinkedCardProps[];
 }
-export interface DataFieldsEntity {
-  id: string;
-  indicator1: string;
-  indicator2: string;
-  subfields?: (SubfieldsEntity)[] | null;
-  tag: string;
+
+export interface Creator {
+  value: string;
+  data?: string;
 }
-export interface SubfieldsEntity {
-  code: string;
-  data: string;
+
+export interface RecordFormValues {
+  created?: string;
+  dataFields?: FormDataField[] | null;
+  content?: string;
+  creators: Creator[];
+  deleted?: string;
   id: string;
+  name: string;
+  updated?: string;
+  linkedCards?: LinkedCardProps[];
 }
 
 interface RecordsFormProps {
   setShowModal: Function;
-  record?: RecordProps;
+  item?: RecordProps;
   afterEdit?: () => void;
+  redirect?: boolean;
+  onSubmitCallback?: Function;
 }
 
 const RecordsFormView: React.FC<RecordsFormProps & RouteComponentProps> = ({
   setShowModal,
-  record,
+  item,
   afterEdit,
-  history
+  history,
+  redirect = true,
+  onSubmitCallback,
 }) => {
   const classes = useStyles();
-  const classesText = useTextStyles();
   const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
   const state: StateProps = context.state;
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<boolean>(false);
-  const [initValues, setInitValues] = useState<RecordRequest | null>(null);
-  const marc = state.record.marc;
-  let fields: any;
-  if (marc) {
-    fields = state.record.marc.fields;
-  }
+  const [error, setError] = useState<boolean | string>(false);
+  const [recordType, setRecordType] = useState<any | null>(null);
+  const [content, setContent] = useState<any>();
+  const [contentKey, setContentKey] = useState<boolean>(false);
+
+  const refreshContent = () => setContentKey(!contentKey);
+
+  const [initValues, setInitValues] = useState<RecordFormValues>({
+    dataFields: [],
+    creators: [],
+    id: "",
+    name: "",
+  });
+
+  const marc: MarcEntity[] = state.record.marc;
   useEffect(() => {
-    if (record) {
-      setInitValues(record as any);
+    if (marc) {
+      const creatorDataFields = item
+        ? filter(item.dataFields, ({ tag }) => isCreator(tag))
+        : [];
+      const creators: Creator[] = [];
+      creatorDataFields.forEach(({ tag, subfields }) => {
+        (subfields || []).forEach(({ code, data }) =>
+          creators.push({
+            value: `${tag === "110" || tag === "710" ? "_" : ""}${code}`,
+            data,
+          })
+        );
+      });
+      const content = item ? item.content : undefined;
+      setInitValues({
+        ...{
+          ...((item as any) || {}),
+          dataFields: marc.map((m) => {
+            if (isCreator(m.tag)) {
+              return undefined;
+            }
+            const field = find(get(item, "dataFields"), (d) => d.tag === m.tag);
+
+            return {
+              tag: m.tag,
+              ...(m.indicator1 ? { indicator1: m.indicator1 } : {}),
+              ...(m.indicator2 ? { indicator2: m.indicator2 } : {}),
+              code: m.code,
+              ...(get(field, "subfields")
+                ? {
+                    data: get(
+                      find(
+                        get(field, "subfields"),
+                        (subfield) => subfield.code === m.code
+                      ),
+                      "data"
+                    ),
+                  }
+                : {}),
+            };
+          }),
+          content,
+        },
+        creators: creators.length ? creators : DefaultCreators,
+      });
+      setContent(content);
     }
-  }, [record]);
+  }, [marc, item]);
+  useEffect(() => {
+    recordGetMarc(dispatch);
+  }, [dispatch]);
+
   return (
     <>
       <Loader loading={loading} />
-      {error && <MessageSnackbar setVisible={setError} />}
+      {error && <MessageSnackbar setVisible={setError} message={error} />}
       <Formik
         validateOnChange
         initialValues={initValues}
         enableReinitialize
-        onSubmit={(values: RecordRequest) => {
-          if (loading) return;
-          setLoading(true);
-          onSubmitRecord(
-            values,
-            setShowModal,
-            setError,
-            setLoading,
-            dispatch,
-            history,
-            record,
-            afterEdit
-          );
-        }}
-        render={(formikBag: FormikProps<RecordRequest>) => {
+        onSubmit={() => {}}
+        render={(formikBag: FormikProps<RecordFormValues>) => {
           const { values } = formikBag;
+
+          let briefContent: string | undefined;
+
+          if (values.content) {
+            try {
+              briefContent = get(JSON.parse(values.content), "blocks[0].text");
+            } catch {
+              briefContent = undefined;
+            }
+          }
+
+          const handleParse = () => {
+            if (briefContent) {
+              const result = parseRecord(
+                briefContent,
+                recordType,
+                formikBag.values.dataFields
+              );
+
+              if (result) {
+                formikBag.setFieldValue("dataFields", result.dataFields);
+                formikBag.setFieldValue("creators", result.creators);
+                setRecordType(null);
+              } else {
+                setError(
+                  "Chyba: Nepodařilo se převést citaci do strukturované podoby."
+                );
+              }
+            }
+          };
+
           return (
-            <Form>
-              <div
-                className={classNames(
-                  classesLayout.flex,
-                  classesLayout.flexWrap,
-                  classesLayout.justifyCenter,
-                  classesLayout.directionColumn,
-                  classesSpacing.ml2,
-                  classesSpacing.mr2
-                )}
-              >
-                <Field
-                  name="name"
-                  validate={notEmpty}
-                  render={({ field, form }: FieldProps<RecordRequest>) => (
-                    <>
-                      <InputText
-                        label="Název"
-                        type="text"
-                        field={field}
-                        form={form}
-                        autoFocus={record ? false : true}
-                      />
-                    </>
-                  )}
-                />
-                <Field
-                  name="leader"
-                  validate={leaderValidate}
-                  render={({ field, form }: FieldProps<RecordRequest>) => (
-                    <InputText
-                      label="Leader"
-                      type="text"
-                      field={field}
-                      form={form}
-                    />
-                  )}
-                />
+            <form
+              className={classes.recordForm}
+              autoComplete="off"
+              onReset={formikBag.handleReset}
+              onSubmit={(e: any) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (loading) return;
+                setLoading(true);
+
+                const { creators, ...values } = formikBag.values;
+
+                const creatorDataFields: DataFieldsEntity[] = [];
+                const creatorDataSubfields: SubfieldsEntity[] = [];
+                const creatorCorporateDataSubfields: SubfieldsEntity[] = [];
+                const filtered = filter(
+                  creators,
+                  ({ value, data }) => value && data
+                ) as {
+                  value: string;
+                  data: string;
+                }[];
+                const wrongCreator = find(
+                  filtered,
+                  ({ value, data }) =>
+                    !isCorporate(value) &&
+                    createCreatorRegex({
+                      prefix: "^\\s*",
+                      suffix: "\\S+$",
+                    }).test(data)
+                );
+
+                if (wrongCreator) {
+                  setError(
+                    `Chyba: V poli ${getCreatorLabel(
+                      false,
+                      clearCreatorValue(wrongCreator.value)
+                    )} je Příjmení povinné.`
+                  );
+                  return;
+                }
+                filtered.map(({ value, data }, index) =>
+                  index
+                    ? (isCorporate(value)
+                        ? creatorCorporateDataSubfields
+                        : creatorDataSubfields
+                      ).push({
+                        code: clearCreatorValue(value),
+                        data,
+                      })
+                    : creatorDataFields.push({
+                        tag: isCorporate(value) ? "110" : "100",
+                        subfields: [{ code: clearCreatorValue(value), data }],
+                      })
+                );
+
+                creatorDataSubfields.map((s) =>
+                  creatorDataFields.push({
+                    tag: "700",
+                    subfields: [s],
+                  })
+                );
+
+                creatorCorporateDataSubfields.map((s) =>
+                  creatorDataFields.push({
+                    tag: "710",
+                    subfields: [s],
+                  })
+                );
+
+                const filteredValues = {
+                  ...values,
+                  dataFields: [
+                    ...(() => {
+                      const result: DataFieldsEntity[] = [];
+
+                      forEach(
+                        compact([
+                          ...(values.dataFields || []).map((dataField) => {
+                            if (dataField && dataField.data) {
+                              const { code, data, ...rest } = dataField;
+                              return { ...rest, subfields: [{ code, data }] };
+                            }
+
+                            return undefined;
+                          }),
+                        ]),
+                        (dataField) => {
+                          const found = find(
+                            result,
+                            ({ tag }) => tag === dataField.tag
+                          );
+                          if (found) {
+                            found.subfields = [
+                              ...(found.subfields || []),
+                              ...(dataField.subfields || []),
+                            ];
+                          } else {
+                            result.push(dataField);
+                          }
+                        }
+                      );
+
+                      return result;
+                    })(),
+                    ...creatorDataFields,
+                  ],
+                };
+
+                onSubmitRecord(
+                  filteredValues,
+                  setShowModal,
+                  setError,
+                  setLoading,
+                  dispatch,
+                  history,
+                  item,
+                  afterEdit,
+                  redirect,
+                  onSubmitCallback
+                );
+              }}
+            >
+              <div className={classNames(classes.mainPanel)}>
                 <div
                   className={classNames(
-                    classesLayout.flex,
-                    classesLayout.flexWrap,
-                    classesLayout.spaceBetween,
-                    classesSpacing.mt2,
-                    classesLayout.halfItems,
-                    classesLayout.fullItemsMobile
+                    classesSpacing.pt2,
+                    classesSpacing.pb2,
+                    classesSpacing.pr2
                   )}
                 >
-                  <FieldArray
-                    name="dataFields"
-                    render={dataFields => (
+                  <Field
+                    name="name"
+                    validate={notEmpty}
+                    render={({ field, form }: FieldProps<RecordFormValues>) => (
                       <>
-                        <div>
-                          <Typography
-                            className={classNames(
-                              classesText.subtitle,
-                              classesSpacing.mb2
-                            )}
-                          >
-                            TAGY
-                          </Typography>
-                          {Object.keys(fields).map(key => {
-                            if (key === "LDR") return;
-                            return (
-                              <div
-                                key={key}
-                                className={classNames(
-                                  classesLayout.flex,
-                                  classesLayout.alignCenter
-                                )}
-                              >
-                                <IconButton
-                                  disabled={Boolean(
-                                    !get(fields[key], `repeatable`, false) &&
-                                      values.dataFields &&
-                                      values.dataFields.some(d => d.tag === key)
-                                  )}
-                                  color="inherit"
-                                  onClick={() => dataFields.push({ tag: key })}
-                                >
-                                  <Add color="inherit" />
-                                </IconButton>
-                                <Typography key={key} display="block">
-                                  {`${key} ${get(fields[key], "label", "N/A")}`}
-                                </Typography>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div>
-                          <Typography
-                            className={classNames(
-                              classesText.subtitle,
-                              classesSpacing.mb2
-                            )}
-                          >
-                            Citace
-                          </Typography>
-                          {values.dataFields &&
-                            values.dataFields.map((d, index) => {
-                              return (
-                                <div
-                                  key={d.tag + index}
-                                  className={classNames(classes.recordWrapper)}
-                                >
-                                  <div
-                                    className={classNames(
-                                      classesLayout.flex,
-                                      classesLayout.alignCenter
-                                    )}
-                                  >
-                                    <Typography
-                                      className={classNames(
-                                        classesText.textBold
-                                      )}
-                                    >
-                                      {d.tag}
-                                    </Typography>
-                                    <IconButton
-                                      color="inherit"
-                                      onClick={() => dataFields.remove(index)}
-                                    >
-                                      <Remove color="inherit" />
-                                    </IconButton>
-                                  </div>
-                                  <div
-                                    className={classNames(
-                                      classesLayout.flex,
-                                      classesLayout.spaceBetween
-                                    )}
-                                  >
-                                    <div style={{ width: "45%" }}>
-                                      <Field
-                                        name={`dataFields.${index}.indicator1`}
-                                        render={({
-                                          field,
-                                          form
-                                        }: FieldProps<RecordRequest>) => (
-                                          <InputText
-                                            type="text"
-                                            field={field}
-                                            form={form}
-                                            fullWidth={false}
-                                            inputProps={{
-                                              placeholder: "Indikátor 1"
-                                            }}
-                                          />
-                                        )}
-                                      />
-                                    </div>
-                                    <div style={{ width: "45%" }}>
-                                      <Field
-                                        name={`dataFields.${index}.indicator2`}
-                                        render={({
-                                          field,
-                                          form
-                                        }: FieldProps<RecordRequest>) => (
-                                          <InputText
-                                            type="text"
-                                            field={field}
-                                            form={form}
-                                            fullWidth={false}
-                                            inputProps={{
-                                              placeholder: "Indikátor 2"
-                                            }}
-                                          />
-                                        )}
-                                      />
-                                    </div>
-                                  </div>
-                                  <FieldArray
-                                    name={`dataFields.${index}.subfields`}
-                                    render={subfields => (
-                                      <>
-                                        <div
-                                          className={classNames(
-                                            classesLayout.flex,
-                                            classesLayout.alignCenter
-                                          )}
-                                        >
-                                          <Typography
-                                            className={classNames(
-                                              classesText.textBold
-                                            )}
-                                          >
-                                            Code
-                                          </Typography>
-                                          <IconButton
-                                            color="inherit"
-                                            onClick={() =>
-                                              subfields.push({
-                                                code: "",
-                                                data: ""
-                                              })
-                                            }
-                                          >
-                                            <Add color="inherit" />
-                                          </IconButton>
-                                        </div>
-                                        {get(
-                                          values,
-                                          `dataFields[${index}].subfields`,
-                                          []
-                                        ).map(
-                                          (
-                                            subField: SubfieldsEntity,
-                                            indexSubField: number
-                                          ) => (
-                                            <div
-                                              key={
-                                                subField.code + indexSubField
-                                              }
-                                            >
-                                              <div
-                                                className={classNames(
-                                                  classesLayout.flex,
-                                                  classesLayout.alignCenter
-                                                )}
-                                              >
-                                                <div
-                                                  style={{
-                                                    width: "5rem",
-                                                    marginRight: "1rem"
-                                                  }}
-                                                >
-                                                  <Field
-                                                    name={`dataFields.${index}.subfields.${indexSubField}.code`}
-                                                    render={({
-                                                      field,
-                                                      form
-                                                    }: FieldProps<
-                                                      RecordRequest
-                                                    >) => (
-                                                      <InputText
-                                                        type="text"
-                                                        field={field}
-                                                        form={form}
-                                                        fullWidth={false}
-                                                        inputProps={{
-                                                          placeholder: "Code"
-                                                        }}
-                                                      />
-                                                    )}
-                                                  />
-                                                </div>
-                                                <div
-                                                  style={{
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    alignItems: "center"
-                                                  }}
-                                                >
-                                                  <Field
-                                                    name={`dataFields.${index}.subfields.${indexSubField}.data`}
-                                                    render={({
-                                                      field,
-                                                      form
-                                                    }: FieldProps<
-                                                      RecordRequest
-                                                    >) => (
-                                                      <InputText
-                                                        type="text"
-                                                        field={field}
-                                                        form={form}
-                                                        inputProps={{
-                                                          placeholder: "Data"
-                                                        }}
-                                                      />
-                                                    )}
-                                                  />
-                                                  <IconButton
-                                                    color="inherit"
-                                                    className={classNames(
-                                                      classesSpacing.mlAuto
-                                                    )}
-                                                    onClick={() =>
-                                                      subfields.remove(
-                                                        indexSubField
-                                                      )
-                                                    }
-                                                  >
-                                                    <Remove color="inherit" />
-                                                  </IconButton>
-                                                </div>
-                                              </div>
-                                            </div>
-                                          )
-                                        )}
-                                      </>
-                                    )}
-                                  />
-                                </div>
-                              );
-                            })}
-                        </div>
+                        <InputText
+                          label="Název"
+                          type="text"
+                          field={field}
+                          form={form}
+                          autoFocus={false}
+                          oneLine={true}
+                        />
+                      </>
+                    )}
+                  />
+                  <Field
+                    name="documents"
+                    render={({ field, form }: FieldProps<RecordFormValues>) => (
+                      <>
+                        <AsyncSelect
+                          label="Dokumenty"
+                          field={field}
+                          form={form}
+                          oneLine={true}
+                          isMulti={true}
+                          loadOptions={async (text?: string) =>
+                            get(await getFiles(text), "items", [])
+                          }
+                        />
+                      </>
+                    )}
+                  />
+                  <Field
+                    name="linkedCards"
+                    render={({ field, form }: FieldProps<RecordFormValues>) => (
+                      <>
+                        <AsyncSelect
+                          label="Karty"
+                          field={field}
+                          form={form}
+                          oneLine={true}
+                          isMulti={true}
+                          loadOptions={async (text?: string) =>
+                            get(await getCards(text), "items", [])
+                          }
+                        />
                       </>
                     )}
                   />
                 </div>
+                <Divider />
+                <div
+                  className={
+                    contentNotEmpty(formikBag.values.content)
+                      ? classes.contentWrapperSticky
+                      : ""
+                  }
+                >
+                  <div
+                    className={classNames(
+                      classesSpacing.p2,
+                      classesSpacing.pb1
+                    )}
+                  >
+                    <Field
+                      key={contentKey}
+                      name="content"
+                      briefOptions={true}
+                      value={content}
+                      component={Editor}
+                    />
+                  </div>
+                </div>
+                <div
+                  className={classNames(
+                    classesSpacing.pl2,
+                    classesSpacing.pr2,
+                    classesSpacing.pb1
+                  )}
+                >
+                  <div
+                    className={classNames(
+                      classesLayout.flex,
+                      classesLayout.alignCenter,
+                      classesLayout.spaceBetween
+                    )}
+                  >
+                    <Button
+                      variant="outlined"
+                      className={classesSpacing.mr1}
+                      onClick={() => {
+                        formikBag.setFieldValue("content", undefined);
+                        setContent(undefined);
+                        setTimeout(refreshContent);
+                      }}
+                      disabled={!briefContent}
+                    >
+                      Vymazat text
+                    </Button>
+                    <div
+                      className={classNames(
+                        classesLayout.flex,
+                        classesLayout.alignCenter,
+                        classesLayout.justifyEnd,
+                        classesLayout.flexWrap
+                      )}
+                    >
+                      <div>Převést do strukturované podoby:</div>
+                      <div
+                        className={classesSpacing.ml1}
+                        style={{ minWidth: 300 }}
+                      >
+                        <Select
+                          placeholder="Vyberte typ citace"
+                          options={RecordTypes}
+                          onChange={(value) => setRecordType(value)}
+                          isClearable={false}
+                        />
+                      </div>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        className={classesSpacing.ml1}
+                        onClick={handleParse}
+                        disabled={!briefContent || !recordType}
+                      >
+                        Převést
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={classNames(
+                    classesLayout.flex,
+                    classesLayout.flexWrap,
+                    classesSpacing.pr2
+                  )}
+                >
+                  {(() => {
+                    let cretatorRendered = false;
+
+                    return (marc || []).map((m, index) => {
+                      const key = `${m.tag}-${index}`;
+
+                      if (isCreator(m.tag)) {
+                        if (cretatorRendered) {
+                          return <div key={key} />;
+                        }
+
+                        cretatorRendered = true;
+
+                        return (
+                          <CreatorField key={key} items={values.creators} />
+                        );
+                      }
+
+                      return (
+                        <Field
+                          key={key}
+                          name={`dataFields[${index}].data`}
+                          render={({
+                            field,
+                            form,
+                          }: FieldProps<RecordFormValues>) => (
+                            <InputText
+                              type="text"
+                              label={
+                                <div
+                                  className={classNames(
+                                    classesLayout.flex,
+                                    classesLayout.alignCenter,
+                                    classesLayout.justifyEnd
+                                  )}
+                                >
+                                  <div className={classesSpacing.mr1}>
+                                    {m.czech}
+                                  </div>
+                                  <Tooltip title={createMarcLabel(m)}>
+                                    <InfoIcon />
+                                  </Tooltip>
+                                </div>
+                              }
+                              field={field}
+                              form={form}
+                              oneLine={true}
+                            />
+                          )}
+                        />
+                      );
+                    });
+                  })()}
+                </div>
               </div>
-              <Divider className={classesSpacing.mt3} />
+              <Divider />
               <div
                 className={classNames(
+                  classes.buttonsPanel,
                   classesLayout.flex,
                   classesLayout.justifyCenter,
-                  classesSpacing.mb1
+                  classesLayout.alignCenter
                 )}
               >
-                <Button
-                  className={classesSpacing.mt3}
-                  variant="contained"
-                  color="primary"
-                  type="submit"
-                >
-                  {record ? "Změnit citaci" : "Vytvořit citaci"}
+                <Button variant="contained" color="primary" type="submit">
+                  {item ? "Změnit citaci" : "Vytvořit citaci"}
                 </Button>
               </div>
-            </Form>
+            </form>
           );
         }}
       />

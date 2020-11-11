@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RouteComponentProps } from "react-router-dom";
 import Fade from "@material-ui/core/Fade";
 import Grid from "@material-ui/core/Grid";
@@ -13,21 +13,23 @@ import { api } from "../../utils/api";
 
 import { CardDetailActions } from "./CardDetailActions";
 import { CardDetailContent } from "./CardDetailContent";
+import { CardDetailComments } from "./CardDetailComments";
 import { CardDetailMeta } from "./CardDetailMeta";
 
 export const CardDetail: React.FC<RouteComponentProps> = ({
   history,
-  match
+  match,
 }) => {
   const classesSpacing = useSpacingStyles();
   // @ts-ignore
   const cardId = match.params.id;
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [cardContent, setCardContent] = useState<
     CardContentProps[] | undefined
   >(undefined);
   const [card, setCard] = useState<CardContentProps | undefined>(undefined);
-  const loadCard = () => {
+  const loadCard = useCallback(() => {
+    setLoading(true);
     api()
       .get(`card/${cardId}/content`)
       .json()
@@ -41,7 +43,7 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
           if (openedCards) {
             openedCards = [
               { id: cardId, name: res[0].card.name },
-              ...openedCards
+              ...openedCards,
             ];
             openedCards = uniqBy(openedCards, "id");
             openedCards = openedCards.slice(0, 5);
@@ -56,11 +58,11 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
         setLoading(false);
         // TODO error
       });
-  };
+  }, [cardId]);
   useEffect(() => {
-    setCard(card => {
+    setCard((card) => {
       if (cardContent && card) {
-        const res = cardContent.filter(c => c.id === card.id);
+        const res = cardContent.filter((c) => c.id === card.id);
         return { ...res[0] };
       } else {
         return undefined;
@@ -69,7 +71,7 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
   }, [cardContent]);
   useEffect(() => {
     loadCard();
-  }, [cardId]);
+  }, []); // eslint-disable-line
 
   return (
     <Fade in>
@@ -94,7 +96,9 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
                     history={history}
                     cardContent={cardContent}
                     setCardContent={setCardContent}
+                    refreshCard={loadCard}
                   />
+                  <CardDetailComments card={card} />
                 </Grid>
                 <Grid item xs={12} lg={3}>
                   <CardDetailMeta

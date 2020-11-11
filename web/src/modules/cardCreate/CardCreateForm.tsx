@@ -3,7 +3,7 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-  useContext
+  useContext,
 } from "react";
 import { FormikProps, Form, Field, FieldProps } from "formik";
 import InputBase from "@material-ui/core/InputBase";
@@ -21,11 +21,11 @@ import { LabelProps } from "../../types/label";
 
 import { notEmpty } from "../../utils/form/validate";
 import { useStyles as useStylesText } from "../../theme/styles/textStyles";
-import { useStyles as useFormStyles } from "../../components/form/_formStyles";
+import { useStyles as useFormStyles } from "../../components/form/_styles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 
 import { Formik } from "../../components/form/Formik";
-import { InputText } from "../../components/form/InputText";
 import { Popover } from "../../components/portal/Popover";
 import { Divider } from "../../components/divider/Divider";
 import { ButtonGrey } from "../../components/control/ButtonGrey";
@@ -46,6 +46,10 @@ import { CardCreateAddFile } from "./CardCreateAddFile";
 import { useStyles } from "./_cardCreateStyles";
 import { onSubmitCard, getTemplateName } from "./_utils";
 import { CardCreateAddRecord } from "./CardCreateAddRecord";
+import { theme } from "../../theme/theme";
+import { RecordProps } from "../../types/record";
+import { Editor } from "../../components/editor/Editor";
+import InputLabel from "@material-ui/core/InputLabel";
 
 export interface InitValuesProps {
   id: string;
@@ -54,7 +58,8 @@ export interface InitValuesProps {
   categories: CategoryProps[];
   labels: LabelProps[];
   attributes: AttributeProps[];
-  files?: FileProps[];
+  records: RecordProps[];
+  documents?: FileProps[];
   cardContentId?: string;
   linkedCards?: { id: string; name: string; note: string }[];
 }
@@ -65,29 +70,31 @@ let defaultInitialValues: InitValuesProps = {
   note: "",
   categories: [] as CategoryProps[],
   labels: [] as LabelProps[],
+  records: [] as RecordProps[],
   attributes: [] as AttributeProps[],
   linkedCards: [],
-  files: []
+  documents: [],
 };
 
 interface CardCreateFormProps {
-  setShowModal: Function;
+  setOpen: Function;
   loadTemplates: Function;
-  initValues?: InitValuesProps;
+  initValues: InitValuesProps;
   templates: CardTemplateProps[];
   edit?: boolean;
   afterEdit?: Function;
 }
 
-const CardCreateFormView: React.FC<CardCreateFormProps &
-  RouteComponentProps> = ({
-  setShowModal,
+const CardCreateFormView: React.FC<
+  CardCreateFormProps & RouteComponentProps
+> = ({
+  setOpen,
   templates,
   loadTemplates,
   initValues,
   history,
   edit,
-  afterEdit
+  afterEdit,
 }) => {
   const classes = useStyles();
 
@@ -96,6 +103,8 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
   const classesForm = useFormStyles();
 
   const classesSpacing = useSpacingStyles();
+
+  const classesLayout = useLayoutStyles();
 
   const context: any = useContext(GlobalContext);
 
@@ -109,7 +118,9 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
     undefined
   );
 
-  const [initialValues, setInitialValues] = useState(defaultInitialValues);
+  const [initialValues, setInitialValues] = useState<InitValuesProps>(
+    defaultInitialValues
+  );
 
   const [popoverOpen, setPopoverOpen] = useState<boolean>(false);
 
@@ -156,7 +167,7 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
           setLoading(true);
           onSubmitCard(
             values,
-            setShowModal,
+            setOpen,
             setError,
             setLoading,
             history,
@@ -172,63 +183,78 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
                 validate={notEmpty}
                 name="name"
                 render={({ field, form }: FieldProps<any>) => (
-                  <React.Fragment>
+                  <>
                     <InputBase
-                      className={classesForm.title}
+                      className={classNames(
+                        classesForm.title,
+                        classes.cardTitle
+                      )}
                       error={Boolean(form.touched.name && form.errors.name)}
-                      autoFocus={edit ? false : true}
+                      autoFocus={false}
                       autoComplete="off"
                       {...field}
                       placeholder="Zadejte název"
                     />
-                    <Typography className={classesSpacing.ml2} color="error">
+                    <Typography
+                      style={{
+                        marginLeft: theme.spacing(3),
+                        marginRight: theme.spacing(3),
+                      }}
+                      color="error"
+                    >
                       {form.touched.name &&
                         form.errors.name &&
                         form.errors.name}
                     </Typography>
-                  </React.Fragment>
+                    <Divider />
+                  </>
                 )}
               />
-              <Divider />
               <div className={classes.subWrapper}>
+                <InputLabel
+                  className={classNames(classesForm.label)}
+                  htmlFor="note"
+                >
+                  Popis
+                </InputLabel>
                 <Field
                   name="note"
-                  render={({ field, form }: FieldProps<any>) => (
-                    <InputText
-                      field={field}
-                      form={form}
-                      label="Popis"
-                      multiline
-                      inputProps={{
-                        rows: 5
-                      }}
-                    />
-                  )}
+                  label="Popis"
+                  onChange={(value: string) =>
+                    formikBag.setFieldValue("note", value)
+                  }
+                  component={Editor}
                 />
 
-                <CardCreateAddCategory formikBag={formikBag} />
-
-                <CardCreateAddLabel formikBag={formikBag} />
+                <div
+                  className={classNames(
+                    classesLayout.flex,
+                    classesLayout.flexWrap,
+                    classesLayout.directionColumnMobile,
+                    classesLayout.halfItemsWithSpaceBetween,
+                    classesLayout.fullItemsMobile
+                  )}
+                >
+                  <CardCreateAddCategory formikBag={formikBag} />
+                  <CardCreateAddLabel formikBag={formikBag} />
+                </div>
 
                 <CardCreateAddRecord formikBag={formikBag} />
 
-                <Typography
-                  className={classNames(
-                    classesText.subtitle,
-                    classesSpacing.mt2
-                  )}
-                >
+                <div className={classesSpacing.mt2} />
+                <Typography className={classesText.subtitle}>
                   ATRIBUTY
                 </Typography>
-                {formikBag.values.attributes.map((att: AttributeProps) => {
-                  return (
-                    <CardCreateAttribute
-                      key={att.id}
-                      attribute={att}
-                      formikBag={formikBag}
-                    />
-                  );
-                })}
+                <div className={classes.attributeItemsContainer}>
+                  {formikBag.values.attributes.map((att: AttributeProps) => (
+                    <div key={att.id} className={classes.attributeItemWrapper}>
+                      <CardCreateAttribute
+                        attribute={att}
+                        formikBag={formikBag}
+                      />
+                    </div>
+                  ))}
+                </div>
                 <div ref={AddAttributeRef} className={classes.addWrapper}>
                   <ButtonGrey
                     text="Přidat atribut"
@@ -240,6 +266,7 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
                     open={popoverOpen}
                     setOpen={setPopoverOpen}
                     anchorEl={AddAttributeRef.current}
+                    overflowVisible={true}
                     content={
                       <CardCreateAddAttribute
                         formikBagParent={formikBag}
@@ -251,10 +278,7 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
 
                 <CardCreateAddFile formikBag={formikBag} />
 
-                <CardCreateAddCard
-                  formikBag={formikBag}
-                  setShowModal={setShowModal}
-                />
+                <CardCreateAddCard formikBag={formikBag} />
               </div>
 
               <div className={classesSpacing.mb2} />
@@ -273,7 +297,7 @@ const CardCreateFormView: React.FC<CardCreateFormProps &
                       className={classNames(classesSpacing.mb1)}
                       variant="outlined"
                       color="primary"
-                      onClick={() => setTemplateOpen(prev => !prev)}
+                      onClick={() => setTemplateOpen((prev) => !prev)}
                     >
                       Uložit jako šablonu
                     </Button>

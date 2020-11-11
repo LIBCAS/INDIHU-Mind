@@ -1,60 +1,58 @@
 import React, { useState } from "react";
-import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
-import classNames from "classnames";
+import { Field } from "formik";
 
-import { UserProps } from "../../types/user";
-import { TableUser } from "../../components/tableUser/Table";
+import { api } from "../../utils/api";
+import { Table, Column, ColumnType } from "../../components/table";
+import { Switch } from "../../components/form/Switch";
 
 import { UserCreateModal } from "./UserCreateModal";
-import { columns } from "./_utils";
 
-import { useStyles } from "./_userCreateStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+export const columns: Column[] = [
+  {
+    field: "email",
+    name: "Uživatelské jméno",
+    bold: true,
+  },
+  {
+    field: "allowed",
+    name: "Stav registrace",
+    type: ColumnType.BOOLEAN,
+  },
+];
 
 export const UserCreate: React.FC = () => {
-  const classes = useStyles();
-  const classesLayout = useLayoutStyles();
-  const classesSpacing = useSpacingStyles();
-
   const [open, setOpen] = useState(false);
-  const [seelctedUser, setSelectedUser] = useState<UserProps | undefined>(
-    undefined
-  );
 
   return (
     <>
-      <div
-        className={classNames(
-          classesLayout.flex,
-          classesLayout.alignCenter,
-          classesLayout.flexWrap,
-          classesSpacing.mb2,
-          classesSpacing.mt1
-        )}
-      >
-        <Typography
-          className={classNames(classesSpacing.mr2, classesSpacing.mb1)}
-          variant="h5"
-        >
-          Správa uživatelů
-        </Typography>
-        <Button
-          className={classes.createUserButton}
-          color="primary"
-          variant="outlined"
-          onClick={() => setOpen(prev => !prev)}
-        >
-          Vytvořit nového uživatele
-        </Button>
-        <UserCreateModal open={open} setOpen={setOpen} />
-      </div>
-      <TableUser
-        baseUrl="admin/users?"
+      <UserCreateModal open={open} setOpen={setOpen} />
+      <Table
+        title="Správa uživatelů"
+        createLabel="Vytvořit nového uživatele"
+        baseUrl="admin/users"
         columns={columns}
-        selectedRow={seelctedUser}
-        setSelectedRow={setSelectedUser}
+        enableRowClick={false}
+        enableGroupEdit={true}
+        parametrized={false}
+        onCreate={() => setOpen(true)}
+        onGroupEdit={(checkboxRows, values) =>
+          api().post(`admin/set-allowance`, {
+            json: {
+              ids: checkboxRows.map((checkbox) => checkbox.id),
+              value: values.state,
+            },
+          })
+        }
+        GroupActionsComponent={({ formikBag }) => (
+          <Field
+            name="state"
+            component={Switch}
+            label={`Stav registrace ${
+              formikBag.values.state ? "(povoleno)" : "(zakázáno)"
+            }`}
+            secondary
+          />
+        )}
       />
     </>
   );

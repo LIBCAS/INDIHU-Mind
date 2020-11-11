@@ -13,7 +13,7 @@ interface CategoryProps {
 
 const CategoryView: React.FC<CategoryProps & RouteComponentProps> = ({
   category,
-  history
+  history,
 }) => {
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;

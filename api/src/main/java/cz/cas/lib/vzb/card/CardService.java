@@ -65,6 +65,7 @@ public class CardService {
         card.setId(dto.getId());
         card.setName(dto.getName());
         card.setNote(dto.getNote());
+        card.setRawNote(dto.getRawNote());
         card.setCategories(dto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
         card.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
         card.setLinkedCards(dto.getLinkedCards().stream().map(Card::new).collect(Collectors.toSet()));
@@ -96,6 +97,7 @@ public class CardService {
 
         fromDb.setName(dto.getName());
         fromDb.setNote(dto.getNote());
+        fromDb.setRawNote(dto.getRawNote());
         fromDb.setCategories(dto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
         fromDb.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
         fromDb.setLinkedCards(dto.getLinkedCards().stream().map(Card::new).collect(Collectors.toSet()));
@@ -280,6 +282,16 @@ public class CardService {
         }
 
         store.save(affectedCards);
+    }
+
+    /**
+     * For single use, Card.note was changed to save json becasue of text editor
+     */
+    @Transactional
+    public void wipeAllCardNotes() {
+        Collection<Card> allCards = store.findAll();
+        allCards.forEach(card -> card.setNote(""));
+        store.save(allCards);
     }
 
     private Result<CardSearchResultDto> cardSearchPostProcess(HighlightPage<IndexedCard> page) {

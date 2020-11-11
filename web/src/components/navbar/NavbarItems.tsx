@@ -7,6 +7,7 @@ import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useUserToken } from "../../hooks/authHooks";
 
 import { useStyles } from "./_navbarStyles";
+import { isAdmin } from "../../utils/token";
 
 interface NavbarItemsProps {
   matchesMd: boolean;
@@ -21,7 +22,6 @@ export const NavbarItems: React.FC<NavbarItemsProps> = ({ matchesMd }) => {
   const classesText = useTextStyles();
   const classes = useStyles();
   const token = useUserToken();
-  const isAdmin = token && token.authorities.indexOf("ROLE_ADMIN") !== -1;
 
   const renderItems = ({ path, label }: RoutesProps) => (
     <Link
@@ -41,7 +41,7 @@ export const NavbarItems: React.FC<NavbarItemsProps> = ({ matchesMd }) => {
       {matchesMd && (
         <div className={classes.navItems}>
           {routesTabs.map(renderItems)}
-          {isAdmin && adminRoutes.map(renderItems)}
+          {isAdmin(token) && adminRoutes.map(renderItems)}
         </div>
       )}
     </>

@@ -72,8 +72,8 @@ public class FieldAuthorTest {
     public void humanFullNameFullMultipleFirstName() {
         FieldAuthor author = setupAuthorField(true, FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("DOE, John, Marko MARKOVIĆ a San ZHANG a Josef NOVÁK a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -81,8 +81,8 @@ public class FieldAuthorTest {
     public void humanInitialsNameFullMultipleFirstName() {
         FieldAuthor author = setupAuthorField(true, FirstNameFormat.INITIAL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("DOE, J., M. MARKOVIĆ a S. ZHANG a J. NOVÁK a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -90,8 +90,8 @@ public class FieldAuthorTest {
     public void humanFullNameFullMultipleLastName() {
         FieldAuthor author = setupAuthorField(true, FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.LASTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("DOE, John, MARKOVIĆ, Marko a ZHANG, San a NOVÁK, Josef a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -99,8 +99,8 @@ public class FieldAuthorTest {
     public void humanInitialsNameFullMultipleLastName() {
         FieldAuthor author = setupAuthorField(true, FirstNameFormat.INITIAL, MultipleAuthorsFormat.FULL, OrderFormat.LASTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("DOE, J., MARKOVIĆ, M. a ZHANG, S. a NOVÁK, J. a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -108,8 +108,8 @@ public class FieldAuthorTest {
     public void humanFullNameEtalFirstName() {
         FieldAuthor author = setupAuthorField(true, FirstNameFormat.FULL, MultipleAuthorsFormat.ETAL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("DOE, John, et al.");
     }
 
@@ -117,8 +117,8 @@ public class FieldAuthorTest {
     public void humanInitialNameEtalFirstName() {
         FieldAuthor author = setupAuthorField(true, FirstNameFormat.INITIAL, MultipleAuthorsFormat.ETAL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("DOE, J., et al.");
     }
 
@@ -126,8 +126,8 @@ public class FieldAuthorTest {
     public void companyFullNameFullMultipleFirstName() {
         FieldAuthor author = setupAuthorField(false, FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("INQOOL, Marko MARKOVIĆ a San ZHANG a Josef NOVÁK a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -135,8 +135,8 @@ public class FieldAuthorTest {
     public void companyInitialsNameFullMultipleFirstName() {
         FieldAuthor author = setupAuthorField(false, FirstNameFormat.INITIAL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("INQOOL, M. MARKOVIĆ a S. ZHANG a J. NOVÁK a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -144,8 +144,8 @@ public class FieldAuthorTest {
     public void companyFullNameFullMultipleLastName() {
         FieldAuthor author = setupAuthorField(false, FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.LASTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("INQOOL, MARKOVIĆ, Marko a ZHANG, San a NOVÁK, Josef a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -153,8 +153,8 @@ public class FieldAuthorTest {
     public void companyInitialsNameFullMultipleLastName() {
         FieldAuthor author = setupAuthorField(false, FirstNameFormat.INITIAL, MultipleAuthorsFormat.FULL, OrderFormat.LASTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("INQOOL, MARKOVIĆ, M. a ZHANG, S. a NOVÁK, J. a GHOSTRONICS a TULIPRODUCTIONS a JAVAZO");
     }
 
@@ -162,8 +162,8 @@ public class FieldAuthorTest {
     public void companyFullNameEtalFirstName() {
         FieldAuthor author = setupAuthorField(false, FirstNameFormat.FULL, MultipleAuthorsFormat.ETAL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("INQOOL, et al.");
     }
 
@@ -171,8 +171,8 @@ public class FieldAuthorTest {
     public void companyInitialNameEtalFirstName() {
         FieldAuthor author = setupAuthorField(false, FirstNameFormat.INITIAL, MultipleAuthorsFormat.ETAL, OrderFormat.FIRSTNAME_FIRST);
 
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData())
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData())
                 .isEqualTo("INQOOL, et al.");
     }
 
@@ -190,9 +190,9 @@ public class FieldAuthorTest {
         author.setMultipleAuthorsFormat(MultipleAuthorsFormat.FULL);
         author.setOrderFormat(OrderFormat.FIRSTNAME_FIRST);
 
-        author.initializeAuthorsNames(record, ERROR_MESSAGE);
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData()).isEqualTo("DOE, John a Josef NOVÁK");
+        author.initializeAuthorsNames(record);
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData()).isEqualTo("DOE, John a Josef NOVÁK");
     }
 
     @Test
@@ -209,9 +209,9 @@ public class FieldAuthorTest {
         author.setMultipleAuthorsFormat(MultipleAuthorsFormat.FULL);
         author.setOrderFormat(OrderFormat.LASTNAME_FIRST);
 
-        author.initializeAuthorsNames(record, ERROR_MESSAGE);
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData()).isEqualTo("DOE, John a NOVÁK, Josef");
+        author.initializeAuthorsNames(record);
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData()).isEqualTo("DOE, John a NOVÁK, Josef");
     }
 
     @Test
@@ -228,9 +228,9 @@ public class FieldAuthorTest {
         author.setMultipleAuthorsFormat(MultipleAuthorsFormat.FULL);
         author.setOrderFormat(OrderFormat.LASTNAME_FIRST);
 
-        author.initializeAuthorsNames(record, ERROR_MESSAGE);
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData()).isEqualTo("DOE, J. a NOVÁK, J.");
+        author.initializeAuthorsNames(record);
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData()).isEqualTo("DOE, J. a NOVÁK, J.");
     }
 
     @Test
@@ -247,9 +247,9 @@ public class FieldAuthorTest {
         author.setMultipleAuthorsFormat(MultipleAuthorsFormat.ETAL);
         author.setOrderFormat(OrderFormat.LASTNAME_FIRST);
 
-        author.initializeAuthorsNames(record, ERROR_MESSAGE);
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData()).isEqualTo("DOE, John, et al.");
+        author.initializeAuthorsNames(record);
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData()).isEqualTo("DOE, John, et al.");
     }
 
     @Test
@@ -266,9 +266,9 @@ public class FieldAuthorTest {
         author.setMultipleAuthorsFormat(MultipleAuthorsFormat.FULL);
         author.setOrderFormat(OrderFormat.FIRSTNAME_FIRST);
 
-        author.initializeAuthorsNames(record, ERROR_MESSAGE);
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData()).isEqualTo("INQOOL a GHOSTRONICS");
+        author.initializeAuthorsNames(record);
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData()).isEqualTo("INQOOL a GHOSTRONICS");
     }
 
 
@@ -286,9 +286,9 @@ public class FieldAuthorTest {
         author.setMultipleAuthorsFormat(MultipleAuthorsFormat.FULL);
         author.setOrderFormat(OrderFormat.FIRSTNAME_FIRST);
 
-        author.initializeAuthorsNames(record, ERROR_MESSAGE);
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData()).isEqualTo("DOE, John a INQOOL");
+        author.initializeAuthorsNames(record);
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData()).isEqualTo("DOE, John a INQOOL");
     }
 
     @Test
@@ -305,9 +305,9 @@ public class FieldAuthorTest {
         author.setMultipleAuthorsFormat(MultipleAuthorsFormat.FULL);
         author.setOrderFormat(OrderFormat.FIRSTNAME_FIRST);
 
-        author.initializeAuthorsNames(record, ERROR_MESSAGE);
-        Assertions.assertThat(author.getData()).isNotNull();
-        Assertions.assertThat(author.getData()).isEqualTo("INQOOL a Josef NOVÁK");
+        author.initializeAuthorsNames(record);
+        Assertions.assertThat(author.obtainTextualData()).isNotNull();
+        Assertions.assertThat(author.obtainTextualData()).isEqualTo("INQOOL a Josef NOVÁK");
     }
 
 
@@ -321,7 +321,7 @@ public class FieldAuthorTest {
         fieldAuthor.setMultipleAuthorsFormat(multipleAuthorsFormat);
         fieldAuthor.setOrderFormat(orderFormat);
 
-        fieldAuthor.initializeAuthorsNames(record, ERROR_MESSAGE);
+        fieldAuthor.initializeAuthorsNames(record);
         return fieldAuthor;
     }
 

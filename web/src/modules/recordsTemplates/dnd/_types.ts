@@ -1,5 +1,5 @@
 export const ItemTypes = {
-  CARD: "card"
+  CARD: "card",
 };
 
 export interface Item {

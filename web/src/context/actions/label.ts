@@ -4,7 +4,7 @@ import { LabelProps } from "../../types/label";
 import { LABEL_GET, LABEL_ACTIVE_SET } from "../reducers/label";
 import {
   STATUS_LOADING_COUNT_CHANGE,
-  STATUS_ERROR_COUNT_CHANGE
+  STATUS_ERROR_COUNT_CHANGE,
 } from "../reducers/status";
 
 export const labelGet = (dispatch: any) => {
@@ -12,7 +12,7 @@ export const labelGet = (dispatch: any) => {
   api()
     .get("label")
     .json()
-    .then(res => {
+    .then((res: any) => {
       dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: -1 });
       dispatch({ type: LABEL_GET, payload: res });
     })

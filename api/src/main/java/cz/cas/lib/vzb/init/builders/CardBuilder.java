@@ -40,6 +40,11 @@ public final class CardBuilder {
         return this;
     }
 
+    public CardBuilder rawNote(String rawNote) {
+        card.setRawNote(rawNote);
+        return this;
+    }
+
     public CardBuilder categories(Set<Category> categories) {
         card.setCategories(categories);
         return this;

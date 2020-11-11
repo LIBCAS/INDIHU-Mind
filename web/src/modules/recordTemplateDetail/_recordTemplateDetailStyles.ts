@@ -6,28 +6,27 @@ export const useStyles = makeStyles((theme: Theme) => {
     actionsWrapper: {
       display: "flex",
       width: "100%",
-      alignItems: "center"
+      alignItems: "center",
     },
     actionsIcon: {
       marginLeft: theme.spacing(1),
-      color: theme.greyText,
       transition: ".3s ease color",
       cursor: "pointer",
       "&:hover": {
-        color: theme.palette.primary.main
-      }
+        color: theme.palette.primary.main,
+      },
     },
     actionsBack: {
       marginLeft: 0,
-      marginRight: "auto"
+      marginRight: "auto",
     },
     iconSecondary: {
       transition: ".3s ease color",
       cursor: "pointer",
-      color: theme.greyText,
+      color: theme.blackIconColor,
       "&:hover": {
-        color: theme.palette.secondary.main
-      }
-    }
+        color: theme.palette.secondary.main,
+      },
+    },
   };
 });

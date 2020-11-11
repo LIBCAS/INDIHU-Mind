@@ -42,8 +42,8 @@ import static cz.cas.lib.vzb.exception.NameAlreadyExistsException.ErrorCode.NAME
 @Slf4j
 public class ReferenceTemplateService {
 
-    @Value("${vzb.marc.template.missing-data}")
-    private String MISSING_DATA_ERROR_TEXT;
+//    @Value("${vzb.marc.template.missing-data}")
+//    private String MISSING_DATA_ERROR_TEXT;
     private String PDF_FILE_NAME;
 
     private Clock clock = Clock.systemDefaultZone(); // can be changed in tests with setter
@@ -136,7 +136,7 @@ public class ReferenceTemplateService {
      */
     private String createHtmlStringFromTemplateData(ReferenceTemplate templateWithData) {
         return templateWithData.getFields().stream()
-                .map(field -> Typeface.formatData(IndihuMindUtils.escapeText(field.getData()), field.getCustomizations()))
+                .map(field -> Typeface.formatData(IndihuMindUtils.escapeText(field.obtainTextualData()), field.getCustomizations()))
                 .collect(Collectors.joining());
     }
 
@@ -148,13 +148,24 @@ public class ReferenceTemplateService {
     private ReferenceTemplate createTemplateWithFilledData(ReferenceTemplate templateWithoutData, Citation record) {
         ReferenceTemplate template = ReferenceTemplate.blankCopyOf(templateWithoutData);
 
-        template.marcFields().forEach(marcField -> marcField.initializeDataForTagAndCode(record, MISSING_DATA_ERROR_TEXT));
+        template.marcFields().forEach(marcField -> marcField.initializeDataForTagAndCode(record));
         template.dateFields().forEach(dateField -> dateField.initializeCitationDate(clock));
 
-        template.authorField().ifPresent(authorField -> authorField.initializeAuthorsNames(record, MISSING_DATA_ERROR_TEXT));
+        template.authorField().ifPresent(authorField -> authorField.initializeAuthorsNames(record));
 
         return template;
     }
+
+//    private ReferenceTemplate createTemplateWithFilledDataAndShowMissingDataErrorText(ReferenceTemplate templateWithoutData, Citation record) {
+//        ReferenceTemplate template = ReferenceTemplate.blankCopyOf(templateWithoutData);
+//
+//        template.marcFields().forEach(marcField -> marcField.initializeDataForTagAndCode(record, MISSING_DATA_ERROR_TEXT));
+//        template.dateFields().forEach(dateField -> dateField.initializeCitationDate(clock));
+//
+//        template.authorField().ifPresent(authorField -> authorField.initializeAuthorsNames(record, MISSING_DATA_ERROR_TEXT));
+//
+//        return template;
+//    }
 
 
     @Inject

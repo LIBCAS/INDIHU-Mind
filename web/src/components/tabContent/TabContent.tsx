@@ -15,7 +15,6 @@ import { useStyles } from "./_tabContentStyles";
 import { TabProps } from "../leftPanel/LeftPanelContent";
 
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 
 interface TabContentProps {
@@ -23,10 +22,10 @@ interface TabContentProps {
   setActiveTab: Function;
 }
 
-export const TabContentView: React.FC<TabContentProps &
-  RouteComponentProps> = ({ activeTab, setActiveTab, history }) => {
+export const TabContentView: React.FC<
+  TabContentProps & RouteComponentProps
+> = ({ activeTab, setActiveTab, history }) => {
   const classesText = useTextStyles();
-  const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
   const [cardsOpened, setCardsOpened] = useState<
     { id: string; name: string }[]
@@ -42,19 +41,19 @@ export const TabContentView: React.FC<TabContentProps &
   useEffect(() => {
     if (
       categoryActive === undefined &&
-      activeTab == "category" &&
+      activeTab === "category" &&
       labelActive !== undefined
     ) {
       setActiveTab("label");
     }
     if (
       labelActive === undefined &&
-      activeTab == "label" &&
+      activeTab === "label" &&
       categoryActive !== undefined
     ) {
       setActiveTab("category");
     }
-  }, [categoryActive, labelActive]);
+  }, [categoryActive, labelActive, activeTab, setActiveTab]);
   const onChangeCards = () => {
     const storeCards = get("cardsOpened", []);
     setCardsOpened(storeCards);
@@ -77,7 +76,7 @@ export const TabContentView: React.FC<TabContentProps &
           display:
             activeTab === "category" || activeTab === undefined
               ? "block"
-              : "none"
+              : "none",
         }}
       >
         <Categories
@@ -92,7 +91,7 @@ export const TabContentView: React.FC<TabContentProps &
           maxHeight: transition ? "57vh" : "70vh",
           transition: ".3s ease max-height",
           overflow: "auto",
-          display: activeTab === "label" ? "block" : "none"
+          display: activeTab === "label" ? "block" : "none",
         }}
       >
         <Labels activeTab={activeTab} />
@@ -106,10 +105,9 @@ export const TabContentView: React.FC<TabContentProps &
               classesText.textGreyLight,
               classesText.textUppercase,
               classesText.cursor,
-              classesText.small,
-              classesSpacing.mt2
+              classesText.small
             )}
-            onClick={() => setShowCards(prev => !prev)}
+            onClick={() => setShowCards((prev) => !prev)}
           >
             Naposledy otevřené karty{" "}
             {showCards ? <KeyboardArrowDown /> : <KeyboardArrowUp />}
@@ -122,7 +120,7 @@ export const TabContentView: React.FC<TabContentProps &
             onExited={() => setTransition(false)}
           >
             <div>
-              {cardsOpened.map(c => (
+              {cardsOpened.map((c) => (
                 <div
                   key={c.id}
                   className={classNames(classes.cardOpened)}

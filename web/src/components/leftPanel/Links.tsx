@@ -6,6 +6,7 @@ import { useUserToken } from "../../hooks/authHooks";
 
 import { routesTabs, adminRoutes, RoutesProps } from "../../router/_routes";
 import { useStyles } from "./_leftPanelStyles";
+import { isAdmin } from "../../utils/token";
 
 interface LinksProps {
   setLeftPanelOpen?: any;
@@ -19,7 +20,6 @@ const CustomNavLink = React.forwardRef((
 export const Links: React.FC<LinksProps> = ({ setLeftPanelOpen }) => {
   const classes = useStyles();
   const token = useUserToken();
-  const isAdmin = token && token.authorities.indexOf("ROLE_ADMIN") !== -1;
 
   const mapRoutes = (r: RoutesProps) => (
     <Link
@@ -37,7 +37,7 @@ export const Links: React.FC<LinksProps> = ({ setLeftPanelOpen }) => {
   return (
     <div className={classes.wrapper}>
       {routesTabs.map(mapRoutes)}
-      {isAdmin && adminRoutes.map(mapRoutes)}
+      {isAdmin(token) && adminRoutes.map(mapRoutes)}
     </div>
   );
 };

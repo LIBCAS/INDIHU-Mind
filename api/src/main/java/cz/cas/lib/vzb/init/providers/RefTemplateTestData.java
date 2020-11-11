@@ -7,6 +7,7 @@ import cz.cas.lib.vzb.reference.marc.template.field.*;
 import cz.cas.lib.vzb.reference.marc.template.field.author.FirstNameFormat;
 import cz.cas.lib.vzb.reference.marc.template.field.author.MultipleAuthorsFormat;
 import cz.cas.lib.vzb.reference.marc.template.field.author.OrderFormat;
+import cz.cas.lib.vzb.reference.marc.template.field.interpunction.*;
 import cz.cas.lib.vzb.security.user.User;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ public class RefTemplateTestData implements TestDataRemovable {
         template.setName("New Reference Template Test");
         template.setFields(asList(
                 new FieldAuthor(FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST, Typeface.BOLD), new FieldComma(), new FieldSpace(),
-                new FieldMarc("300", 'a'), new FieldSpace(), new FieldGeneratedDate(Typeface.ITALIC)
+                new FieldMarc("300", 'a'), new FieldSpace(), new FieldGeneratedDate(Typeface.ITALIC), new FieldComma(), new FieldSpace(), new FieldCustomText("Muj custom text:ěščřřžýáíéůĚŠČŘŘŽÝÁÍÉŮ", Typeface.ITALIC, Typeface.BOLD)
         ));
 
         template.setOwner(owner);
@@ -72,6 +73,30 @@ public class RefTemplateTestData implements TestDataRemovable {
                 new FieldAuthor(FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST, Typeface.BOLD),
                 new FieldSpace(), new FieldColon(), new FieldSpace(), new FieldGeneratedDate(), new FieldSemicolon(),
                 new FieldSpace(), new FieldOnline()));
+        template.setOwner(owner);
+        return templateStore.save(template);
+    }
+
+    public ReferenceTemplate allFieldsTemplate(User owner) {
+        ReferenceTemplate template = new ReferenceTemplate();
+        template.setId("11744c72-2270-11eb-adc1-0242ac120002");
+        template.setName("All fields");
+        template.setFields(asList(
+                new FieldCustomText("Punctuation:"),
+                new FieldSpace(), new FieldBracketLeft(),
+                new FieldSpace(), new FieldBracketRight(),
+                new FieldSpace(), new FieldColon(),
+                new FieldSpace(), new FieldSemicolon(),
+                new FieldSpace(), new FieldSlash(),
+                new FieldSpace(), new FieldHyphen(),
+                new FieldSpace(), new FieldComma(),
+                new FieldSpace(), new FieldPeriod(),
+                new FieldSpace(), new FieldAuthor(FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST, Typeface.UPPERCASE),
+                new FieldSpace(), new FieldGeneratedDate(),
+                new FieldSpace(), new FieldInside(),
+                new FieldSpace(), new FieldOnline(),
+                new FieldSpace(), new FieldMarc("245", 'a', Typeface.BOLD)
+        ));
         template.setOwner(owner);
         return templateStore.save(template);
     }

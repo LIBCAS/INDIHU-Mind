@@ -106,16 +106,16 @@ public interface IndexedStore<T extends DomainObject, U extends IndexedDomainObj
             indexedStoreLogger.trace("this store has no records to index");
             return;
         }
-        indexedStoreLogger.debug("reindexing " + instances.size() + " records of core: " + getIndexCollection());
+        indexedStoreLogger.debug(String.format("reindexing %d records of type:'%s' of core:'%s'", instances.size(), getUType().getSimpleName(), getIndexCollection()));
         int counter = 0;
         for (T instance : instances) {
             index(instance);
             counter++;
             if (counter % 20 == 0 || counter == instances.size()) {
-                indexedStoreLogger.debug("reindexed " + counter + " records of core: " + getIndexCollection());
+                indexedStoreLogger.info(String.format("reindexed %d records of type:'%s' of core:'%s'", counter, getUType().getSimpleName(), getIndexCollection()));
             }
         }
-        indexedStoreLogger.trace("reindexed all " + instances.size() + " records of core: " + getIndexCollection());
+        indexedStoreLogger.trace(String.format("reindexed all %d records of type:'%s' of core:'%s'", instances.size(), getUType().getSimpleName(), getIndexCollection()));
         instances.forEach(this::index);
     }
 

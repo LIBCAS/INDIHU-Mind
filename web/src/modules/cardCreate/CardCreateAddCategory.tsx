@@ -1,23 +1,25 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { Field, FieldProps } from "formik";
 
 import { GlobalContext, StateProps } from "../../context/Context";
 import { categoryGet } from "../../context/actions/category";
 import { CreateCategory } from "../../components/tabContent/CreateCategory";
 import { Modal } from "../../components/portal/Modal";
+import { Select } from "../../components/form/Select";
 
 import { CategoryProps } from "../../types/category";
-import { OptionType } from "../../components/form/reactSelect/_reactSelectTypes";
-import { ReactSelect } from "../../components/form/reactSelect/ReactSelect";
+import { OptionType } from "../../components/select/_types";
 
-import { flattenCategory, parseCategory } from "./_utils";
+import { flattenCategory } from "./_utils";
 
 interface CardCreateAddCategoryProps {
   formikBag: any;
+  compact?: boolean;
 }
 
 export const CardCreateAddCategory: React.FC<CardCreateAddCategoryProps> = ({
-  formikBag
+  formikBag,
+  compact = false,
 }) => {
   const context: any = useContext(GlobalContext);
 
@@ -35,7 +37,7 @@ export const CardCreateAddCategory: React.FC<CardCreateAddCategoryProps> = ({
     categoryGet(dispatch);
     formikBag.setFieldValue("categories", [
       ...formikBag.values.categories,
-      ...flattenCategory([created])
+      created.id,
     ]);
   };
 
@@ -44,36 +46,49 @@ export const CardCreateAddCategory: React.FC<CardCreateAddCategoryProps> = ({
     setOpen(true);
   };
 
+  const formikBagSetFieldCallback = useCallback(
+    (fieldName: string, value: any) =>
+      formikBag.setFieldValue(fieldName, value),
+    [formikBag]
+  );
+  useEffect(() => {
+    if (state.category.categoryActive !== undefined) {
+      formikBagSetFieldCallback("categories", [
+        ...formikBag.values.categories,
+        state.category.categoryActive && state.category.categoryActive.id,
+      ]);
+    }
+  }, [state.category.categoryActive, formikBag, formikBagSetFieldCallback]);
+
   useEffect(() => {
     const flatten = state.category.categoryActive
       ? flattenCategory([
           ...state.category.categories,
-          state.category.categoryActive
+          state.category.categoryActive,
         ])
       : flattenCategory([...state.category.categories]);
     setOptions(flatten);
+  }, [state.category.categories, state.category.categoryActive]);
 
-    if (state.category.categoryActive !== undefined) {
-      formikBag.setFieldValue(
-        "categories",
-        parseCategory(state.category.categoryActive, state.category.categories)
-      );
-    }
-  }, [state.category.categories]);
+  const label = "Kategorie";
 
   return (
     <Field
       name="categories"
+      value={[{ label: "O", value: "2" }]}
       render={({ field, form }: FieldProps<any>) => {
         return (
-          <>
-            <ReactSelect
+          <div>
+            <Select
               form={form}
               field={field}
               loading={false}
-              label="Kategorie"
+              isMulti={true}
+              label={compact ? undefined : label}
+              placeholder={compact ? label : undefined}
               options={options}
               onCreate={onCreate}
+              createLabel="Vytvořit kategorii: "
             />
             <Modal
               open={open}
@@ -87,7 +102,7 @@ export const CardCreateAddCategory: React.FC<CardCreateAddCategoryProps> = ({
                 />
               }
             />
-          </>
+          </div>
         );
       }}
     />

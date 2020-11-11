@@ -1,12 +1,5 @@
 import * as React from "react";
-import {
-  Drawer,
-  Link,
-  ListItem,
-  List,
-  Button,
-  ListItemText
-} from "@material-ui/core";
+import { Drawer, ListItem, List, ListItemText } from "@material-ui/core";
 import { useStyles } from "./_leftPanelStyle";
 
 export interface LeftPanelProps {
@@ -18,7 +11,7 @@ export interface LeftPanelProps {
 export const LeftPanel: React.SFC<LeftPanelProps> = ({
   leftPanelOpen,
   setLeftPanelOpen,
-  setOpenModalInfo
+  setOpenModalInfo,
 }) => {
   const classes = useStyles();
 
