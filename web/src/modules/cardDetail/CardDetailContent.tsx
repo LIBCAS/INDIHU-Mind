@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MuiTypography from "@material-ui/core/Typography";
 import MuiToolbar from "@material-ui/core/Toolbar";
 import classNames from "classnames";
@@ -26,6 +26,8 @@ import { useStyles } from "./_cardDetailStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { CardDetailContentAddRecord } from "./cardDetailContent/CardDetailContentAddRecord";
+import { loadNote } from "./_utils";
+import { LinearProgress } from "@material-ui/core";
 
 interface CardDetailContentProps {
   card: CardContentProps;
@@ -56,6 +58,21 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
 
   const cardInner = card.card;
 
+  const [structuredNote, setStructuredNote] = useState<null | {
+    data: string;
+    id: string;
+    size: number;
+  }>(null);
+  const [loadingNote, setLoadingNote] = useState(false);
+  const fetchNote = useCallback(async () => {
+    setLoadingNote(true);
+    const structuredNoteFetched = await loadNote(card.card.id);
+    setStructuredNote(structuredNoteFetched);
+    setLoadingNote(false);
+  }, [card.card.id]);
+  useEffect(() => {
+    fetchNote();
+  }, [fetchNote]);
   return (
     <React.Fragment>
       <CardDetailContentTitle
@@ -101,13 +118,16 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
           Popis
         </MuiTypography>
       </MuiToolbar>
+      {loadingNote && (
+        <LinearProgress style={{ width: "100%" }} color="primary" />
+      )}
       <CardDetailContentNote
-        note={cardInner.note}
+        setStructuredNote={setStructuredNote}
+        note={structuredNote ? structuredNote.data : null}
         card={card}
         cardContent={cardContent}
         setCardContent={setCardContent}
       />
-
       <MuiToolbar disableGutters={true}>
         <MuiTypography style={{ marginTop: "15px" }} variant="h6">
           Štítky

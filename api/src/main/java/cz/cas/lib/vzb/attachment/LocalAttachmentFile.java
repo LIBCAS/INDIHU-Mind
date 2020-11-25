@@ -26,6 +26,7 @@ public class LocalAttachmentFile extends AttachmentFile implements DownloadableA
 
     /**
      * Content type of the file e.g. {@link org.springframework.http.MediaType#IMAGE_PNG_VALUE}
+     * Parsed by BE from received file.
      */
     private String contentType;
 

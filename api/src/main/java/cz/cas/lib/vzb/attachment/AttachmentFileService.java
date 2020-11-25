@@ -13,6 +13,7 @@ import cz.cas.lib.vzb.reference.marc.record.CitationStore;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.User;
 import cz.cas.lib.vzb.util.IndihuMindUtils;
+import cz.cas.lib.vzb.util.QuotaVerifier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.tika.Tika;
@@ -46,7 +47,6 @@ import static core.exception.ForbiddenOperation.ErrorCode.FILE_NOT_STORED_ON_SER
 import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.exception.MissingObject.ErrorCode.FILE_IS_MISSING;
 import static core.util.Utils.*;
-import static cz.cas.lib.vzb.exception.UserQuotaReachedException.ErrorCode.USER_QUOTA_REACHED;
 
 @Slf4j
 @Service
@@ -58,6 +58,7 @@ public class AttachmentFileService {
     private CardStore cardStore;
     private CitationStore recordStore;
     private UserDelegate userDelegate;
+    private QuotaVerifier quotaVerifier;
 
     /** Specifies the path on file system, where the local attachment files should be saved. **/
     private String attachmentsDirectory;
@@ -355,24 +356,14 @@ public class AttachmentFileService {
         if (dto.getProviderType() == AttachmentFileProviderType.LOCAL) {
             notNull(file, () -> new MissingObject(ENTITY_IS_NULL, MultipartFile.class, "null"));
             IndihuMindUtils.checkFileExtensionFromName(file.getOriginalFilename());
-            checkUserFileSizeQuota(file.getSize());
+            quotaVerifier.verify(file.getSize());
         }
 
         if (dto.getProviderType() == AttachmentFileProviderType.URL && dto.shouldDownloadUrlDocumentFromLink()) {
             URL url = IndihuMindUtils.createUrlFromLink(dto.getLink());
             IndihuMindUtils.checkUrlFileExtension(url);
-            checkUserFileSizeQuota(IndihuMindUtils.getSizeFromUrlFile(url));
+            quotaVerifier.verify(IndihuMindUtils.getSizeFromUrlFile(url));
         }
-    }
-
-    private void checkUserFileSizeQuota(long sizeBytes) throws UserQuotaReachedException {
-        long uploadSizeKb = sizeBytes / 1000;
-
-        long localAttachmentsSize = localAttachmentStore.localAttachmentsSizeForUser(userDelegate.getUser().getId()) / 1000;
-        long urlAttachmentsSize = urlAttachmentStore.urlAttachmentsSizeForUser(userDelegate.getUser().getId()) / 1000;
-        long sizeUserAlreadyHasKb = localAttachmentsSize + urlAttachmentsSize;
-        if (sizeUserAlreadyHasKb + uploadSizeKb > kbPerUser)
-            throw new UserQuotaReachedException(USER_QUOTA_REACHED, kbPerUser);
     }
 
     /**
@@ -603,4 +594,8 @@ public class AttachmentFileService {
         this.recordStore = recordStore;
     }
 
+    @Inject
+    public void setQuotaVerifier(QuotaVerifier quotaVerifier) {
+        this.quotaVerifier = quotaVerifier;
+    }
 }

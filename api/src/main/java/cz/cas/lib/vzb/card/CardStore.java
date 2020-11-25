@@ -86,6 +86,52 @@ public class CardStore extends NamedStore<Card, QCard> implements AdvancedSearch
         return null;
     }
 
+    /**
+     * Query Card and initialize LAZY entities.
+     */
+    public Card findCardNote(String cardId) {
+        Card fetch = query()
+                .select(qObject())
+                .where(qObject().id.eq(cardId).and(qObject().deleted.isNull()))
+                .join(qObject().structuredNote).fetchJoin()
+                .fetchFirst();
+        detachAll();
+        return fetch;
+    }
+
+    public Long cardNoteSizeForUser(String userId) {
+        QCardNote qCardNote = QCardNote.cardNote;
+        QCard qCard = qObject();
+        Long fetch = query()
+                .select(qCardNote.size.sum())
+                .where(qObject().owner.id.eq(userId))
+                .from(qCard)
+                .innerJoin(qCard.structuredNote, qCardNote)
+                .fetchOne();
+        if (fetch == null)
+            fetch = 0L;
+        detachAll();
+        return fetch;
+    }
+
+    public Long cardNoteSizeForSpecificCard(String cardId) {
+        QCardNote qCardNote = QCardNote.cardNote;
+        QCard qCard = qObject();
+
+        Long fetch = query()
+                .select(qCardNote.size)
+                .where(qObject().id.eq(cardId))
+                .from(qCard)
+                .innerJoin(qCard.structuredNote, qCardNote)
+                .fetchOne();
+
+        if (fetch == null)
+            fetch = 0L;
+        detachAll();
+        return fetch;
+    }
+
+
     public List<Card> findSoftDeletedCardsOfUser(String userId) {
         List<Card> fetch = query()
                 .select(qObject())
@@ -153,7 +199,7 @@ public class CardStore extends NamedStore<Card, QCard> implements AdvancedSearch
         cardDoc.addField(IndexedCard.CATEGORY_IDS, filledCategories.stream().map(Category::getId).collect(Collectors.toList()));
         cardDoc.addField(IndexedCard.ATTACHMENT_FILES_NAMES, filledFiles.stream().map(AttachmentFile::getName).collect(Collectors.toList()));
         cardDoc.addField(IndexedCard.NAME, card.getName());
-        cardDoc.addField(IndexedCard.NOTE, card.getNote());
+        cardDoc.addField(IndexedCard.NOTE, card.getRawNote());
 
         // TODO: Should we index only last card content?
         List<CardContent> allOfCard = cardContentStore.findAllOfCard(card.getId());

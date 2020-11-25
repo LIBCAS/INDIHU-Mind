@@ -3,6 +3,7 @@ package cz.cas.lib.vzb.init.builders;
 import core.util.Utils;
 import cz.cas.lib.vzb.attachment.AttachmentFile;
 import cz.cas.lib.vzb.card.Card;
+import cz.cas.lib.vzb.card.CardNote;
 import cz.cas.lib.vzb.card.category.Category;
 import cz.cas.lib.vzb.card.label.Label;
 import cz.cas.lib.vzb.reference.marc.record.Citation;
@@ -36,7 +37,7 @@ public final class CardBuilder {
     }
 
     public CardBuilder note(String note) {
-        card.setNote(note);
+        card.setStructuredNote(new CardNote(note));
         return this;
     }
 

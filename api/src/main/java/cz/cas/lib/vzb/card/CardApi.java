@@ -38,6 +38,28 @@ public class CardApi {
     private UserDelegate userDelegate;
 
 
+    @ApiOperation(value = "Retrieve card. Without LAZY entities, use specific endpoint for them")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = Card.class),
+            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
+            @ApiResponse(code = 404, message = "Entity not found for given ID")
+    })
+    @GetMapping(path = "/{id}", produces = APPLICATION_JSON_VALUE)
+    public Card find(@ApiParam(value = "card id", required = true) @PathVariable("id") String id) {
+        return service.find(id);
+    }
+
+    @ApiOperation(value = "Retrieve card note", notes = "Possibly large requests (megabytes) because of encoded images.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = CardNote.class),
+            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
+            @ApiResponse(code = 404, message = "Entity not found for given ID")
+    })
+    @GetMapping(path = "/{id}/card-note", produces = APPLICATION_JSON_VALUE)
+    public CardNote findCardNote(@ApiParam(value = "card id", required = true) @PathVariable("id") String id) {
+        return service.findCardNote(id);
+    }
+
     @ApiOperation("Creates a new card")
     @ApiResponses({
             @ApiResponse(code = 200, message = "first version of card content with link to the new card"),
@@ -45,11 +67,22 @@ public class CardApi {
             @ApiResponse(code = 409, message = "Card with that ID already exists.")
     })
     @PostMapping(consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CardContent create(
-            @ApiParam(value = "DTO.. attributes does not has to have ID or relation to card content") @Valid @RequestBody CreateCardDto createCardDto) {
+    public CardContent create(@ApiParam(value = "DTO attributes does not has to have ID or relation to card content") @Valid @RequestBody CreateCardDto createCardDto) {
         return service.createCard(createCardDto);
     }
 
+    @ApiOperation(value = "Updates card and its relationships with cards, categories, labels, records")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK, entity was updated"),
+            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
+            @ApiResponse(code = 404, message = "Entity not found for given ID")
+    })
+    @PutMapping(path = "/{id}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CardContent update(
+            @ApiParam(value = "card id") @PathVariable("id") String cardId,
+            @ApiParam(value = "dto") @Valid @RequestBody UpdateCardDto updateCardDto) {
+        return service.updateCard(cardId, updateCardDto);
+    }
 
     @ApiOperation(value = "Updates the latest content of the card.",
             notes = "If newVersion is set to true, new version of content is created, otherwise the old one is updated.")
@@ -63,20 +96,6 @@ public class CardApi {
             @ApiParam(value = "card id") @PathVariable("id") String cardId,
             @ApiParam(value = "dto") @RequestBody @NotNull UpdateCardContentDto updateCardDto) {
         return service.updateCardContent(cardId, updateCardDto);
-    }
-
-
-    @ApiOperation(value = "Updates card and its relationships with cards, categories, labels, records")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK, entity was updated"),
-            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
-            @ApiResponse(code = 404, message = "Entity not found for given ID")
-    })
-    @PutMapping(path = "/{id}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CardContent update(
-            @ApiParam(value = "card id") @PathVariable("id") String cardId,
-            @ApiParam(value = "dto") @Valid @RequestBody UpdateCardDto updateCardDto) {
-        return service.updateCard(cardId, updateCardDto);
     }
 
 
@@ -166,17 +185,6 @@ public class CardApi {
         return service.findAllContentsForCard(cardId);
     }
 
-
-    @ApiOperation(value = "Retrieve card with relations (categories, labels etc.) but without contents")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Card.class),
-            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
-            @ApiResponse(code = 404, message = "Entity not found for given ID")
-    })
-    @GetMapping(path = "/{id}", produces = APPLICATION_JSON_VALUE)
-    public Card find(@ApiParam(value = "card id", required = true) @PathVariable("id") String id) {
-        return service.find(id);
-    }
 
     @Inject
     public void setService(CardService service) {

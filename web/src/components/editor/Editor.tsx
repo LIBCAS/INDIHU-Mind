@@ -7,7 +7,7 @@ import { useStyles } from "./_styles";
 import classNames from "classnames";
 import { EditorState, convertFromRaw, convertToRaw } from "draft-js";
 import { debounce } from "lodash";
-//import { imageUploadCallBack } from "./_utils";
+import { imageUploadCallBack } from "./_utils";
 import { translations } from "./_enums";
 
 export interface EditorProps {
@@ -81,11 +81,11 @@ export const Editor: React.FC<EditorProps> = ({
                       options: ["bold", "italic", "underline"],
                     }
                   : undefined,
-                // image: {
-                //   uploadEnabled: true,
-                //   uploadCallback: imageUploadCallBack,
-                //   previewImage: true,
-                // },
+                image: {
+                  uploadEnabled: true,
+                  uploadCallback: imageUploadCallBack,
+                  previewImage: true,
+                },
               },
         }}
       />

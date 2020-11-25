@@ -144,7 +144,7 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
 
   const isTable = view === ViewType.TABLE;
   const Icon = isTable ? ViewModule : ViewHeadline;
-  const Component = isTable ? TableComponent : TilesComponent;
+  const Component = isTable || !TileComponent ? TableComponent : TilesComponent;
 
   return (
     <>

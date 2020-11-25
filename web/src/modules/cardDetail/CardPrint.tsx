@@ -5,7 +5,6 @@ import { CardProps } from "../../types/card";
 import { useStyles } from "./_cardDetailStyles";
 import { formatCategoryName } from "../../utils/category";
 import { CategoryProps } from "../../types/category";
-import { Editor } from "../../components/editor";
 
 interface PrintComponentProps {
   card: CardProps;
@@ -24,9 +23,8 @@ const PrintComponent: React.FC<PrintComponentProps> = ({ card }) => {
       {[
         { name: "name", label: "Název" },
         {
-          name: "note",
+          name: "rawNote",
           label: "Popis",
-          mapper: (value: string) => <Editor {...{ value, readOnly: true }} />,
         },
         {
           name: "categories",

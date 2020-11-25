@@ -1,11 +1,13 @@
 package core.rest.config;
 
+import core.exception.BadArgument;
 import core.exception.RestGeneralException;
 import cz.cas.lib.vzb.util.IndihuMindUtils;
 import lombok.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -36,6 +38,11 @@ public abstract class RestExceptionHandler extends ResponseEntityExceptionHandle
 
     protected ResponseEntity<Object> createExceptionResponse(@NonNull MaxUploadSizeExceededException exception, HttpStatus status, Map<String, String> details, WebRequest request) {
         RestExceptionResponse responseBodyDTO = new RestExceptionResponse(FILE_TOO_BIG, exception, details, status);
+        return handleException(exception, responseBodyDTO, status, request);
+    }
+
+    protected ResponseEntity<Object> createExceptionResponse(@NonNull MethodArgumentNotValidException exception, HttpStatus status, Map<String, String> details, WebRequest request) {
+        RestExceptionResponse responseBodyDTO = new RestExceptionResponse(BadArgument.ErrorCode.ARGUMENT_FAILED_VALIDATION, exception, details, status);
         return handleException(exception, responseBodyDTO, status, request);
     }
 

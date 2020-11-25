@@ -74,6 +74,9 @@ security:
     digit: true
     alphabet: true
 
+logging:
+  file.path: ../logs
+
 file.path: filerepository
 
 json:

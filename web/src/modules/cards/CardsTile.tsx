@@ -1,13 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
-import { flatten } from "lodash";
-
 import { api } from "../../utils/api";
 import { CardProps } from "../../types/card";
 import { GlobalContext } from "../../context/Context";
-import { CategoryProps } from "../../types/category";
-
 import { Loader } from "../../components/loader/Loader";
-
 import { useStyles } from "./_cardsStyles";
 import { CardTile } from "../../components/card/CardTile";
 
@@ -25,7 +20,7 @@ export const CardsTile: React.FC<CardsTileProps> = ({ query }) => {
   const [loading, setLoading] = useState(true);
 
   const [cards, setCards] = useState<
-    { id: string; name: string; note: string }[]
+    { id: string; name: string; rawNote: string }[]
   >([]);
 
   const context: any = useContext(GlobalContext);

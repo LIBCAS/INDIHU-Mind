@@ -22,7 +22,7 @@ public class UrlAttachmentFile extends AttachmentFile implements DownloadableAtt
     @Transient
     private final AttachmentFileProviderType providerType = AttachmentFileProviderType.URL;
 
-    /** URL link from which file has been downloaded **/
+    /** URL link from which file can be downloaded **/
     @NotNull
     private String link;
 

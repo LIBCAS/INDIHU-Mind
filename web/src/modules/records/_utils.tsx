@@ -21,6 +21,7 @@ export const getRecords = async (text?: string, page = 0, pageSize = 10) => {
         ...(text
           ? { filter: [{ field: "name", operation: "EQ", value: text }] }
           : {}),
+        order: "DESC",
       },
     });
 

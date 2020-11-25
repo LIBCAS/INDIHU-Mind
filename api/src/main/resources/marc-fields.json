@@ -111,7 +111,22 @@
     "code": "a"
   },
   {
-    "czech": "Rozsah stran",
+    "czech": "Zdrojový dokument tvůrce",
+    "tag": "760",
+    "code": "a"
+  },
+  {
+    "czech": "Zdrojový dokument název",
+    "tag": "760",
+    "code": "t"
+  },
+  {
+    "czech": "Zdrojový dokument místo, nakladatel, rok",
+    "tag": "773",
+    "code": "d"
+  },
+  {
+    "czech": "Zdrojový dokument číslování",
     "tag": "773",
     "code": "g"
   },
@@ -139,5 +154,26 @@
     "czech": "Číslo dokumentu",
     "tag": "910",
     "code": "b"
+  },
+  {
+    "czech": "Kolekce",
+    "__comment__": "Non-existent MARC Code, more info in API JavaDoc",
+    "__hidden__" : true,
+    "tag": "999",
+    "code": "a"
+  },
+  {
+    "czech": "Archiv",
+    "__comment__": "Non-existent MARC Code, more info in API JavaDoc",
+    "__hidden__" : true,
+    "tag": "999",
+    "code": "b"
+  },
+  {
+    "czech": "Město",
+    "__comment__": "Non-existent MARC Code, more info in API JavaDoc",
+    "__hidden__" : true,
+    "tag": "999",
+    "code": "c"
   }
 ]

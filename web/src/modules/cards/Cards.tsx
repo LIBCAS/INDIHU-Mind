@@ -26,7 +26,6 @@ import {
 import { Label } from "../../components/card/Label";
 import { api } from "../../utils/api";
 import { CardTile } from "../../components/card/CardTile";
-import { parseCardNoteText } from "../../components/card/_utils";
 
 export const columns: Column[] = [
   {
@@ -40,10 +39,9 @@ export const columns: Column[] = [
     type: ColumnType.DATE,
   },
   {
-    field: "note",
+    field: "rawNote",
     name: "Popis",
     unsortable: true,
-    format: (row: any) => row.note && parseCardNoteText(row.note),
   },
   {
     field: "labels",

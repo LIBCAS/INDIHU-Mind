@@ -7,7 +7,7 @@ import { FileProps } from "./file";
 export interface LinkedCardProps {
   id: string;
   name: string;
-  note: string;
+  rawNote: string;
 }
 
 export interface CardComment {
@@ -22,7 +22,9 @@ export interface CardProps {
   id: string;
   pid: number;
   name: string;
-  note: string | null;
+  rawNote: string | null;
+  structuredNote: any | null;
+  note: string;
   created: string;
   updated: string;
   deleted: string;

@@ -10,6 +10,7 @@ import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -64,7 +65,20 @@ public class RestExceptionResponse {
         } else {
             this.cause = "Unknown cause";
         }
-        this.details = details;
+        this.details = truncatePossibleLengthyLogs(details);
+    }
+
+
+    private Map<String, String> truncatePossibleLengthyLogs(Map<String, String> details) {
+        Map<String, String> result = new HashMap<>(details);
+        for (Map.Entry<String, String> entry : details.entrySet()) {
+            String value = entry.getValue();
+            if (value.length() > 250) {
+                String truncated = value.substring(0, 2500);
+                result.put(entry.getKey(), "[TRUNCATED first 2500 chars] " + truncated);
+            }
+        }
+        return result;
     }
 
 }

@@ -19,7 +19,7 @@ export const getFiles = async (text?: string, page = 0, pageSize = 10) => {
             )}`
           )
         : await api().post(url, {
-            json: { page, pageSize },
+            json: { page, pageSize, order: "DESC" },
           });
 
     return await response.json();

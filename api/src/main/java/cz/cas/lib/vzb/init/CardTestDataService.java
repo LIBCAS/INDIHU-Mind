@@ -3,6 +3,7 @@ package cz.cas.lib.vzb.init;
 import com.github.javafaker.Faker;
 import cz.cas.lib.vzb.card.Card;
 import cz.cas.lib.vzb.card.CardContent;
+import cz.cas.lib.vzb.card.CardNote;
 import cz.cas.lib.vzb.card.attribute.Attribute;
 import cz.cas.lib.vzb.card.attribute.AttributeType;
 import cz.cas.lib.vzb.card.category.Category;
@@ -48,10 +49,10 @@ public class CardTestDataService {
             card.setOwner(this.owner);
             card.setLabels(selectRandomEntities(genLabels, randBetween(2, 6)));
             card.setCategories(selectRandomEntities(genCategories, randBetween(0, 4)));
-            card.setNote(String.format("Kraj %s je super, řekl človek z lidu: %s. %s",
+            card.setStructuredNote(new CardNote(String.format("Kraj %s je super, řekl človek z lidu: %s. %s",
                     faker.address().state(),
                     faker.name().fullName(),
-                    faker.commerce().productName()));
+                    faker.commerce().productName())));
             card.setName(String.format("%s %s narozený v %s pracuje pro %s",
                     faker.address().state(),
                     faker.name().firstName(),

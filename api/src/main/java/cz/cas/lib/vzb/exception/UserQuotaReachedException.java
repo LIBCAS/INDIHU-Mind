@@ -13,7 +13,7 @@ public class UserQuotaReachedException extends RestGeneralException {
 
 
     public enum ErrorCode implements RestErrorCodeEnum {
-        USER_QUOTA_REACHED("Soubor by překročil limit úložiště uživatele");
+        USER_QUOTA_REACHED("Limit úložiště uživatele překročen");
 
         @Getter private final String message;
 

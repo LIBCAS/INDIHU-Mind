@@ -29,3 +29,14 @@ export const deleteComment = async (id: string) => {
     return false;
   }
 };
+
+export const loadNote = async (id: string) => {
+  try {
+    const response = await api().get(`card/${id}/card-note`);
+    const result = await response.json();
+    return result;
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+};

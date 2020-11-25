@@ -32,13 +32,13 @@ export const Bin: React.FC<RouteComponentProps> = () => {
   const [cards, setCards] = useState<CardProps[]>([]);
 
   const loadCards = useCallback(() => {
-    if (!controller.signal.aborted && loading) controller.abort();
+    if (!controller.signal.aborted) controller.abort();
     controller = new AbortController();
     setLoading(true);
     api()
       .post(`card/deleted`, {
         signal: controller.signal,
-        json: { page: 0, pageSize: 30 },
+        json: { page: 0, pageSize: 30, order: "DESC" },
       })
       .json()
       .then((res: any) => {
@@ -49,7 +49,7 @@ export const Bin: React.FC<RouteComponentProps> = () => {
         dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
         setLoading(false);
       });
-  }, [dispatch, loading]);
+  }, [dispatch]);
 
   const onRestore = (card: any) => {
     api().post(`card/set-softdelete`, {
@@ -138,14 +138,14 @@ export const Bin: React.FC<RouteComponentProps> = () => {
         {!loading && cards.length === 0 && (
           <Typography>Žádné karty v koši</Typography>
         )}
-        <Grid container spacing={3}>
+        <Grid style={{ maxWidth: "100%", margin: 0 }} container spacing={3}>
           {cards.map((c) => (
             <Grid key={c.id} item xs={12} md={6} lg={4}>
               <CardTile
                 card={{
                   id: c.id,
                   name: c.name,
-                  note: c.note as string,
+                  rawNote: c.rawNote as string,
                 }}
                 onRestore={onRestore}
                 onRemove={onRemove}

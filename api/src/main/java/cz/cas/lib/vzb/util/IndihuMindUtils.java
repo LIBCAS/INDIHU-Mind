@@ -41,6 +41,12 @@ public class IndihuMindUtils {
      */
     public static final String AUTHOR_NAME_ENCODING = "#&&#";
 
+
+    public static long stringByteSize(String value) {
+        if (value == null) return 0L;
+        return value.getBytes().length;
+    }
+
     public static HttpHeaders jsonApplicationHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

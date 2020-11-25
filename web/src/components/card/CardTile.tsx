@@ -12,10 +12,9 @@ import Card from "@material-ui/core/Card";
 import { CardActionArea } from "@material-ui/core";
 import { LabelProps } from "../../types/label";
 import { Label } from "./Label";
-import { parseCardNoteText } from "./_utils";
 
 interface CardCreateAddCardItemProps {
-  card: { id: string; name: string; note: string; labels?: LabelProps[] };
+  card: { id: string; name: string; rawNote: string; labels?: LabelProps[] };
   onSelect?: (card: any) => void;
   onRestore?: (card: any) => void;
   onRemove?: (card: any) => void;
@@ -39,7 +38,7 @@ const CardTileView: React.FC<
   const classes = useStyles();
   const classesText = useTextStyles();
 
-  const { note, labels } = card;
+  const { rawNote, labels } = card;
 
   return (
     <Card
@@ -61,7 +60,7 @@ const CardTileView: React.FC<
       <CardActionArea>
         <div
           className={classNames(classes.cardLinked, {
-            [classes.cardLinkedNote]: note,
+            [classes.cardLinkedNote]: rawNote,
           })}
         >
           <Typography
@@ -71,12 +70,12 @@ const CardTileView: React.FC<
           >
             {card.name}
           </Typography>
-          {note && (
+          {rawNote && (
             <Typography
               variant="body1"
               className={classNames(classesText.noWrap, classes.cardTileNote)}
             >
-              {parseCardNoteText(note)}
+              {rawNote}
             </Typography>
           )}
           {showLabels && labels && (

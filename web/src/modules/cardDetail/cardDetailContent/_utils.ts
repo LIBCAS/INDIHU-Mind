@@ -8,6 +8,7 @@ import { AttributeProps } from "../../../types/attribute";
 import { getAttributeTypeDefaultValue } from "../../../utils/attribute";
 import { AttributeType } from "../../../enums";
 import { parseAttributeForApi } from "../../../utils/card";
+import { Dispatch, SetStateAction } from "react";
 // import { CategoryProps } from "../../types/category";
 // import { STATUS_ERROR_COUNT_CHANGE, STATUS_ERROR_TEXT_SET, STATUS_LOADING_COUNT_CHANGE } from '../../context/reducers/status';
 
@@ -72,7 +73,8 @@ export const onEditCard = (
   setCardContent: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >,
-  onSuccess = () => {}
+  onSuccess = () => {},
+  onError = (e: Error) => {}
 ) => {
   updateCardContent(field, value, card, setCardContent);
 
@@ -89,7 +91,7 @@ export const onEditCard = (
     return value ? { [`${newField || field}`]: value } : {};
   };
 
-  const { id, name, note, comments } = card.card;
+  let { id, name, note, comments } = card.card;
 
   const fieldsVersioned = ["attributes"];
 
@@ -123,16 +125,20 @@ export const onEditCard = (
       })
       .then(onSuccess);
   } else {
-    let noteRaw;
+    let rawNote;
+    if (field === "note") {
+      note = value;
+    }
     if (note) {
       try {
-        noteRaw = get(JSON.parse(note), "blocks", [])
+        rawNote = get(JSON.parse(note), "blocks", [])
           .map(({ text }: { text: string }) => text)
           .join(" ");
       } catch {
-        noteRaw = undefined;
+        rawNote = undefined;
       }
     }
+
     const body = {
       ...mapFieldValue("categories"),
       ...mapFieldValue("labels"),
@@ -143,7 +149,7 @@ export const onEditCard = (
       name,
       note,
       comments,
-      ...(noteRaw ? { noteRaw } : {}),
+      rawNote,
       [field]: arrayIdFields.includes(field) ? value.map(createIds) : value,
     };
 
@@ -152,7 +158,8 @@ export const onEditCard = (
         json: body,
         signal: controller.signal,
       })
-      .then(onSuccess);
+      .then(onSuccess)
+      .catch(onError);
   }
 };
 
@@ -230,3 +237,19 @@ export const isNoteTextEmpty = (note: any): boolean =>
       previousEmpty && block.text.length === 0,
     true
   );
+
+export const onNoteUploadError = (
+  setError: (o: any) => void,
+  afterErrorCB: () => void
+) => (e: any) => {
+  const errMessage =
+    e.response && e.response.details && e.response.details.field === "note"
+      ? e.response.status === 400
+        ? "Popis přesahuje povolenou velikost 10MB."
+        : e.response.status === 409
+        ? "Popis přesahuje celkovou kvotu uživatele."
+        : "Nepodařilo se změnit popis"
+      : "Nepodařilo se upravit kartu";
+  setError && setError({ isError: true, message: errMessage });
+  afterErrorCB();
+};

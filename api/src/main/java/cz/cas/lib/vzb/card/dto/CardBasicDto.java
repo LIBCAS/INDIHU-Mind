@@ -20,6 +20,6 @@ import lombok.Setter;
 public class CardBasicDto {
     private String id;
     private String name;
-    private String note;
+    private String rawNote;
     private long pid;
 }

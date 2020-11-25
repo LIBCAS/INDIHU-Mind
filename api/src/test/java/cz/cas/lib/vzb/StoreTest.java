@@ -1,8 +1,8 @@
 package cz.cas.lib.vzb;
 
+import cz.cas.lib.vzb.attachment.*;
 import cz.cas.lib.vzb.card.Card;
 import cz.cas.lib.vzb.card.CardStore;
-import cz.cas.lib.vzb.attachment.*;
 import cz.cas.lib.vzb.card.category.Category;
 import cz.cas.lib.vzb.card.category.CategoryStore;
 import helper.AlterSolrCollection;

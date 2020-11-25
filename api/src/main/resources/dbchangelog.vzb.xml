@@ -747,4 +747,25 @@
             <column name="raw_note" type="clob"/>
         </addColumn>
     </changeSet>
+
+    <changeSet id="15" author="radvan">
+        <dropColumn tableName="vzb_card" columnName="note" />
+
+        <createTable tableName="vzb_card_note">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" primaryKeyName="vzb_card_note_pkey" nullable="false"/>
+            </column>
+            <column name="data" type="clob"/>
+            <column name="size" type="bigint"/>
+        </createTable>
+
+        <addColumn tableName="vzb_card">
+            <column name="note_id" type="varchar(255)">
+                <constraints foreignKeyName="vzb_card_note_fk"
+                             referencedTableName="vzb_card_note"
+                             referencedColumnNames="id"
+                             deleteCascade="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

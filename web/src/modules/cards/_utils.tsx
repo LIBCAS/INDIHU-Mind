@@ -31,6 +31,7 @@ export const getCards = async (text?: string, page = 0, pageSize = 10) => {
           text && text.length
             ? [{ field: "name", operation: "CONTAINS", value: text }]
             : [],
+        order: "DESC",
       },
     });
 

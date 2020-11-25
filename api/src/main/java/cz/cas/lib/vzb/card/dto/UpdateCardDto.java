@@ -1,5 +1,6 @@
 package cz.cas.lib.vzb.card.dto;
 
+import cz.cas.lib.vzb.dto.validation.MaxAllowedByteSize;
 import cz.cas.lib.vzb.dto.validation.Uuid;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -21,7 +22,8 @@ public class UpdateCardDto {
     @ApiModelProperty(value = "Name of the card", required = true, example = "Test Name for Card")
     private String name;
 
-    @ApiModelProperty(value = "Note of the card, in JSON structure created by FE")
+    @MaxAllowedByteSize(megaBytes = 10)
+    @ApiModelProperty(value = "Note of the card, in JSON structure with images created by FE")
     private String note;
 
     @ApiModelProperty(value = "Raw note text for BE", example = "Text of note.")

@@ -19,7 +19,6 @@ import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 
 import { parseAttribute } from "../../utils/card";
-import { parseCardNoteText } from "../../components/card/_utils";
 
 interface CardsTableDetailContentProps {
   card: CardProps;
@@ -52,13 +51,13 @@ const CardsTableDetailContentView: React.FC<
           ))}
         </div>
       )}
-      {card.note && (
+      {card.rawNote && (
         <div className={classesSpacing.mt2}>
           <Typography className={classNames(classesText.subtitle)}>
             popis
           </Typography>
           <Typography variant="body1" className={classesSpacing.mt2}>
-            {parseCardNoteText(card.note)}
+            {card.rawNote}
           </Typography>
         </div>
       )}

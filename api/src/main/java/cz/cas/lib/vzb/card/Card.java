@@ -39,14 +39,17 @@ public class Card extends NamedObject {
     private User owner;
 
     /**
-     * Note in JSON structure that FE uses to display note in format editor.
+     * Card's note possibly of huge size because it can contain images.
      */
-    private String note;
+    @JoinColumn(name = "note_id", referencedColumnName = "id")
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private CardNote structuredNote;
 
     /**
-     * Raw text of note, used in BE for searching, indexing etc.
+     * Raw text of note ({@link CardNote#getData()} without images or formatting.
+     *
+     * On BE used for indexing and searching. On FE used as view for a card.
      */
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String rawNote;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "card")

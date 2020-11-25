@@ -28,6 +28,7 @@ public class BadArgument extends RestGeneralException {
 
 
     public enum ErrorCode implements RestErrorCodeEnum {
+        ARGUMENT_FAILED_VALIDATION("Argument neprošel validací"),
         ARGUMENT_IS_NULL("Argument je NULL"),
         ARGUMENT_IS_BLANK("Argument je prádný"),
         ARGUMENT_FAILED_COMPARISON("Argument chyboval ve srovnání"),

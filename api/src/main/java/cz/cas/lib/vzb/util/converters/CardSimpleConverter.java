@@ -10,6 +10,12 @@ public class CardSimpleConverter extends StdConverter<Card, CardBasicDto> {
     public CardBasicDto convert(Card value) {
         if (value == null)
             return null;
-        return new CardBasicDto(value.getId(), value.getName(), value.getNote(), value.getPid());
+
+        CardBasicDto dto = new CardBasicDto();
+        dto.setId(value.getId());
+        dto.setPid(value.getPid());
+        dto.setName(value.getName());
+        dto.setRawNote(value.getRawNote());
+        return dto;
     }
 }

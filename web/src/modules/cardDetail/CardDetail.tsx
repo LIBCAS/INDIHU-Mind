@@ -71,7 +71,7 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
   }, [cardContent]);
   useEffect(() => {
     loadCard();
-  }, []); // eslint-disable-line
+    }, []); // eslint-disable-line
 
   return (
     <Fade in>

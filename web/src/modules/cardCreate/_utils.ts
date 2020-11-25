@@ -71,20 +71,20 @@ const newCard = (values: any, cardId: string, documents?: Attachment[]) => {
       : {};
   };
   const { note } = values;
-  let noteRaw;
+  let rawNote;
   if (note) {
     try {
-      noteRaw = get(JSON.parse(note), "blocks", [])
+      rawNote = get(JSON.parse(note), "blocks", [])
         .map(({ text }: { text: string }) => text)
         .join(" ");
     } catch {
-      noteRaw = undefined;
+      rawNote = undefined;
     }
   }
   return {
     id: cardId,
     ...pick(values, ["name", "note"]),
-    ...(noteRaw ? { noteRaw } : {}),
+    rawNote,
     attributes: values.attributes.map(parseAttributeForApi),
     categories: values.categories,
     labels: values.labels,
@@ -160,9 +160,18 @@ export const onSubmitCard = (
         afterEdit();
       }
     })
-    .catch(() => {
+    .catch((e) => {
       setLoading(false);
       setError(true);
+      const message =
+        e.response && e.response.details && e.response.details.field === "note"
+          ? e.response.status === 400
+            ? "Popis přesahuje povolenou velikost 10MB."
+            : e.response.status === 409
+            ? "Popis přesahuje celkovou kvotu uživatele."
+            : "Nastala chyba v popisu."
+          : "Nepodařilo se vytvořit kartu";
+      setErrorMessage(message);
     });
 };
 

@@ -114,10 +114,17 @@ public class CitationApi {
         return service.findByUser();
     }
 
+
+    /**
+     * Retrieve supported MARC fields.
+     *
+     * @implNote Json contains unsupported fields with tag 999. They are not official MARC fields, however they
+     *         were requested by client. Therefore unsupported MARC tag was chosen as a quick workaround.
+     */
     @RolesAllowed({})
     @ApiOperation(
             value = "Retrieve PLAIN STRING of one big json object with all supported MARC fields declared by INDIHU-MIND, return empty string if file is not found",
-            notes = "Used String instead of JSON object because JSON.parse() is faster than parsing JSON literal according to Chrome Dev Summit 2019 (https://www.youtube.com/watch?v=ff4fgQxPaO0)"
+            notes = "Used String instead of JSON object because JSON.parse() is faster than parsing JSON literal according to Chrome Dev Summit 2019 [youtube.com/watch?v=ff4fgQxPaO0]"
     )
     @GetMapping(value = "/marc-fields", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> getSupportedMarcFields() throws IOException {

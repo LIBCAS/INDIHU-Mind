@@ -10,14 +10,18 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.inject.Inject;
+import java.util.HashMap;
 import java.util.Map;
 
 import static core.util.Utils.asMap;
@@ -79,6 +83,22 @@ public class RestExceptionDispatcher extends RestExceptionHandler {
         return createExceptionResponse(exception, HttpStatus.PAYLOAD_TOO_LARGE, details, request);
     }
 
+    /**
+     * Overriding because @ExceptionHandler(MethodArgumentNotValidException) already exists for superclass.
+     */
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException exception, HttpHeaders headers, HttpStatus status, WebRequest request) {
+        Map<String, String> details = new HashMap<>();
+
+        FieldError err = exception.getBindingResult().getFieldError();
+        if (err != null) {
+            details.put("field", err.getField());
+            details.put("message", err.getDefaultMessage());
+            if (err.getRejectedValue() != null) details.put("rejectedValue", err.getRejectedValue().toString());
+        }
+
+        return createExceptionResponse(exception, HttpStatus.BAD_REQUEST, details, request);
+    }
 
     @Inject
     public void setMaxFileSize(@Value("${spring.servlet.multipart.max-file-size}") String maxFileSize) {

@@ -48,6 +48,7 @@ export const TemplatesAttribute: React.FC<TemplatesAttributeProps> = ({
         open={popoverOpen}
         setOpen={setPopoverOpen}
         anchorEl={anchorRef.current}
+        overflowVisible={true}
         content={
           <TemplatesAddAttribute
             formikBagParent={formikBag}

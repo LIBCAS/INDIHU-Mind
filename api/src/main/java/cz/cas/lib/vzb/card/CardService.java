@@ -19,10 +19,10 @@ import cz.cas.lib.vzb.card.template.CardTemplate;
 import cz.cas.lib.vzb.card.template.CardTemplateStore;
 import cz.cas.lib.vzb.dto.BulkFlagSetDto;
 import cz.cas.lib.vzb.reference.marc.record.Citation;
-import cz.cas.lib.vzb.reference.marc.record.CitationStore;
 import cz.cas.lib.vzb.security.delegate.UserDelegate;
 import cz.cas.lib.vzb.security.user.User;
 import cz.cas.lib.vzb.util.IndihuMindUtils;
+import cz.cas.lib.vzb.util.QuotaVerifier;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.solr.core.query.Criteria;
@@ -53,18 +53,38 @@ public class CardService {
     private AttributeTemplateStore attributeTemplateStore;
     private UserDelegate userDelegate;
     private AttachmentFileStore fileStore;
-    private CitationStore citationStore;
+    private QuotaVerifier quotaVerifier;
 
+
+    /**
+     * Find Card WITHOUT LAZY entities initialized.
+     */
+    public Card find(String id) {
+        Card card = store.find(id);
+        notNull(card, () -> new MissingObject(ENTITY_IS_NULL, Card.class, id));
+        eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, id));
+
+        return card;
+    }
+
+    public CardNote findCardNote(String cardId) {
+        Card card = store.findCardNote(cardId);
+        notNull(card, () -> new MissingObject(ENTITY_IS_NULL, Card.class, cardId));
+        eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, cardId));
+
+        return card.getStructuredNote();
+    }
 
     @Transactional
     public CardContent createCard(CreateCardDto dto) {
+        quotaVerifier.verify(IndihuMindUtils.stringByteSize(dto.getNote()));
         User loggedInUser = userDelegate.getUser();
 
         Card card = new Card();
         card.setOwner(loggedInUser);
         card.setId(dto.getId());
         card.setName(dto.getName());
-        card.setNote(dto.getNote());
+        card.setStructuredNote(new CardNote(dto.getNote()));
         card.setRawNote(dto.getRawNote());
         card.setCategories(dto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
         card.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
@@ -95,8 +115,12 @@ public class CardService {
         notNull(fromDb, () -> new MissingObject(ENTITY_IS_NULL, Card.class, cardId));
         eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, cardId));
 
+        long newSize = IndihuMindUtils.stringByteSize(dto.getNote());
+        long oldSize = store.cardNoteSizeForSpecificCard(fromDb.getId());
+        quotaVerifier.verify(newSize - oldSize);
+
         fromDb.setName(dto.getName());
-        fromDb.setNote(dto.getNote());
+        fromDb.setStructuredNote(new CardNote(dto.getNote()));
         fromDb.setRawNote(dto.getRawNote());
         fromDb.setCategories(dto.getCategories().stream().map(Category::new).collect(Collectors.toSet()));
         fromDb.setLabels(dto.getLabels().stream().map(Label::new).collect(Collectors.toSet()));
@@ -262,14 +286,6 @@ public class CardService {
         return store.findAll(params);
     }
 
-    public Card find(String id) {
-        Card card = store.find(id);
-        notNull(card, () -> new MissingObject(ENTITY_IS_NULL, Card.class, id));
-        eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, id));
-
-        return card;
-    }
-
 
     @Transactional
     public void switchSoftDeletionFlag(BulkFlagSetDto dto) {
@@ -285,12 +301,15 @@ public class CardService {
     }
 
     /**
-     * For single use, Card.note was changed to save json becasue of text editor
+     * For single use, Card.note was changed to save json because of text editor
      */
     @Transactional
     public void wipeAllCardNotes() {
         Collection<Card> allCards = store.findAll();
-        allCards.forEach(card -> card.setNote(""));
+        allCards.forEach(card -> {
+            card.setStructuredNote(null);
+            card.setRawNote("");
+        });
         store.save(allCards);
     }
 
@@ -384,7 +403,8 @@ public class CardService {
     }
 
     @Inject
-    public void setCitationStore(CitationStore citationStore) {
-        this.citationStore = citationStore;
+    public void setQuotaVerifier(QuotaVerifier quotaVerifier) {
+        this.quotaVerifier = quotaVerifier;
     }
+
 }

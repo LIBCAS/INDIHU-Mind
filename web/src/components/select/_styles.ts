@@ -57,7 +57,7 @@ export const useStyles = makeStyles((theme: Theme) => ({
   },
   paper: {
     position: "absolute",
-    zIndex: 1,
+    zIndex: 11,
     marginTop: theme.spacing(1),
     left: 0,
     right: 0,

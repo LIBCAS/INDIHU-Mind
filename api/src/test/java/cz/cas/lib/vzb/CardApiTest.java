@@ -235,7 +235,7 @@ public class CardApiTest extends ApiTest {
         updateCardDto.setCategories(asList(categoryFirst.getId(), categorySecond.getId(), categoryThird.getId()));
         updateCardDto.setLabels(asList());
         updateCardDto.setLinkedCards(asList(contentCard.getId()));
-        updateCardDto.setNote(contentCard.getNote());
+        updateCardDto.setNote(contentCard.getStructuredNote().getData());
         updateCardDto.setName(contentCard.getName());
 
         securedMvc().perform(
@@ -567,7 +567,8 @@ public class CardApiTest extends ApiTest {
         //update card, not content
         UpdateCardDto updateCardDto = new UpdateCardDto();
         updateCardDto.setFiles(asList(localFile.getId()));
-        updateCardDto.setNote("Updated note");
+        updateCardDto.setNote("{ Updated note }");
+        updateCardDto.setRawNote("Raw updated text");
         updateCardDto.setName("New updated Name");
 
         securedMvc().perform(
@@ -578,7 +579,7 @@ public class CardApiTest extends ApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.card", notNullValue()))
                 .andExpect(jsonPath("$.card.name", is(updateCardDto.getName())))
-                .andExpect(jsonPath("$.card.note", is(updateCardDto.getNote())))
+                .andExpect(jsonPath("$.card.rawNote", is(updateCardDto.getRawNote())))
                 .andExpect(jsonPath("$.card.documents", hasSize(1)));
 
 
@@ -600,7 +601,7 @@ public class CardApiTest extends ApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.card", notNullValue()))
                 .andExpect(jsonPath("$.card.name", is(updateCardDto.getName())))
-                .andExpect(jsonPath("$.card.note", is(updateCardDto.getNote())))
+                .andExpect(jsonPath("$.card.rawNote", is(updateCardDto.getRawNote())))
                 .andExpect(jsonPath("$.card.documents", hasSize(1)));
 
         fromDbLocal = fileStore.find(localFile.getId());
