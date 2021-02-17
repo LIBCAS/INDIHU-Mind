@@ -58,7 +58,7 @@ public class FileApi {
 
         return ResponseEntity
                 .ok()
-                .header("Content-Disposition", "attachment; filename=" + file.getName())
+                .header("Content-Disposition", "attachment; filename=\"" + file.getName()+"\"")
                 .header("Content-Length", String.valueOf(file.getSize()))
                 .contentType(MediaType.parseMediaType(file.getContentType()))
                 .body(new InputStreamResource(file.getStream()));
@@ -92,7 +92,7 @@ public class FileApi {
 
             String contentType = uploadFile.getContentType();
 
-            return repository.create(stream, filename, contentType);
+            return repository.create(stream, filename, contentType, false);
 
         } catch (IOException e) {
             throw new UncheckedIOException(e);

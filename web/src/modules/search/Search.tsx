@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { RouteComponentProps } from "react-router-dom";
+import Fade from "@material-ui/core/Fade";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-import Fade from "@material-ui/core/Fade";
-
+import React, { useEffect, useState } from "react";
+import { RouteComponentProps } from "react-router-dom";
+import { Loader } from "../../components/loader/Loader";
+import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { SearchCardProps } from "../../types/search";
 import { api } from "../../utils/api";
-import { Loader } from "../../components/loader/Loader";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
 import { SearchItem } from "./SearchItem";
 
 let controller = new AbortController();
@@ -41,7 +40,7 @@ export const Search: React.FC<RouteComponentProps> = ({
         }
       })
       .catch(() => setError("Nepovedlo se načíst karty."));
-  }, [searchText, loading]);
+  }, [searchText]); // eslint-disable-line 
   return (
     <Fade in>
       <div>

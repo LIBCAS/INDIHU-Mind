@@ -1,7 +1,7 @@
 package core.index;
 
-import cz.cas.lib.vzb.search.query.QueryType;
-import cz.cas.lib.vzb.search.searchable.AdvancedSearch;
+import cz.cas.lib.indihumind.advancedsearch.query.QueryType;
+import cz.cas.lib.indihumind.advancedsearch.searchable.AdvancedSearch;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.solr.client.solrj.beans.Field;

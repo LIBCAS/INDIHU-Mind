@@ -1,27 +1,24 @@
-import React, { useState, useRef, useEffect } from "react";
 import AppBar from "@material-ui/core/AppBar";
-import Toolbar from "@material-ui/core/Toolbar";
-import IconButton from "@material-ui/core/IconButton";
-import Typography from "@material-ui/core/Typography";
-import MenuIcon from "@material-ui/icons/Menu";
-import Highlight from "@material-ui/icons/Highlight";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
-import { useTheme } from "@material-ui/styles";
-import useMediaQuery from "@material-ui/core/useMediaQuery";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-
-import InputBase from "@material-ui/core/InputBase";
-import SearchIcon from "@material-ui/icons/Search";
-import Cancel from "@material-ui/icons/Cancel";
 import Fade from "@material-ui/core/Fade";
+import IconButton from "@material-ui/core/IconButton";
+import InputBase from "@material-ui/core/InputBase";
+import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
+import Cancel from "@material-ui/icons/Cancel";
+import MenuIcon from "@material-ui/icons/Menu";
+import SearchIcon from "@material-ui/icons/Search";
+import { useTheme } from "@material-ui/styles";
 import classNames from "classnames";
-
-import { DeleteCards } from "../deleteCards/DeleteCards";
+import React, { useEffect, useRef, useState } from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
-
-import { useStyles } from "./_navbarStyles";
+import { DeleteCards } from "../deleteCards/DeleteCards";
+import { Logo } from "../icons/Logo";
 import { NavbarItems } from "./NavbarItems";
 import { NavbarUser } from "./NavbarUser";
+import { useStyles } from "./_navbarStyles";
 
 interface NavbarProps {
   setLeftPanelOpen: any;
@@ -78,7 +75,7 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               color="inherit"
               aria-label="logo"
             >
-              <Highlight />
+              <Logo />
             </IconButton>
             <Typography
               className={classes.title}
@@ -91,7 +88,7 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
             </Typography>
           </div>
         </div>
-        <NavbarItems matchesMd={matchesLg} />
+        <NavbarItems matchesLg={matchesLg} />
         <div
           className={classNames({
             [classes.searchWrapper]: true,

@@ -2,8 +2,8 @@ package core.security.jwt;
 
 import core.security.UserDetails;
 import core.security.jwt.spi.JwtHandler;
-import io.jsonwebtoken.ClaimJwtException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +51,7 @@ public class JwtTokenProvider implements AuthenticationProvider {
                 UserDetails user = handler.parseClaims(claims);
 
                 return new JwtToken(user, claims, user.getAuthorities());
-            } catch (ClaimJwtException ex) {
+            } catch (JwtException ex) {
                 throw new BadCredentialsException("JWT error", ex);
             }
         } else {

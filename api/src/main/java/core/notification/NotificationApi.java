@@ -6,7 +6,7 @@ import core.exception.ForbiddenObject;
 import core.exception.MissingObject;
 import core.index.dto.Params;
 import core.index.dto.Result;
-import cz.cas.lib.vzb.security.user.Roles;
+import cz.cas.lib.indihumind.security.user.Roles;
 import io.swagger.annotations.*;
 import lombok.Getter;
 import org.springframework.web.bind.annotation.*;

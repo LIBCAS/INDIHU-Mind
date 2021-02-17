@@ -1,5 +1,5 @@
 import { ComponentClass } from "react";
-import { ColumnType, Order, FormType } from "./_enums";
+import { ColumnType, FormType, Order } from "./_enums";
 
 export interface Column {
   name: string;
@@ -135,6 +135,7 @@ export interface TableProps
   getItems?: (params: Params, searchText: string) => Promise<DataProps>;
   onCreate?: Function;
   requestType?: string;
+  onRefreshLoadData?: boolean;
 }
 
 export interface DataProps {

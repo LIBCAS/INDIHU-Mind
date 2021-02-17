@@ -1,7 +1,7 @@
 package core.security.preauth;
 
 import core.audit.AuditLogger;
-import core.security.audit.LoginEvent;
+import core.security.authorization.assign.audit.LoginEvent;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedCredentialsNotFoundException;
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter;

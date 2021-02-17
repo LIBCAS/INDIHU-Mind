@@ -1,28 +1,27 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
 import Button from "@material-ui/core/Button";
-
-import { categoryGet, categoryActiveSet } from "../../context/actions/category";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { categoryActiveSet, categoryGet } from "../../context/actions/category";
 import { GlobalContext, StateProps } from "../../context/Context";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { CategoryProps } from "../../types/category";
-
 import { TabProps } from "../leftPanel/LeftPanelContent";
 import { Modal } from "../portal/Modal";
-
 import { CategoryItem } from "./CategoryItem";
-import { useStyles } from "./_tabContentStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { CreateCategory } from "./CreateCategory";
+import { useStyles } from "./_tabContentStyles";
 
 interface CategoriesProps {
   activeTab: TabProps;
   setActiveTab: Function;
   transition: boolean;
+  setActiveCallback: () => void;
 }
 
 export const Categories: React.FC<CategoriesProps> = ({
   activeTab,
   setActiveTab,
   transition,
+  setActiveCallback,
 }) => {
   const context: any = useContext(GlobalContext);
 
@@ -57,6 +56,7 @@ export const Categories: React.FC<CategoriesProps> = ({
   }, [loadCategories]);
 
   const categoryActiveSetHandler = (category?: CategoryProps) => {
+    setActiveCallback();
     categoryActiveSet(dispatch, category);
   };
 

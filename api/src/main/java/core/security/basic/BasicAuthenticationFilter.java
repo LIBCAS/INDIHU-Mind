@@ -3,7 +3,8 @@ package core.security.basic;
 import core.Changed;
 import core.audit.AuditLogger;
 import core.exception.BadRequestException;
-import core.security.audit.LoginEvent;
+import core.security.authorization.assign.audit.LoginEvent;
+import core.security.logging.SiftingAppenderInjector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.security.authentication.*;
@@ -30,14 +31,15 @@ public class BasicAuthenticationFilter
     }
 
     @Override
-    protected void onSuccessfulAuthentication(HttpServletRequest request,
-                                              HttpServletResponse response, Authentication authResult) throws IOException {
+    protected void onSuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, Authentication authResult) throws IOException {
+        SiftingAppenderInjector.injectKey();
         logger.logEvent(new LoginEvent(Instant.now(), extractUsername(request), true));
     }
 
     @Override
     protected void onUnsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
         try {
+            SiftingAppenderInjector.removeKey();
             logger.logEvent(new LoginEvent(Instant.now(), extractUsername(request), false));
         } catch (BadRequestException e) {
             log.warn(e.toString());
@@ -96,8 +98,7 @@ public class BasicAuthenticationFilter
      * @throws BadCredentialsException if the Basic header is not present or is not valid
      *                                 Base64
      */
-    private String[] extractAndDecodeHeader(String header, HttpServletRequest request)
-            throws IOException {
+    private String[] extractAndDecodeHeader(String header, HttpServletRequest request) throws IOException {
 
         byte[] base64Token = header.substring(6).getBytes(StandardCharsets.UTF_8);
         byte[] decoded;
@@ -112,7 +113,7 @@ public class BasicAuthenticationFilter
         int delimiter = token.indexOf(":");
 
         if (delimiter == -1) {
-            throw new BadRequestException("Invalid basic authentication token");
+            throw new BadRequestException("Invalid basic authentication token. Format is 'email:password' encoded in Base64.");
         }
         return new String[]{token.substring(0, delimiter), token.substring(delimiter + 1)};
     }

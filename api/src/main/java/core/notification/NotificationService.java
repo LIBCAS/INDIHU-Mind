@@ -10,7 +10,7 @@ import core.mail.MailCenter;
 import core.security.UserDetails;
 import core.security.UserDetailsService;
 import core.store.Transactional;
-import cz.cas.lib.vzb.security.user.UserService;
+import cz.cas.lib.indihumind.security.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

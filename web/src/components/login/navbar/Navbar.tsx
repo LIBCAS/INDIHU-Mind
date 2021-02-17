@@ -1,13 +1,13 @@
+import { AppBar, IconButton, Toolbar, Typography } from "@material-ui/core";
+import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import useMediaQuery from "@material-ui/core/useMediaQuery";
+import MenuIcon from "@material-ui/icons/Menu";
+import { useTheme } from "@material-ui/styles";
 import * as React from "react";
 import { useHistory } from "react-router-dom";
-import { AppBar, Toolbar, Typography, IconButton } from "@material-ui/core";
-import Highlight from "@material-ui/icons/Highlight";
-import useMediaQuery from "@material-ui/core/useMediaQuery";
-import { useStyles } from "./_navbarStyles";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
-import { useTheme } from "@material-ui/styles";
+import { Logo } from "../../icons/Logo";
 import DesktopMenu from "./DesktopMenu";
-import MenuIcon from "@material-ui/icons/Menu";
+import { useStyles } from "./_navbarStyles";
 
 export interface NavbarProps {
   setLeftPanelOpen?: any;
@@ -36,7 +36,7 @@ const Navbar: React.SFC<NavbarProps> = ({
               color="inherit"
               aria-label="logo"
             >
-              <Highlight />
+              <Logo />
             </IconButton>
             <Typography
               className={classes.title}

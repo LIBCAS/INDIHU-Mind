@@ -1,33 +1,30 @@
-import React, { useState, useEffect, useCallback } from "react";
-import MuiTypography from "@material-ui/core/Typography";
+import { LinearProgress } from "@material-ui/core";
 import MuiToolbar from "@material-ui/core/Toolbar";
+import MuiTypography from "@material-ui/core/Typography";
 import classNames from "classnames";
-
-import { CardContentProps, LinkedCardProps } from "../../types/card";
-
+import { isEqual, uniqWith } from "lodash";
+import React, { useCallback, useEffect, useState } from "react";
 import { CardTile } from "../../components/card/CardTile";
 import { Gallery } from "../../components/gallery";
-
-import { CardDetailContentAttribute } from "./cardDetailContent/CardDetailContentAttribute";
-import { CardDetailContentAddAttribute } from "./cardDetailContent/CardDetailContentAddAttribute";
-import { CardDetailContentAddFile } from "./cardDetailContent/CardDetailContentAddFile";
-import { CardDetailContentCard } from "./cardDetailContent/CardDetailContentCard";
-import { CardDetailContentAddLabel } from "./cardDetailContent/CardDetailContentAddLabel";
-import { CardDetailContentLabel } from "./cardDetailContent/CardDetailContentLabel";
-import { CardDetailContentAddCategory } from "./cardDetailContent/CardDetailContentAddCategory";
-import { CardDetailContentTitle } from "./cardDetailContent/CardDetailContentTitle";
-import { CardDetailContentNote } from "./cardDetailContent/CardDetailContentNote";
-import { CardDetailContentCategory } from "./cardDetailContent/CardDetailContentCategory";
-import { CardDetailContentFile } from "./cardDetailContent/CardDetailContentFile";
-import { CardDetailContentRecord } from "./cardDetailContent/CardDetailContentRecord";
-import { onEditCard } from "./cardDetailContent/_utils";
-
-import { useStyles } from "./_cardDetailStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { CardContentProps, LinkedCardProps } from "../../types/card";
+import { CardDetailContentAddAttribute } from "./cardDetailContent/CardDetailContentAddAttribute";
+import { CardDetailContentAddCategory } from "./cardDetailContent/CardDetailContentAddCategory";
+import { CardDetailContentAddFile } from "./cardDetailContent/CardDetailContentAddFile";
+import { CardDetailContentAddLabel } from "./cardDetailContent/CardDetailContentAddLabel";
 import { CardDetailContentAddRecord } from "./cardDetailContent/CardDetailContentAddRecord";
+import { CardDetailContentAttribute } from "./cardDetailContent/CardDetailContentAttribute";
+import { CardDetailContentCard } from "./cardDetailContent/CardDetailContentCard";
+import { CardDetailContentCategory } from "./cardDetailContent/CardDetailContentCategory";
+import { CardDetailContentFile } from "./cardDetailContent/CardDetailContentFile";
+import { CardDetailContentLabel } from "./cardDetailContent/CardDetailContentLabel";
+import { CardDetailContentNote } from "./cardDetailContent/CardDetailContentNote";
+import { CardDetailContentRecord } from "./cardDetailContent/CardDetailContentRecord";
+import { CardDetailContentTitle } from "./cardDetailContent/CardDetailContentTitle";
+import { onEditCard } from "./cardDetailContent/_utils";
+import { useStyles } from "./_cardDetailStyles";
 import { loadNote } from "./_utils";
-import { LinearProgress } from "@material-ui/core";
 
 interface CardDetailContentProps {
   card: CardContentProps;
@@ -64,6 +61,7 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
     size: number;
   }>(null);
   const [loadingNote, setLoadingNote] = useState(false);
+
   const fetchNote = useCallback(async () => {
     setLoadingNote(true);
     const structuredNoteFetched = await loadNote(card.card.id);
@@ -73,6 +71,12 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
   useEffect(() => {
     fetchNote();
   }, [fetchNote]);
+
+  const connectedCards = uniqWith(
+    [...cardInner.linkedCards, ...cardInner.linkingCards],
+    isEqual
+  );
+
   return (
     <React.Fragment>
       <CardDetailContentTitle
@@ -260,28 +264,16 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
         {card.lastVersion && (
           <CardDetailContentCard card={card} setCardContent={setCardContent} />
         )}
-        {cardInner.linkedCards.map((linkedCard) => (
+        {connectedCards.map((connectedCard) => (
           <CardTile
-            key={linkedCard.id}
-            card={linkedCard}
+            key={connectedCard.id}
+            card={connectedCard}
             onSelect={onSelect}
             onRemove={() => {
               const removedCards = cardInner.linkedCards.filter(
-                (lc) => lc.id !== linkedCard.id
+                (lc) => lc.id !== connectedCard.id
               );
               onEditCard("linkedCards", removedCards, card, setCardContent);
-            }}
-          />
-        ))}
-        {cardInner.linkingCards.map((linkingCard) => (
-          <CardTile
-            key={linkingCard.id}
-            card={linkingCard}
-            onRemove={() => {
-              const removedCards = cardInner.linkingCards.filter(
-                (lc) => lc.id !== linkingCard.id
-              );
-              onEditCard("linkingCards", removedCards, card, setCardContent);
             }}
           />
         ))}

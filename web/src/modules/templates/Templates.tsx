@@ -1,9 +1,8 @@
 import React from "react";
-
+import { ColumnType, Table } from "../../components/table";
+import { TemplateActions } from "./TemplateActions";
 import { TemplatesForm } from "./TemplatesForm";
 import { TemplatesItem } from "./TemplatesItem";
-import { Table, ColumnType } from "../../components/table";
-import { TemplateActions } from "./TemplateActions";
 
 const columns = [
   {
@@ -37,6 +36,7 @@ export const Templates: React.FC = () => {
       parametrized={false}
       TileComponent={TemplatesItem}
       createModalProps={{ fullSize: true, overflowVisible: true }}
+      onRefreshLoadData={true}
     />
   );
 };

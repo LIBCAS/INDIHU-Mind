@@ -3,8 +3,9 @@ package helper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.rest.config.RestExceptionDispatcher;
-import cz.cas.lib.vzb.security.delegate.UserDelegate;
-import cz.cas.lib.vzb.security.user.User;
+import cz.cas.lib.indihumind.card.IndexedCard;
+import cz.cas.lib.indihumind.security.delegate.UserDelegate;
+import cz.cas.lib.indihumind.security.user.User;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.SolrClient;
@@ -43,7 +44,7 @@ public abstract class ApiTest implements AlterSolrCollection {
     @Inject protected ObjectMapper objectMapper;
     @Inject protected TransactionTemplate transactionTemplate;
 
-    /** Name of test collection for {@link cz.cas.lib.vzb.card.IndexedCard} */
+    /** Name of test collection for {@link IndexedCard} */
     @Getter
     @Value("${vzb.index.cardCollectionName}")
     private String cardTestCollectionName;
