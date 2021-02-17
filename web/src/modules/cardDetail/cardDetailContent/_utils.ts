@@ -1,14 +1,13 @@
-import { v4 as uuid } from "uuid";
 import { get } from "lodash";
-
-import { api } from "../../../utils/api";
+import { v4 as uuid } from "uuid";
+import { AttributeType } from "../../../enums";
+import { AttributeProps } from "../../../types/attribute";
 // import { parseAttributeForApi } from "../../../utils/card";
 import { CardContentProps } from "../../../types/card";
-import { AttributeProps } from "../../../types/attribute";
+import { api } from "../../../utils/api";
 import { getAttributeTypeDefaultValue } from "../../../utils/attribute";
-import { AttributeType } from "../../../enums";
 import { parseAttributeForApi } from "../../../utils/card";
-import { Dispatch, SetStateAction } from "react";
+
 // import { CategoryProps } from "../../types/category";
 // import { STATUS_ERROR_COUNT_CHANGE, STATUS_ERROR_TEXT_SET, STATUS_LOADING_COUNT_CHANGE } from '../../context/reducers/status';
 
@@ -143,6 +142,7 @@ export const onEditCard = (
       ...mapFieldValue("categories"),
       ...mapFieldValue("labels"),
       ...mapFieldValue("linkedCards"),
+      ...mapFieldValue("linkingCards"),
       ...mapFieldValue("files"),
       ...mapFieldValue("documents", "files"),
       ...mapFieldValue("records"),

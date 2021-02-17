@@ -2,7 +2,7 @@ package helper;
 
 import core.exception.GeneralException;
 import core.index.IndexedDomainObject;
-import cz.cas.lib.vzb.card.IndexedCard;
+import cz.cas.lib.indihumind.card.IndexedCard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.solr.core.mapping.SolrDocument;

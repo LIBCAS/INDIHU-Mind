@@ -2,10 +2,10 @@ package core.rest.config;
 
 import core.exception.*;
 import core.index.UnsupportedSearchParameterException;
-import cz.cas.lib.vzb.exception.ContentLengthRequiredException;
-import cz.cas.lib.vzb.exception.ForbiddenFileException;
-import cz.cas.lib.vzb.exception.NameAlreadyExistsException;
-import cz.cas.lib.vzb.exception.UserQuotaReachedException;
+import cz.cas.lib.indihumind.exception.ContentLengthRequiredException;
+import cz.cas.lib.indihumind.exception.ForbiddenFileException;
+import cz.cas.lib.indihumind.exception.NameAlreadyExistsException;
+import cz.cas.lib.indihumind.exception.UserQuotaReachedException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

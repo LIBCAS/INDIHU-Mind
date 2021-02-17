@@ -30,17 +30,12 @@ public class JwtPostFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
-
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         putTokenToResponse(response);
-
         filterChain.doFilter(request, response);
     }
 
     private void putTokenToResponse(HttpServletResponse response) {
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication instanceof JwtToken) {

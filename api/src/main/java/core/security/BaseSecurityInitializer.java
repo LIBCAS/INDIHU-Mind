@@ -6,6 +6,7 @@ import core.security.basic.BasicAuthenticationFilter;
 import core.security.jwt.JwtFilter;
 import core.security.jwt.JwtPostFilter;
 import core.security.jwt.JwtTokenProvider;
+import core.security.jwt.LoggingByUserFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -73,6 +74,7 @@ public abstract class BaseSecurityInitializer extends WebSecurityConfigurerAdapt
         httpSecurity = httpSecurity.addFilterBefore(new JwtFilter(jwtHeaderName), AnonymousAuthenticationFilter.class);
 
         httpSecurity.addFilterAfter(new JwtPostFilter(tokenProvider), FilterSecurityInterceptor.class);
+        httpSecurity.addFilterAfter(new LoggingByUserFilter(), FilterSecurityInterceptor.class);
     }
 
     @Override

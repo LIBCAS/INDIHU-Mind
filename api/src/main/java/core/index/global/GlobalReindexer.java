@@ -49,6 +49,18 @@ public class GlobalReindexer {
                     });
     }
 
+    @Transactional
+    public void removeIndexes(List<Class<? extends IndexedStore>> storeClasses) {
+         stores.stream()
+                .map(Utils::unwrap)
+                .filter(store -> storeClasses == null || storeClasses.contains(store.getClass()))
+                .forEach(store -> {
+                    log.info("Removing indexes for entity:'{}', store {}", store.getUType().getSimpleName(), store.getClass().getName());
+                    store.removeAllIndexes();
+                    log.info("Removal of indexes is complete.");
+                });
+    }
+
     @Inject
     public void setStores(List<IndexedStore> stores) {
         this.stores = stores;

@@ -1,21 +1,17 @@
-import React, { useContext, useEffect, useState } from "react";
-import classNames from "classnames";
 import Slide from "@material-ui/core/Slide";
 import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
 import KeyboardArrowUp from "@material-ui/icons/KeyboardArrowUp";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-
-import { watch, unwatch, get } from "../../utils/store";
+import classNames from "classnames";
+import React, { useContext, useEffect, useState } from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 import { GlobalContext, StateProps } from "../../context/Context";
-import { Labels } from "./Labels";
-import { Categories } from "./Categories";
-
-import { useStyles } from "./_tabContentStyles";
-
-import { TabProps } from "../leftPanel/LeftPanelContent";
-
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
+import { get, unwatch, watch } from "../../utils/store";
+import { TabProps } from "../leftPanel/LeftPanelContent";
+import { Categories } from "./Categories";
+import { Labels } from "./Labels";
+import { useStyles } from "./_tabContentStyles";
 
 interface TabContentProps {
   activeTab: TabProps;
@@ -24,7 +20,7 @@ interface TabContentProps {
 
 export const TabContentView: React.FC<
   TabContentProps & RouteComponentProps
-> = ({ activeTab, setActiveTab, history }) => {
+> = ({ activeTab, setActiveTab, history, location }) => {
   const classesText = useTextStyles();
   const classesLayout = useLayoutStyles();
   const [cardsOpened, setCardsOpened] = useState<
@@ -53,7 +49,7 @@ export const TabContentView: React.FC<
     ) {
       setActiveTab("category");
     }
-  }, [categoryActive, labelActive, activeTab, setActiveTab]);
+  }, [categoryActive, labelActive, setActiveTab]); // eslint-disable-line 
   const onChangeCards = () => {
     const storeCards = get("cardsOpened", []);
     setCardsOpened(storeCards);
@@ -65,6 +61,12 @@ export const TabContentView: React.FC<
       unwatch(watchId);
     };
   }, []);
+
+  const setActiveCallback = () => {
+    if (location.pathname !== "/cards") {
+      history.push("/cards");
+    }
+  };
   return (
     <div className={classes.tabContentWrapper}>
       <div
@@ -83,6 +85,7 @@ export const TabContentView: React.FC<
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           transition={transition}
+          setActiveCallback={setActiveCallback}
         />
       </div>
       <div
@@ -94,7 +97,7 @@ export const TabContentView: React.FC<
           display: activeTab === "label" ? "block" : "none",
         }}
       >
-        <Labels activeTab={activeTab} />
+        <Labels activeTab={activeTab} setActiveCallback={setActiveCallback} />
       </div>
       {cardsOpened.length > 0 && (
         <div>

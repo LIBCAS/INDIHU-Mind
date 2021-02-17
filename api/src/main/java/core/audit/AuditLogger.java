@@ -9,6 +9,7 @@ import org.slf4j.MarkerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Audit logger.
@@ -39,7 +40,7 @@ public class AuditLogger {
     }
 
     @Inject
-    public void setMapper(ObjectMapper mapper) {
+    public void setMapper(@Named("objectMapper") ObjectMapper mapper) {
         this.mapper = mapper;
     }
 }

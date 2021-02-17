@@ -1,12 +1,11 @@
-import React, { useEffect, useCallback } from "react";
 import { flatten } from "lodash";
-
+import React, { useCallback, useEffect } from "react";
+import { categoryActiveSet } from "../../context/actions/category";
+import { labelActiveSet } from "../../context/actions/label";
 import {
   searchCategorySet,
   searchLabelSet,
 } from "../../context/actions/search";
-import { labelActiveSet } from "../../context/actions/label";
-import { categoryActiveSet } from "../../context/actions/category";
 import { CategoryProps } from "../../types/category";
 import { LabelProps } from "../../types/label";
 
@@ -50,6 +49,7 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
       const filterQuery: any = [
         {
           operation: "OR",
+          field: "category_ids",
           filter: subIds.map((id) => ({
             field: "category_ids",
             operation: "CONTAINS",

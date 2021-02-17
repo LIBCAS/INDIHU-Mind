@@ -13,4 +13,4 @@ public enum RootFilterOperation {
      * Logical OR.
      */
     OR
-};
+}

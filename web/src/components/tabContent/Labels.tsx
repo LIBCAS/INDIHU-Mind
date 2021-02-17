@@ -1,24 +1,25 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import Button from "@material-ui/core/Button";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-import Button from "@material-ui/core/Button";
-
-import { LabelProps } from "../../types/label";
-
-import { TabProps } from "../leftPanel/LeftPanelContent";
-import { labelGet, labelActiveSet } from "../../context/actions/label";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { labelActiveSet, labelGet } from "../../context/actions/label";
 import { GlobalContext, StateProps } from "../../context/Context";
+import { LabelProps } from "../../types/label";
+import { TabProps } from "../leftPanel/LeftPanelContent";
 import { Modal } from "../portal/Modal";
-
-import { LabelsActions } from "./LabelsActions";
 import { CreateLabel } from "./CreateLabel";
+import { LabelsActions } from "./LabelsActions";
 import { useStyles } from "./LabelsStyles";
 
 interface LabelsProps {
   activeTab: TabProps;
+  setActiveCallback: () => void;
 }
 
-export const Labels: React.FC<LabelsProps> = ({ activeTab }) => {
+export const Labels: React.FC<LabelsProps> = ({
+  activeTab,
+  setActiveCallback,
+}) => {
   const context: any = useContext(GlobalContext);
   const state: StateProps = context.state;
   const dispatch: Function = context.dispatch;
@@ -38,8 +39,11 @@ export const Labels: React.FC<LabelsProps> = ({ activeTab }) => {
     if (activeTab !== "label") labelActiveSet(dispatch, undefined);
   }, [activeTab, dispatch]);
 
-  const setActiveLabel = (label: LabelProps | undefined) =>
+  const setActiveLabel = (label: LabelProps | undefined) => {
+    setActiveCallback();
     labelActiveSet(dispatch, label);
+  };
+
   return (
     <>
       <Button
@@ -71,9 +75,7 @@ export const Labels: React.FC<LabelsProps> = ({ activeTab }) => {
         return (
           <div
             onClick={() =>
-              isActive
-                ? labelActiveSet(dispatch, undefined)
-                : labelActiveSet(dispatch, l)
+              isActive ? setActiveLabel(undefined) : setActiveLabel(l)
             }
             key={l.name}
             className={classNames({

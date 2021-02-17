@@ -1,5 +1,5 @@
-import { makeStyles } from "@material-ui/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import { makeStyles } from "@material-ui/styles";
 
 export const useStyles = makeStyles((theme: Theme) => {
   return {
@@ -7,6 +7,12 @@ export const useStyles = makeStyles((theme: Theme) => {
       cursor: "pointer",
       padding: `4px`,
       marginBottom: theme.spacing(1),
+      "&:hover": {
+        "& p": {
+          color: theme.palette.grey[100],
+        },
+        backgroundColor: theme.palette.primary.dark,
+      },
       "&:hover $wrapperIcons": {
         opacity: 1,
       },

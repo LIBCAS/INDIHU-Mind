@@ -1,6 +1,7 @@
+import { compact } from "lodash";
+import { CardProps } from "../../types/card";
 import { CategoryProps } from "../../types/category";
 import { api } from "../../utils/api";
-import { CardProps } from "../../types/card";
 
 export const getPathToCategory = (
   cat: CategoryProps,
@@ -21,16 +22,37 @@ export const getPathToCategory = (
   return result;
 };
 
-export const getCards = async (text?: string, page = 0, pageSize = 10) => {
+export const getCards = async (
+  text?: string,
+  page = 0,
+  pageSize = 10,
+  excludedCards?: string[]
+) => {
   try {
     const response = await api().post("card/parametrized", {
       json: {
         page,
         pageSize,
-        filter:
-          text && text.length
-            ? [{ field: "name", operation: "CONTAINS", value: text }]
-            : [],
+        filter: compact([
+          text &&
+            text.length && {
+              field: "name",
+              operation: "CONTAINS",
+              value: text,
+            },
+          excludedCards && {
+            operation: "AND",
+            field: "id",
+            filter: [
+              ...excludedCards.map((id: string) => ({
+                operation: "NEQ",
+                field: "id",
+                value: id,
+              })),
+            ],
+          },
+        ]),
+
         order: "DESC",
       },
     });

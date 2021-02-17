@@ -1,5 +1,5 @@
-import { makeStyles } from "@material-ui/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import { makeStyles } from "@material-ui/styles";
 
 export const useStyles = makeStyles((theme: Theme) => {
   return {
@@ -8,7 +8,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       transform: "translateX(-50%)",
     },
     header: {
-      height: "4em",
+      height: "5em",
       justifyContent: "center",
     },
     toolbar: {

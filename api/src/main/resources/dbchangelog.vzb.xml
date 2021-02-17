@@ -37,7 +37,7 @@
             <column name="name" type="nvarchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="note" type="nvarchar(2000)"/> <!-- changed to 'clob' type in change set 13 -->
+            <column name="note" type="nvarchar(2000)"/> <!-- changed to 'raw_note' change set 14 and added LAZY 'card_note' entity in change set 15 -->
         </createTable>
         <addUniqueConstraint constraintName="vzb_pid_of_user_uniqueness" tableName="vzb_card"
                              columnNames="pid,owner_id"/>
@@ -767,5 +767,14 @@
                              deleteCascade="true"/>
             </column>
         </addColumn>
+    </changeSet>
+    <changeSet id="16" author="radvan">
+        <addColumn tableName="vzb_label">
+            <column name="ordinal_number" type="int" value="0">
+                <!-- <constraints nullable="false"/>-->
+            </column>
+        </addColumn>
+        <!-- Workaround, because its not possible to create new not null column even though the value="0" is set -->
+        <addNotNullConstraint tableName="vzb_label" columnName="ordinal_number" />
     </changeSet>
 </databaseChangeLog>

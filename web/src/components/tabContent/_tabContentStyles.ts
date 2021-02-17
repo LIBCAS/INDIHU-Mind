@@ -1,5 +1,5 @@
-import { makeStyles } from "@material-ui/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import { makeStyles } from "@material-ui/styles";
 
 export const useStyles = makeStyles((theme: Theme) => {
   return {
@@ -35,8 +35,14 @@ export const useStyles = makeStyles((theme: Theme) => {
       display: "flex",
       alignItems: "center",
       cursor: "pointer",
-      marginBottom: theme.spacing(1),
+      padding: "4px 0 4px 8px",
       borderBottom: `1px solid transparent`,
+      "&:hover": {
+        "& p": {
+          color: theme.palette.grey[100],
+        },
+        backgroundColor: theme.palette.primary.dark,
+      },
     },
     categorySub: {
       fontSize: "14px",

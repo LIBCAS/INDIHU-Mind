@@ -1,10 +1,8 @@
-import React from "react";
 import Typography from "@material-ui/core/Typography";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-
-import { useStyles as useStylesText } from "../../theme/styles/textStyles";
+import React from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-
+import { useStyles as useStylesText } from "../../theme/styles/textStyles";
 import { CardsLink } from "../cards/CardsLink";
 
 interface CardCreateAddCardProps {
@@ -25,6 +23,11 @@ const CardCreateAddCardView: React.FC<
         onSelect={(linkedCards: any[]) => {
           formikBag.setFieldValue("linkedCards", linkedCards);
         }}
+        excludedCards={
+          formikBag.values
+            ? formikBag.values.linkedCards.map(({ id }: { id: string }) => id)
+            : []
+        }
       />
     </>
   );

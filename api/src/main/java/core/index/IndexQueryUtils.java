@@ -2,7 +2,7 @@ package core.index;
 
 import core.exception.BadArgument;
 import core.index.dto.*;
-import cz.cas.lib.vzb.card.CardStore;
+import cz.cas.lib.indihumind.card.CardStore;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.solr.core.DefaultQueryParser;

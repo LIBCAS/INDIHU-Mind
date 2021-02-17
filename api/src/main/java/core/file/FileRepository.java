@@ -1,18 +1,29 @@
 package core.file;
 
+import core.domain.DomainObject;
 import core.exception.BadArgument;
 import core.exception.ForbiddenObject;
 import core.exception.MissingObject;
+import core.file.mime.MimeTypeRecognizer;
 import core.store.Transactional;
+import core.transformer.Transformer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static core.exception.BadArgument.ErrorCode.ARGUMENT_IS_NULL;
 import static core.exception.BadArgument.ErrorCode.INVALID_UUID;
@@ -36,8 +47,10 @@ import static java.nio.file.Files.*;
 @Slf4j
 @Service
 public class FileRepository {
-    private FileRefStore store;
 
+    private FileRefStore store;
+    private MimeTypeRecognizer recognizer;
+    private Transformer transformer;
     private String basePath;
 
     private final String indexContentType = "text/plain";
@@ -46,7 +59,8 @@ public class FileRepository {
      * Gets a single file for specified id.
      *
      * <p>
-     * {@link FileRef#size} will be initialized and {@link FileRef#stream} will be opened and prepared for reading.
+     * {@link FileRef#getSize()} will be initialized and {@link FileRef#getStream()} will be opened and prepared for
+     * reading.
      * </p>
      *
      * @param id Id of the file
@@ -76,10 +90,10 @@ public class FileRepository {
     }
 
     /**
-     * Reopens the {@link FileRef#stream} and reset it to the beginning.
+     * Reopens the {@link FileRef#getStream()} and reset it to the beginning.
      *
      * <p>
-     * If the {@link FileRef} was previously opened, the {@link FileRef#stream} will be firstly closed and
+     * If the {@link FileRef} was previously opened, the {@link FileRef#getStream()} will be firstly closed and
      * then reopened.
      * </p>
      *
@@ -119,10 +133,25 @@ public class FileRepository {
     }
 
     /**
+     * Closes the content stream on {@link FileRef} but keeps size of the file.
+     *
+     * @param ref Provided {@link FileRef}
+     */
+    public void closeAndKeepSize(FileRef ref) {
+        InputStream stream = ref.getStream();
+
+        if (stream != null) {
+            checked(stream::close);
+        }
+
+        ref.setStream(null);
+    }
+
+    /**
      * Gets the {@link FileRef} without opening the content stream.
      *
      * <p>
-     * Developer can later open the {@link FileRef#stream} with {@link FileRepository#reset(FileRef)}.
+     * Developer can later open the {@link FileRef#getStream()} with {@link FileRepository#reset(FileRef)}.
      * </p>
      *
      * @param id Id of the file
@@ -147,21 +176,25 @@ public class FileRepository {
      * Failure to index the content will not produce exception.
      * </p>
      *
-     * @param stream      Content stream to save
-     * @param name        Name of the file
-     * @param contentType MIME type
+     * @param stream       Content stream to save
+     * @param name         Name of the file
+     * @param contentType  MIME type
+     * @param indexContent Should the file content be indexed
      * @return Newly created {@link FileRef}
      * @throws BadArgument If any argument is null
      */
     @Transactional
-    public FileRef create(InputStream stream, String name, String contentType) {
+    public FileRef create(InputStream stream, String name, String contentType, boolean indexContent) {
         notNull(stream, () -> new BadArgument(ARGUMENT_IS_NULL, "stream"));
-        notNull(name, () -> new BadArgument(ARGUMENT_IS_NULL,"name"));
-        notNull(contentType, () -> new BadArgument(ARGUMENT_IS_NULL,"contentType"));
+        notNull(name, () -> new BadArgument(ARGUMENT_IS_NULL, "name"));
+        notNull(contentType, () -> new BadArgument(ARGUMENT_IS_NULL, "contentType"));
+
+        String extension = FilenameUtils.getExtension(name);
+        final String finalContentType = recognizer.recognize(extension, contentType);
 
         FileRef ref = new FileRef();
         ref.setName(name);
-        ref.setContentType(contentType);
+        ref.setContentType(finalContentType);
         ref.setIndexedContent(false);
 
         checked(() -> {
@@ -174,7 +207,70 @@ public class FileRepository {
             }
 
             Path path = Paths.get(basePath, ref.getId());
+            Files.createDirectories(path.getParent());
             copy(stream, path);
+
+            if (indexContent) {
+                if (transformer.support(finalContentType, indexContentType)) {
+                    try (InputStream transformIn = newInputStream(path)) {
+                        ByteArrayOutputStream transformOut = new ByteArrayOutputStream();
+                        transformer.transform(finalContentType, indexContentType, transformIn, transformOut);
+
+                        ref.setIndexedContent(true);
+                        ref.setContent(transformOut.toString(StandardCharsets.UTF_8));
+                    }
+                } else {
+                    log.warn("Trying to index unsupported content type '{}' of {}.", finalContentType, ref.getId());
+                }
+            }
+        });
+
+        return store.save(ref);
+    }
+
+    /**
+     * Updates content of file
+     *
+     * @param id           File identification
+     * @param stream       Content stream
+     * @param indexContent Should the file content be indexed
+     * @return Updated {@link FileRef}
+     * @throws BadArgument   If any argument is null
+     * @throws MissingObject If the file was not found
+     */
+    @Transactional
+    public FileRef update(String id, InputStream stream, boolean indexContent) {
+        notNull(id, () -> new BadArgument(ARGUMENT_IS_NULL, "id"));
+        notNull(stream, () -> new BadArgument(ARGUMENT_IS_NULL, "stream"));
+
+        FileRef ref = store.find(id);
+        notNull(ref, () -> new MissingObject(ENTITY_IS_NULL, FileRef.class, id));
+
+        ref.setStream(stream);
+        ref.setIndexedContent(false);
+
+        checked(() -> {
+            Path path = Paths.get(basePath, ref.getId());
+
+            if (!exists(path) || isDirectory(path)) {
+                throw new MissingObject(FILE_IS_MISSING, Path.class, ref.getId());
+            }
+
+            copy(stream, path, StandardCopyOption.REPLACE_EXISTING);
+
+            if (indexContent) {
+                if (transformer.support(ref.getContentType(), indexContentType)) {
+                    try (InputStream transformIn = newInputStream(path)) {
+                        ByteArrayOutputStream transformOut = new ByteArrayOutputStream();
+                        transformer.transform(ref.getContentType(), indexContentType, transformIn, transformOut);
+
+                        ref.setIndexedContent(true);
+                        ref.setContent(transformOut.toString(StandardCharsets.UTF_8));
+                    }
+                } else {
+                    log.warn("Trying to index unsupported content type '{}' of {}.", ref.getContentType(), ref.getId());
+                }
+            }
         });
 
         return store.save(ref);
@@ -210,6 +306,52 @@ public class FileRepository {
     }
 
     /**
+     * Migration function. Moves existing flat storage files into hierarchical.
+     */
+    public void hierarchializeWholeStorage() throws IOException {
+        Files.list(Paths.get(basePath)).filter(Files::isRegularFile).forEach(
+                sourcePath -> {
+                    try {
+                        Path targetPath = Paths.get(sourcePath.getParent().toString(), sourcePath.getFileName().toString());
+                        Files.createDirectories(targetPath.getParent());
+                        Files.move(sourcePath, targetPath);
+                    } catch (IOException e) {
+                        throw new RuntimeException("Error while moving files.", e);
+                    }
+                }
+        );
+        log.info("Hierarchialization successful.");
+    }
+
+    /**
+     * Debug / maintenance function.
+     * Deletes any files that for some reason remain in store folder but no longer are referenced from any database
+     * FileRef.
+     */
+    @Transactional
+    public void wipeStrayFiles() throws IOException {   //not tested enough for production runs!
+        Set<String> existingIds = store.findAll().stream().map(DomainObject::getId).collect(Collectors.toSet());
+        wipeStrayDeep(Paths.get(basePath), existingIds);
+    }
+
+    private void wipeStrayDeep(Path parentPath, Set<String> existingIds) throws IOException {
+        Files.list(parentPath).forEach(
+                path -> {
+                    if (Files.isDirectory(path)) {
+                        checked(() -> wipeStrayDeep(path, existingIds));
+                    } else if (Files.isRegularFile(path)) {
+                        String fileName = path.getFileName().toString();
+                        if (!existingIds.contains(fileName)) {
+                            checked(() -> Files.delete(path));
+                            log.debug("Deleting " + fileName);
+                        }
+                    }
+                }
+        );
+    }
+
+
+    /**
      * Specifies the path on file system, where the files should be saved.
      *
      * @param basePath Path on file system
@@ -223,4 +365,15 @@ public class FileRepository {
     public void setStore(FileRefStore store) {
         this.store = store;
     }
+
+    @Inject
+    public void setRecognizer(MimeTypeRecognizer recognizer) {
+        this.recognizer = recognizer;
+    }
+
+    @Inject
+    public void setTransformer(Transformer transformers) {
+        this.transformer = transformers;
+    }
+
 }

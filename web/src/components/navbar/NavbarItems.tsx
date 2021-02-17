@@ -1,16 +1,14 @@
+import Link from "@material-ui/core/Link";
 import React from "react";
 import { NavLink } from "react-router-dom";
-import Link from "@material-ui/core/Link";
-
-import { routesTabs, adminRoutes, RoutesProps } from "../../router/_routes";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useUserToken } from "../../hooks/authHooks";
-
-import { useStyles } from "./_navbarStyles";
+import { adminRoutes, RoutesProps, routesTabs } from "../../router/_routes";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { isAdmin } from "../../utils/token";
+import { useStyles } from "./_navbarStyles";
 
 interface NavbarItemsProps {
-  matchesMd: boolean;
+  matchesLg: boolean;
 }
 
 const CustomNavLink = React.forwardRef((
@@ -18,7 +16,7 @@ const CustomNavLink = React.forwardRef((
   ref // eslint-disable-line @typescript-eslint/no-unused-vars
 ) => <NavLink {...props} />);
 
-export const NavbarItems: React.FC<NavbarItemsProps> = ({ matchesMd }) => {
+export const NavbarItems: React.FC<NavbarItemsProps> = ({ matchesLg }) => {
   const classesText = useTextStyles();
   const classes = useStyles();
   const token = useUserToken();
@@ -38,7 +36,7 @@ export const NavbarItems: React.FC<NavbarItemsProps> = ({ matchesMd }) => {
 
   return (
     <>
-      {matchesMd && (
+      {matchesLg && (
         <div className={classes.navItems}>
           {routesTabs.map(renderItems)}
           {isAdmin(token) && adminRoutes.map(renderItems)}

@@ -1,28 +1,27 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-import { isEqual } from "lodash";
-import classNames from "classnames";
-import { Typography, Button } from "@material-ui/core";
-import Tooltip from "@material-ui/core/Tooltip";
+import { Button, Typography } from "@material-ui/core";
 import IconButton from "@material-ui/core/IconButton";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
-import { useTheme } from "@material-ui/styles";
+import Tooltip from "@material-ui/core/Tooltip";
 import ViewHeadline from "@material-ui/icons/ViewHeadline";
 import ViewModule from "@material-ui/icons/ViewModule";
-
+import { useTheme } from "@material-ui/styles";
+import classNames from "classnames";
+import { isEqual } from "lodash";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Modal } from "../../components/portal/Modal";
-import { Loader } from "../loader/Loader";
-import { TableProps, DataProps, Params } from "./_types";
-import { FormType, Order } from "./_enums";
-import { getData } from "./_utils";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles } from "./_styles";
+import * as store from "../../utils/store";
+import { Loader } from "../loader/Loader";
+import { MessageSnackbar } from "../messages/MessageSnackbar";
+import { Search } from "./Search";
 import { TableComponent } from "./TableComponent";
 import { TilesComponent } from "./TilesComponent";
-import * as store from "../../utils/store";
-import { Search } from "./Search";
-import { MessageSnackbar } from "../messages/MessageSnackbar";
+import { FormType, Order } from "./_enums";
+import { useStyles } from "./_styles";
+import { DataProps, Params, TableProps } from "./_types";
+import { getData } from "./_utils";
 
 enum ViewType {
   TILE = "TILE",
@@ -46,6 +45,7 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
   requestType,
   getItems,
   onSubmitFormRefresh = false,
+  onRefreshLoadData = false,
   ...props
 }) => {
   const classes = useStyles();
@@ -128,6 +128,9 @@ const TableView: React.FC<TableProps & RouteComponentProps> = ({
     updateParams({ page: 0 });
     setSearchText("");
     setSearchKey(!searchKey);
+    if (onRefreshLoadData) {
+      loadData();
+    }
   };
 
   useEffect(() => {

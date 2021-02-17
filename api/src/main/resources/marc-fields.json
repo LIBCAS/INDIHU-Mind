@@ -116,11 +116,6 @@
     "code": "a"
   },
   {
-    "czech": "Zdrojový dokument název",
-    "tag": "760",
-    "code": "t"
-  },
-  {
     "czech": "Zdrojový dokument místo, nakladatel, rok",
     "tag": "773",
     "code": "d"
@@ -131,7 +126,7 @@
     "code": "g"
   },
   {
-    "czech": "Zdrojový dokument",
+    "czech": "Zdrojový dokument název",
     "tag": "773",
     "code": "t"
   },
@@ -157,21 +152,21 @@
   },
   {
     "czech": "Kolekce",
-    "__comment__": "Non-existent MARC Code, more info in API JavaDoc",
+    "__comment__": "Non-existent MARC Code, more info in Citation API JavaDoc",
     "__hidden__" : true,
     "tag": "999",
     "code": "a"
   },
   {
     "czech": "Archiv",
-    "__comment__": "Non-existent MARC Code, more info in API JavaDoc",
+    "__comment__": "Non-existent MARC Code, more info in Citation API JavaDoc",
     "__hidden__" : true,
     "tag": "999",
     "code": "b"
   },
   {
     "czech": "Město",
-    "__comment__": "Non-existent MARC Code, more info in API JavaDoc",
+    "__comment__": "Non-existent MARC Code, more info in Citation API JavaDoc",
     "__hidden__" : true,
     "tag": "999",
     "code": "c"

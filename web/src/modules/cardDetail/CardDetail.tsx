@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { RouteComponentProps } from "react-router-dom";
 import Fade from "@material-ui/core/Fade";
 import Grid from "@material-ui/core/Grid";
 import classNames from "classnames";
-import { uniqBy, isEmpty } from "lodash";
-
-import { set, get } from "../../utils/store";
+import { isEmpty, uniqBy } from "lodash";
+import React, { useCallback, useEffect, useState } from "react";
+import { RouteComponentProps } from "react-router-dom";
 import { Loader } from "../../components/loader/Loader";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { CardContentProps } from "../../types/card";
 import { api } from "../../utils/api";
-
+import { get, set } from "../../utils/store";
 import { CardDetailActions } from "./CardDetailActions";
-import { CardDetailContent } from "./CardDetailContent";
 import { CardDetailComments } from "./CardDetailComments";
+import { CardDetailContent } from "./CardDetailContent";
 import { CardDetailMeta } from "./CardDetailMeta";
 
 export const CardDetail: React.FC<RouteComponentProps> = ({
@@ -71,7 +69,7 @@ export const CardDetail: React.FC<RouteComponentProps> = ({
   }, [cardContent]);
   useEffect(() => {
     loadCard();
-    }, []); // eslint-disable-line
+  }, [loadCard]);
 
   return (
     <Fade in>

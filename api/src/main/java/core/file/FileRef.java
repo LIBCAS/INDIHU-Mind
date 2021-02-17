@@ -13,9 +13,7 @@ import java.io.InputStream;
 /**
  * Reference to a file stored in {@link FileRepository}.
  *
- * <p>
  * Should be created only through {@link FileRepository} and not cascaded from another entity.
- * </p>
  */
 @Getter
 @Setter
@@ -23,27 +21,20 @@ import java.io.InputStream;
 @Entity
 @Table(name = "uas_file")
 public class FileRef extends DatedObject {
-    /**
-     * Filename
-     */
+
+    /** Filename */
     protected String name;
 
-    /**
-     * MIME type
-     */
+    /** MIME type */
     private String contentType;
 
-    /**
-     * Indexing status
-     */
+    /** Indexing status */
     private Boolean indexedContent;
 
     /**
      * Opened stream to read file content
      *
-     * <p>
      * Initialized only if retrieved from {@link FileRepository}.
-     * </p>
      */
     @Transient
     private InputStream stream;
@@ -51,9 +42,7 @@ public class FileRef extends DatedObject {
     /**
      * Text representation of file content
      *
-     * <p>
      * Initialized only if saved through {@link FileRepository}.
-     * </p>
      */
     @Transient
     private String content;
@@ -61,10 +50,9 @@ public class FileRef extends DatedObject {
     /**
      * Size of the file content
      *
-     * <p>
      * Initialized only if retrieved from {@link FileRepository}.
-     * </p>
      */
     @Transient
     private Long size;
+
 }
