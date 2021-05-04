@@ -2,6 +2,7 @@ package cz.cas.lib.indihumind.init.builders;
 
 import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.citation.Citation;
+import cz.cas.lib.indihumind.document.AttachmentFileProviderType;
 import cz.cas.lib.indihumind.document.LocalAttachmentFile;
 import cz.cas.lib.indihumind.security.user.User;
 
@@ -46,6 +47,11 @@ public final class LocalAttachmentBuilder {
 
     public LocalAttachmentBuilder type(String type) {
         localAttachmentFile.setType(type);
+        return this;
+    }
+
+    public LocalAttachmentBuilder provider(AttachmentFileProviderType type) {
+        localAttachmentFile.setProviderType(type);
         return this;
     }
 

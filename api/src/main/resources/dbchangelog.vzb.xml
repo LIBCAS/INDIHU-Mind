@@ -777,4 +777,73 @@
         <!-- Workaround, because its not possible to create new not null column even though the value="0" is set -->
         <addNotNullConstraint tableName="vzb_label" columnName="ordinal_number" />
     </changeSet>
+    <changeSet id="17" author="radvan">
+        <addColumn tableName="vzb_card">
+            <column name="status" type="varchar(255)">
+                <!-- not null constraint add after data migration -->
+            </column>
+        </addColumn>
+        <!-- If card was in trash bin, set value of new column to 'TRASHED' otherwise set 'AVAILABLE' -->
+        <!-- Change all .deleted values to NULL (.deleted used to declare that card is in trash bin, but .status is used from now on) -->
+        <sql>
+            UPDATE vzb_card
+            SET status='AVAILABLE'
+            WHERE deleted IS NULL;
+
+            UPDATE vzb_card
+            SET status='TRASHED'
+            WHERE deleted IS NOT NULL;
+
+            UPDATE vzb_card
+            SET deleted=NULL
+            WHERE deleted IS NOT NULL;
+        </sql>
+        <addNotNullConstraint tableName="vzb_card" columnName="status" />
+    </changeSet>
+    <changeSet id="18" author="radvan">
+        <createIndex tableName="uas_assigned_role" indexName="assigned_role_user_id_index">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="19" author="radvan">
+        <addColumn tableName="vzb_attachment_abstract">
+            <column name="provider_type" type="varchar(255)" />
+            <!-- not null constraint add after data migration -->
+        </addColumn>
+        <!-- Populate newly created 'provider_type' column with data -->
+        <sql>
+            UPDATE vzb_attachment_abstract
+            SET provider_type='URL'
+            WHERE disc_type='URL';
+
+            UPDATE vzb_attachment_abstract
+            SET provider_type='LOCAL'
+            WHERE disc_type='LOCAL';
+
+            UPDATE vzb_attachment_abstract
+            SET provider_type='DROPBOX'
+            WHERE disc_type='EXTERNAL' AND id IN (
+                SELECT abs.id
+                FROM vzb_attachment_abstract as abs INNER JOIN vzb_attachment_external as ext
+                ON abs.id = ext.id
+                WHERE ext.provider_type='DROPBOX'
+            );
+
+            UPDATE vzb_attachment_abstract
+            SET provider_type='GOOGLE_DRIVE'
+            WHERE disc_type='EXTERNAL' AND id IN (
+                SELECT abs.id
+                FROM vzb_attachment_abstract as abs INNER JOIN vzb_attachment_external as ext
+                ON abs.id = ext.id
+                WHERE ext.provider_type='GOOGLE_DRIVE'
+            );
+        </sql>
+        <addNotNullConstraint tableName="vzb_attachment_abstract" columnName="provider_type" />
+        <dropColumn tableName="vzb_attachment_external" columnName="provider_type" />
+    </changeSet>
+    <changeSet id="20" author="radvan">
+        <modifyDataType tableName="vzb_attachment_url" columnName="link" newDataType="clob" />
+        <modifyDataType tableName="vzb_attachment_external" columnName="link" newDataType="clob" />
+        <modifyDataType tableName="vzb_attachment_external" columnName="provider_id" newDataType="clob" />
+    </changeSet>
 </databaseChangeLog>

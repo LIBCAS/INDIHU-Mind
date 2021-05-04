@@ -1,6 +1,5 @@
 package cz.cas.lib.indihumind;
 
-import cz.cas.lib.indihumind.citationtemplate.IndexedReferenceTemplate;
 import cz.cas.lib.indihumind.citationtemplate.ReferenceTemplate;
 import cz.cas.lib.indihumind.citationtemplate.ReferenceTemplateStore;
 import cz.cas.lib.indihumind.citationtemplate.Typeface;
@@ -9,9 +8,7 @@ import cz.cas.lib.indihumind.citationtemplate.fields.FieldMarc;
 import cz.cas.lib.indihumind.citationtemplate.fields.FieldOnline;
 import cz.cas.lib.indihumind.citationtemplate.fields.TemplateField;
 import cz.cas.lib.indihumind.citationtemplate.fields.author.FieldAuthor;
-import cz.cas.lib.indihumind.citationtemplate.fields.author.FirstNameFormat;
-import cz.cas.lib.indihumind.citationtemplate.fields.author.MultipleAuthorsFormat;
-import cz.cas.lib.indihumind.citationtemplate.fields.author.OrderFormat;
+import cz.cas.lib.indihumind.citationtemplate.fields.author.option.*;
 import cz.cas.lib.indihumind.citationtemplate.fields.interpunction.FieldColon;
 import cz.cas.lib.indihumind.citationtemplate.fields.interpunction.FieldComma;
 import cz.cas.lib.indihumind.citationtemplate.fields.interpunction.FieldSemicolon;
@@ -31,9 +28,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import static core.util.Utils.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,11 +43,6 @@ public class ReferenceTemplateApiTest extends ApiTest {
 
     @Inject private UserService userService;
     @Inject private ReferenceTemplateStore templateStore;
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedReferenceTemplate.class);
-    }
 
     private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(true).build();
 
@@ -132,7 +122,7 @@ public class ReferenceTemplateApiTest extends ApiTest {
 
         String newName = "This is new name";
         List<TemplateField> newFields = asList(
-                new FieldAuthor(FirstNameFormat.INITIAL, MultipleAuthorsFormat.ETAL, OrderFormat.FIRSTNAME_FIRST, Typeface.BOLD),
+                new FieldAuthor(FirstNameFormat.INITIAL, MultipleAuthorsFormat.ETAL, OrderFormat.FIRSTNAME_FIRST, Separator.COMMA, AndJoiner.AMPERSAND, Typeface.BOLD),
                 new FieldColon(), new FieldSpace(),
                 new FieldSemicolon(), new FieldComma(), new FieldSpace(),
                 new FieldMarc("300", 'a', Typeface.UPPERCASE, Typeface.ITALIC, Typeface.BOLD),
@@ -213,7 +203,7 @@ public class ReferenceTemplateApiTest extends ApiTest {
             template.setId("8d010538-0be8-4ec9-9861-5dd3947fb78b");
             template.setName("New Reference Template Test");
             template.setFields(asList(
-                    new FieldAuthor(FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST, Typeface.BOLD),
+                    new FieldAuthor(FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST, Separator.COMMA, AndJoiner.CZECH_AND,Typeface.BOLD),
                     new FieldComma(), new FieldSpace(),
                     new FieldMarc("300", 'a'),
                     new FieldSpace(), new FieldGeneratedDate(Typeface.ITALIC)));
@@ -225,7 +215,7 @@ public class ReferenceTemplateApiTest extends ApiTest {
             template.setName("Europský časopis EuroScience, šablona Knižný zdroj");
             template.setFields(asList(
                     new FieldMarc("020", 'a', Typeface.BOLD), new FieldSpace(),
-                    new FieldAuthor(FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST, Typeface.ITALIC),
+                    new FieldAuthor(FirstNameFormat.FULL, MultipleAuthorsFormat.FULL, OrderFormat.FIRSTNAME_FIRST, Separator.COMMA, AndJoiner.ENGLISH_AND, Typeface.ITALIC),
                     new FieldSpace(), new FieldColon(), new FieldSpace(), new FieldMarc("245", 'a', Typeface.UPPERCASE),
                     new FieldComma(), new FieldSpace(), new FieldMarc("300", 'a'), new FieldSpace(),
                     new FieldMarc("650", 'a'), new FieldComma(), new FieldSpace(),

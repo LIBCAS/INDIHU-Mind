@@ -1,23 +1,26 @@
-import React, { useRef } from "react";
-import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
-import { XYCoord } from "dnd-core";
-import {
-  Tooltip,
-  // ClickAwayListener
-} from "@material-ui/core";
-import classNames from "classnames";
-import { get, filter } from "lodash";
+import { Tooltip } from "@material-ui/core";
+import DeleteIcon from "@material-ui/icons/Delete";
 import FormatBoldIcon from "@material-ui/icons/FormatBold";
 import FormatItalicIcon from "@material-ui/icons/FormatItalic";
 import FormatSizeIcon from "@material-ui/icons/FormatSize";
-import DeleteIcon from "@material-ui/icons/Delete";
-import { FieldProps, Field } from "formik";
-
-import { createStyle } from "../_utils";
+import classNames from "classnames";
+import { XYCoord } from "dnd-core";
+import { Field, FieldProps } from "formik";
+import { filter, get } from "lodash";
+import React, { useRef } from "react";
+import { DropTargetMonitor, useDrag, useDrop } from "react-dnd";
 import { Select } from "../../../components/form/Select";
+import { Popover } from "../../../components/portal/Popover";
+import {
+  AuthorsAndJoiner,
+  AuthorsSeparator,
+  FirstNameFormat,
+  MultipleAuthorsFormat,
+  OrderFormat,
+} from "../_enums";
+import { createStyle } from "../_utils";
 import { useStyles } from "./_dndStyles";
 import { ItemTypes } from "./_types";
-import { FirstNameFormat, MultipleAuthorsFormat, OrderFormat } from "../_enums";
 
 export interface CardProps {
   id: any;
@@ -185,120 +188,168 @@ const Card: React.FC<CardProps> = ({
 
   const cardElement = document.getElementById(createCardId(id, index));
 
+  const element = useRef(null);
+
   return (
     // <ClickAwayListener onClickAway={handleClickAway}>
-    <div className={classes.cardContainer} style={{ opacity }}>
+    <div ref={element} className={classes.cardContainer} style={{ opacity }}>
       {active && (
-        <div
-          className={classNames(
-            classes.cardMenu,
-            cardElement &&
-              cardElement.getBoundingClientRect().left >
-                2 * (window.innerWidth / 3)
-              ? classes.cardMenuRight
-              : null,
-            isAuthor && classes.cardMenuBottom
-          )}
-        >
-          <div className={classes.cardMenuIcons}>
-            {[
-              {
-                Icon: FormatBoldIcon,
-                value: "BOLD",
-                title: "Tučně",
-                selected: isBold,
-              },
-              {
-                Icon: FormatItalicIcon,
-                value: "ITALIC",
-                title: "Kurzíva",
-                selected: isItalic,
-              },
-              {
-                Icon: FormatSizeIcon,
-                value: "UPPERCASE",
-                title: "Velká písmena",
-                selected: isUppercase,
-              },
-              {
-                Icon: DeleteIcon,
-                value: "DELETE",
-                title: "Odstranit",
-              },
-            ].map(({ Icon, value, title, selected }) => (
-              <Tooltip key={value} title={title}>
-                <Icon
-                  onClick={() => {
-                    if (value === "DELETE") {
-                      toggleActive();
-                      removeCard();
-                    } else {
-                      formikBag.setFieldValue(
-                        id + count + "customizations",
-                        selected
-                          ? filter(customizations, (c) => c !== value)
-                          : [...customizations, value]
-                      );
-                    }
-                  }}
-                  className={classNames(selected && classes.iconSelected)}
-                />
-              </Tooltip>
-            ))}
-          </div>
-          {isAuthor && (
-            <div className={classes.creatorSelects}>
-              {[
-                {
-                  name: "firstNameFormat",
-                  placeholder: "Podoba jména",
-                  options: [
-                    { value: FirstNameFormat.FULL, label: "Celé jméno" },
-                    { value: FirstNameFormat.INITIAL, label: "Zkrácené jméno" },
-                  ],
-                },
-                {
-                  name: "multipleAuthorsFormat",
-                  placeholder: "Formát u více tvůrců",
-                  options: [
-                    { value: MultipleAuthorsFormat.FULL, label: "Úplný výpis" },
+        <Popover
+          width="max-content"
+          open={active}
+          setOpen={toggleActive}
+          anchorEl={element.current}
+          overflowVisible
+          content={
+            <div
+              className={classNames(
+                cardElement &&
+                  cardElement.getBoundingClientRect().left >
+                    2 * (window.innerWidth / 3)
+                  ? classes.cardMenuRight
+                  : null,
+                isAuthor && classes.cardMenuBottom
+              )}
+            >
+              <div className={classes.cardMenuIcons}>
+                {[
+                  {
+                    Icon: FormatBoldIcon,
+                    value: "BOLD",
+                    title: "Tučně",
+                    selected: isBold,
+                  },
+                  {
+                    Icon: FormatItalicIcon,
+                    value: "ITALIC",
+                    title: "Kurzíva",
+                    selected: isItalic,
+                  },
+                  {
+                    Icon: FormatSizeIcon,
+                    value: "UPPERCASE",
+                    title: "Velká písmena",
+                    selected: isUppercase,
+                  },
+                  {
+                    Icon: DeleteIcon,
+                    value: "DELETE",
+                    title: "Odstranit",
+                  },
+                ].map(({ Icon, value, title, selected }) => (
+                  <Tooltip key={value} title={title}>
+                    <Icon
+                      onClick={() => {
+                        if (value === "DELETE") {
+                          toggleActive();
+                          removeCard();
+                        } else {
+                          formikBag.setFieldValue(
+                            id + count + "customizations",
+                            selected
+                              ? filter(customizations, (c) => c !== value)
+                              : [...customizations, value]
+                          );
+                        }
+                      }}
+                      className={classNames(selected && classes.iconSelected)}
+                    />
+                  </Tooltip>
+                ))}
+              </div>
+              {isAuthor && (
+                <div className={classes.creatorSelects}>
+                  {[
                     {
-                      value: MultipleAuthorsFormat.ETAL,
-                      label: "Zkrácený výpis (et al.)",
-                    },
-                  ],
-                },
-                {
-                  name: "orderFormat",
-                  placeholder: "Pořadí",
-                  options: [
-                    {
-                      value: OrderFormat.FIRSTNAME_FIRST,
-                      label: "Křestní jméno první",
+                      name: "firstNameFormat",
+                      placeholder: "Podoba jména",
+                      options: [
+                        { value: FirstNameFormat.FULL, label: "Celé jméno" },
+                        {
+                          value: FirstNameFormat.INITIAL,
+                          label: "Zkrácené jméno",
+                        },
+                      ],
                     },
                     {
-                      value: OrderFormat.LASTNAME_FIRST,
-                      label: "Příjmení první",
+                      name: "multipleAuthorsFormat",
+                      placeholder: "Formát u více tvůrců",
+                      options: [
+                        {
+                          value: MultipleAuthorsFormat.FULL,
+                          label: "Úplný výpis",
+                        },
+                        {
+                          value: MultipleAuthorsFormat.ETAL,
+                          label: "Zkrácený výpis (et al.)",
+                        },
+                      ],
                     },
-                  ],
-                },
-              ].map(({ name, ...rest }) => (
-                <div
-                  key={name}
-                  onClick={(e) => e.stopPropagation()}
-                  className={classes.creatorSelect}
-                >
-                  <Field
-                    name={`${id}${count}${name}`}
-                    render={({ field, form }: FieldProps<any>) => (
-                      <Select {...rest} field={field} form={form} />
-                    )}
-                  />
+                    {
+                      name: "orderFormat",
+                      placeholder: "Pořadí",
+                      options: [
+                        {
+                          value: OrderFormat.FIRSTNAME_FIRST,
+                          label: "Křestní jméno první",
+                        },
+                        {
+                          value: OrderFormat.LASTNAME_FIRST,
+                          label: "Příjmení první",
+                        },
+                      ],
+                    },
+                    {
+                      name: "separator",
+                      placeholder: "Oddělovač",
+                      options: [
+                        {
+                          value: AuthorsSeparator.COMMA,
+                          label: "Oddělené čárkou ','",
+                        },
+                        {
+                          value: AuthorsSeparator.DASH,
+                          label: "Oddělené pomlčkou '–'",
+                        },
+                      ],
+                    },
+                    {
+                      name: "andJoiner",
+                      placeholder: "Oddělovač na konci",
+                      options: [
+                        {
+                          value: AuthorsAndJoiner.CZECH_AND,
+                          label: "Na konci oddělené českým 'a'",
+                        },
+                        {
+                          value: AuthorsAndJoiner.ENGLISH_AND,
+                          label: "Na konci oddělené anglickým 'and'",
+                        },
+                        {
+                          value: AuthorsAndJoiner.AMPERSAND,
+                          label: "Na konci oddělené ampersandem '&'",
+                        },
+                      ],
+                    },
+                  ].map(({ name, ...rest }) => (
+                    <div
+                      key={name}
+                      onClick={(e) => e.stopPropagation()}
+                      className={classes.creatorSelect}
+                    >
+                      <Field
+                        name={`${id}${count}${name}`}
+                        render={({ field, form }: FieldProps<any>) => (
+                          <Select {...rest} field={field} form={form} />
+                        )}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
+          }
+        />
       )}
       <div
         id={createCardId(id, index)}

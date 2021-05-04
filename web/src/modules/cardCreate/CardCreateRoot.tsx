@@ -1,24 +1,21 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
+import IconButton from "@material-ui/core/IconButton";
+import Tooltip from "@material-ui/core/Tooltip";
 import TableChart from "@material-ui/icons/TableChart";
 import classNames from "classnames";
-import Tooltip from "@material-ui/core/Tooltip";
-import IconButton from "@material-ui/core/IconButton";
-
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { Modal } from "../../components/portal/Modal";
 import { templateGet } from "../../context/actions/template";
 import { GlobalContext, StateProps } from "../../context/Context";
-import { CardTemplateAttribute } from "../../types/cardTemplate";
+import { useStyles as useEffectStyles } from "../../theme/styles/effectStyles";
 import { CardProps } from "../../types/card";
-import { Modal } from "../../components/portal/Modal";
+import { CardTemplateAttribute } from "../../types/cardTemplate";
 import { api } from "../../utils/api";
 import { getAttributeTypeDefaultValue } from "../../utils/attribute";
-
+import { CardCreateCloseConfirm } from "./CardCreateCloseConfirm";
 import { CardCreateForm, InitValuesProps } from "./CardCreateForm";
 import { CardCreateTemplate } from "./CardCreateTemplate";
-import { parseLabel, flattenCategory } from "./_utils";
-
-import { useStyles as useEffectStyles } from "../../theme/styles/effectStyles";
 import { useStyles } from "./_cardCreateStyles";
-import { CardCreateCloseConfirm } from "./CardCreateCloseConfirm";
+import { flattenCategory, parseLabel } from "./_utils";
 
 interface CardCreateRootProps {
   open: boolean;
@@ -86,23 +83,29 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
 
   const loadCardContent = useCallback(() => {
     if (item) {
+      let card: any;
       api()
-        .get(`card/${item.id}/content`)
+        .get(`card/${item.id}/contents`)
         .json()
         .then((res: any) => {
-          if (res.length > 0 && res[0].card) {
-            const card = res[0].card;
-            const init = {
-              ...card,
-              attributes: res[0].attributes,
-              labels: card.labels.map(parseLabel),
-              categories: flattenCategory(card.categories),
-              cardContentId: res[0].id,
-            };
-            setInitValues(init);
-          }
+          card = res;
           return;
         });
+      if (card) {
+        api()
+          .get(`card/${item.id}/content`)
+          .json()
+          .then((content: any) => {
+            const init = {
+              ...card,
+              attributes: content[0].attributes,
+              labels: card.labels.map(parseLabel),
+              categories: flattenCategory(card.categories),
+              cardContentId: content[0].id,
+            };
+            setInitValues(init);
+          });
+      }
     } else if (attributeTemplates && attributeTemplates.length) {
       setAttributes(attributeTemplates);
     }
@@ -110,13 +113,15 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
 
   // common template has no owner
   useEffect(() => {
-    loadTemplates();
     loadCardContent();
-  }, [loadTemplates, loadCardContent]);
+  }, [loadCardContent]);
 
   useEffect(() => {}, [state.template]);
 
   useEffect(() => {
+    if (open) {
+      loadTemplates();
+    }
     if (open && item) {
       setType("create");
       loadCardContent();
@@ -124,7 +129,7 @@ export const CardCreateRoot: React.FC<CardCreateRootProps> = ({
     if (!open) {
       setInitValues(defaultValues);
     }
-  }, [item, open, loadCardContent]);
+  }, [item, open, loadCardContent, loadTemplates]);
 
   /**
    * It handles modal closing. If the truth is returned, the modal closes and vice versa

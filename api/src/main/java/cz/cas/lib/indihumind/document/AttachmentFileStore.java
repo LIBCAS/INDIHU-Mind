@@ -1,19 +1,21 @@
 package cz.cas.lib.indihumind.document;
 
 import core.index.IndexedDatedStore;
+import cz.cas.lib.indihumind.util.Reindexable;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class AttachmentFileStore extends IndexedDatedStore<AttachmentFile, QAttachmentFile, IndexedAttachmentFile> {
-    public final String indexType = "attachmentFile";
+public class AttachmentFileStore extends IndexedDatedStore<AttachmentFile, QAttachmentFile, IndexedAttachmentFile> implements Reindexable {
 
     public AttachmentFileStore() {
         super(AttachmentFile.class, QAttachmentFile.class, IndexedAttachmentFile.class);
     }
 
+    public static final String INDEX_TYPE = "attachmentFile";
+
     @Override
     public String getIndexType() {
-        return indexType;
+        return INDEX_TYPE;
     }
 
     @Override
@@ -25,4 +27,13 @@ public class AttachmentFileStore extends IndexedDatedStore<AttachmentFile, QAtta
         return file;
     }
 
+    @Override
+    public void reindexEverything() {
+        dropReindex();
+    }
+
+    @Override
+    public void removeAllDataFromIndex() {
+        removeAllIndexes();
+    }
 }

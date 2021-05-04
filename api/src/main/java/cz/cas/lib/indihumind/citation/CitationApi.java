@@ -5,6 +5,7 @@ import core.index.dto.Params;
 import core.index.dto.Result;
 import cz.cas.lib.indihumind.citation.dto.CreateCitationDto;
 import cz.cas.lib.indihumind.citation.dto.UpdateCitationDto;
+import cz.cas.lib.indihumind.citation.view.CitationRef;
 import cz.cas.lib.indihumind.security.user.Roles;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -103,9 +104,9 @@ public class CitationApi {
         service.delete(id);
     }
 
-    @ApiOperation(value = "Gets all instances of citations that respect the selected parameters", response = Result.class)
+    @ApiOperation(value = "Gets all instances of citations that respect the selected parameters", response = CitationRef.class)
     @PostMapping(value = "/parametrized", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public Result<Citation> list(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
+    public Result<CitationRef> list(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
         return service.findAll(params);
     }
 

@@ -10,6 +10,7 @@ import cz.cas.lib.indihumind.util.IndihuMindUtils;
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -65,7 +66,14 @@ public abstract class RestExceptionHandler extends ResponseEntityExceptionHandle
 
     private void logRestException(RestExceptionResponse dto) {
         try {
-            ObjectMapper objectMapper = ApplicationContextUtils.getApplicationContext().getBean(ObjectMapper.class);
+            ObjectMapper objectMapper;
+            ApplicationContext ctx = ApplicationContextUtils.getApplicationContext();
+            if (ctx == null) {
+                objectMapper = new ObjectMapper();
+                objectMapper.writerWithDefaultPrettyPrinter();
+            } else {
+                objectMapper = ctx.getBean(ObjectMapper.class);
+            }
             String message = objectMapper.writer().writeValueAsString(dto);
             log.info(message);
         } catch (JsonProcessingException e) {

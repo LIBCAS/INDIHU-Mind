@@ -1,6 +1,7 @@
 package cz.cas.lib.indihumind.citationtemplate.fields.author;
 
 import core.exception.GeneralException;
+import cz.cas.lib.indihumind.citationtemplate.fields.author.option.FirstNameFormat;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
@@ -8,8 +9,7 @@ import javax.validation.constraints.NotBlank;
 import static cz.cas.lib.indihumind.util.IndihuMindUtils.AUTHOR_NAME_ENCODING;
 
 @Getter
-public
-class HumanAuthor implements Author {
+public class HumanAuthor implements Author {
 
     @NotBlank
     private final String lastName;
@@ -28,7 +28,6 @@ class HumanAuthor implements Author {
         this.lastName = split[0];
         this.firstName = split[1];
         applyNameFormat(format);
-
     }
 
     public void applyNameFormat(FirstNameFormat format) {

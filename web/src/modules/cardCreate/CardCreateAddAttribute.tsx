@@ -1,18 +1,15 @@
-import React from "react";
-import { FormikProps, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
-
-import { AttributeProps } from "../../types/attribute";
-import { AttributeTypeEnum } from "../../enums";
-import { notEmpty } from "../../utils/form/validate";
-
+import { Field, FieldProps, FormikProps } from "formik";
+import React from "react";
 import { Formik } from "../../components/form/Formik";
-import { Select } from "../../components/form/Select";
 import { InputText } from "../../components/form/InputText";
-
-import { useStyles } from "./_cardCreateStyles";
+import { Select } from "../../components/form/Select";
+import { AttributeTypeEnum } from "../../enums";
+import { AttributeProps } from "../../types/attribute";
+import { notEmpty, notLongerThan255 } from "../../utils/form/validate";
 import { CardCreateAddAttributeValue } from "./CardCreateAddAttributeValue";
-import { onSubmitAttribute, onChangeType } from "./_utils";
+import { useStyles } from "./_cardCreateStyles";
+import { onChangeType, onSubmitAttribute } from "./_utils";
 
 const initialValues = {
   id: "",
@@ -53,7 +50,9 @@ export const CardCreateAddAttribute: React.FC<CardCreateAddAttributeProp> = ({
           <div className={classes.attributeWrapper}>
             <Field
               name="name"
-              validate={notEmpty}
+              validate={(value: any) =>
+                notLongerThan255(value) || notEmpty(value)
+              }
               render={({ field, form }: FieldProps<AttributeProps>) => (
                 <InputText
                   field={field}

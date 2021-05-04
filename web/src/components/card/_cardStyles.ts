@@ -1,5 +1,5 @@
-import { makeStyles } from "@material-ui/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import { makeStyles } from "@material-ui/styles";
 
 export const useStyles = makeStyles((theme: Theme) => {
   return {
@@ -97,6 +97,16 @@ export const useStyles = makeStyles((theme: Theme) => {
       minHeight: "20%",
       maxHeight: "80%",
       flexShrink: 1,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    cardTileTrashedTag: {
+      borderRadius: 8,
+      fontSize: "0.75rem",
+      background: theme.palette.grey[200],
+      padding: 6,
+      whiteSpace: "nowrap",
     },
     cardTileNote: {
       minHeight: "20%",

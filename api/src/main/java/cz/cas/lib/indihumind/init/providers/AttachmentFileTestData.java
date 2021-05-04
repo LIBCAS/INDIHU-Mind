@@ -51,6 +51,7 @@ public class AttachmentFileTestData implements TestDataRemovable {
         LocalAttachmentFile locFile = LocalAttachmentBuilder.builder()
                 .name("LokalNyfAjl")
                 .owner(owner)
+                .provider(AttachmentFileProviderType.LOCAL)
                 .contentType("image/png")
                 .type("png").build();
         return attachmentStore.save(locFile);
@@ -60,6 +61,7 @@ public class AttachmentFileTestData implements TestDataRemovable {
         UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder()
                 .name("NKP Logo")
                 .location(UrlAttachmentFile.UrlDocumentLocation.WEB)
+                .provider(AttachmentFileProviderType.URL)
                 .owner(owner)
                 .size(29647L)
                 .link("https://kramerius5.nkp.cz/logo.png")
@@ -72,6 +74,7 @@ public class AttachmentFileTestData implements TestDataRemovable {
         LocalAttachmentFile locFile = LocalAttachmentBuilder.builder()
                 .name("adminLocalFile")
                 .owner(owner)
+                .provider(AttachmentFileProviderType.LOCAL)
                 .contentType("image/png")
                 .type("png").build();
         return attachmentStore.save(locFile);
@@ -82,6 +85,7 @@ public class AttachmentFileTestData implements TestDataRemovable {
                 .name("adminUrlFile")
                 .location(UrlAttachmentFile.UrlDocumentLocation.SERVER)
                 .owner(owner)
+                .provider(AttachmentFileProviderType.URL)
                 .size(29647L)
                 .link("https://kramerius5.nkp.cz/logo.png")
                 .contentType(MediaType.IMAGE_PNG_VALUE)

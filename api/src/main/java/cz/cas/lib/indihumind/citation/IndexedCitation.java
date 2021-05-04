@@ -35,9 +35,4 @@ public class IndexedCitation extends IndexedDatedObject implements AdvancedSearc
         return USER_ID;
     }
 
-    @Override
-    public String getDeletedField() {
-        return null;
-    }
-
 }

@@ -1,55 +1,49 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useContext,
-} from "react";
-import { FormikProps, Form, Field, FieldProps } from "formik";
-import InputBase from "@material-ui/core/InputBase";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
-import classNames from "classnames";
-import Add from "@material-ui/icons/Add";
-import { withRouter, RouteComponentProps } from "react-router";
-
-import { GlobalContext } from "../../context/Context";
-import { CategoryProps } from "../../types/category";
-import { AttributeProps } from "../../types/attribute";
-import { LabelProps } from "../../types/label";
-
-import { notEmpty } from "../../utils/form/validate";
-import { useStyles as useStylesText } from "../../theme/styles/textStyles";
-import { useStyles as useFormStyles } from "../../components/form/_styles";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-
-import { Formik } from "../../components/form/Formik";
-import { Popover } from "../../components/portal/Popover";
-import { Divider } from "../../components/divider/Divider";
-import { ButtonGrey } from "../../components/control/ButtonGrey";
-import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
-import { Loader } from "../../components/loader/Loader";
-
-import { CardTemplateProps } from "../../types/cardTemplate";
-import { FileProps } from "../../types/file";
-
-import { CardCreateAddAttribute } from "./CardCreateAddAttribute";
-import { CardCreateAttribute } from "./CardCreateAttribute";
-import { CardCreateAddCategory } from "./CardCreateAddCategory";
-import { CardCreateAddLabel } from "./CardCreateAddLabel";
-import { CardCreateAddTemplate } from "./CardCreateAddTemplate";
-import { CardCreateAddCard } from "./CardCreateAddCard";
-import { CardCreateAddFile } from "./CardCreateAddFile";
-
-import { useStyles } from "./_cardCreateStyles";
-import { onSubmitCard, getTemplateName } from "./_utils";
-import { CardCreateAddRecord } from "./CardCreateAddRecord";
-import { theme } from "../../theme/theme";
-import { RecordProps } from "../../types/record";
-import { Editor } from "../../components/editor/Editor";
+import InputBase from "@material-ui/core/InputBase";
 import InputLabel from "@material-ui/core/InputLabel";
+import Typography from "@material-ui/core/Typography";
+import Add from "@material-ui/icons/Add";
+import classNames from "classnames";
+import { Field, FieldProps, Form, FormikProps } from "formik";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { RouteComponentProps, withRouter } from "react-router";
+import { ButtonGrey } from "../../components/control/ButtonGrey";
+import { Divider } from "../../components/divider/Divider";
+import { Editor } from "../../components/editor/Editor";
+import { Formik } from "../../components/form/Formik";
+import { useStyles as useFormStyles } from "../../components/form/_styles";
+import { Loader } from "../../components/loader/Loader";
+import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
+import { Popover } from "../../components/portal/Popover";
+import { GlobalContext } from "../../context/Context";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useStylesText } from "../../theme/styles/textStyles";
+import { theme } from "../../theme/theme";
+import { AttributeProps } from "../../types/attribute";
+import { CardTemplateProps } from "../../types/cardTemplate";
+import { CategoryProps } from "../../types/category";
+import { FileProps } from "../../types/file";
+import { LabelProps } from "../../types/label";
+import { RecordProps } from "../../types/record";
+import { notEmpty, notLongerThan255 } from "../../utils/form/validate";
+import { CardCreateAddAttribute } from "./CardCreateAddAttribute";
+import { CardCreateAddCard } from "./CardCreateAddCard";
+import { CardCreateAddCategory } from "./CardCreateAddCategory";
+import { CardCreateAddFile } from "./CardCreateAddFile";
+import { CardCreateAddLabel } from "./CardCreateAddLabel";
+import { CardCreateAddRecord } from "./CardCreateAddRecord";
+import { CardCreateAddTemplate } from "./CardCreateAddTemplate";
+import { CardCreateAttribute } from "./CardCreateAttribute";
+import { useStyles } from "./_cardCreateStyles";
+import { getTemplateName, onSubmitCard } from "./_utils";
 
 export interface InitValuesProps {
   id: string;
@@ -180,7 +174,9 @@ const CardCreateFormView: React.FC<
           <Form>
             <div className={classes.wrapper}>
               <Field
-                validate={notEmpty}
+                validate={(value: any) =>
+                  notLongerThan255(value) || notEmpty(value)
+                }
                 name="name"
                 render={({ field, form }: FieldProps<any>) => (
                   <>

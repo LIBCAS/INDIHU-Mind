@@ -39,6 +39,7 @@ public class CategoryApi {
         return service.find(id);
     }
 
+    @ApiOperation(value = "Deletes category and all its subcategories. Asynchronously reindexes cards that were under deleted categories.")
     @DeleteMapping(value = "/{id}")
     public void delete(@ApiParam(value = "Id of the instance", required = true) @PathVariable("id") String id) {
         service.delete(id);

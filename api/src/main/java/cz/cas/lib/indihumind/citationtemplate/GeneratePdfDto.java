@@ -1,5 +1,6 @@
 package cz.cas.lib.indihumind.citationtemplate;
 
+import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.citation.Citation;
 import cz.cas.lib.indihumind.validation.Uuid;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import java.util.List;
 
 /**
  * DTO for generating PDF from given id of {@link ReferenceTemplate}
- * and list of ids of {@link Citation}
+ * and list of ids of {@link Citation} or {@link Card}
  */
 @Getter
 @Setter

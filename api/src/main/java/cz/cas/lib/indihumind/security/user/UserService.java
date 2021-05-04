@@ -34,7 +34,6 @@ import static core.exception.ForbiddenOperation.ErrorCode.INVALID_TOKEN;
 import static core.exception.ForbiddenOperation.ErrorCode.USER_NOT_LOGGED_IN;
 import static core.exception.MissingObject.ErrorCode.ENTITY_IS_NULL;
 import static core.util.Utils.*;
-import static cz.cas.lib.indihumind.card.CardService.getPidSequenceId;
 
 @Service
 public class UserService {
@@ -80,7 +79,7 @@ public class UserService {
 
         // sequence defines number of cards for a user, used by Card#pid
         Sequence s = new Sequence();
-        s.setId(getPidSequenceId(user.getId()));
+        s.setId(user.assembleCardPidSequenceId());
         s.setFormat("0");
         s.setCounter(1L);
         sequenceStore.save(s);

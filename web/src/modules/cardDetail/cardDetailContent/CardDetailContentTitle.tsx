@@ -1,28 +1,29 @@
-import React, { useState } from "react";
-import MuiTypography from "@material-ui/core/Typography";
-import MuiTooltip from "@material-ui/core/Tooltip";
-import { FormikProps, FieldProps, Field, Form } from "formik";
-import * as Yup from "yup";
-import MuiClickAwayListener from "@material-ui/core/ClickAwayListener";
 import MuiButton from "@material-ui/core/Button";
+import MuiClickAwayListener from "@material-ui/core/ClickAwayListener";
+import MuiTooltip from "@material-ui/core/Tooltip";
+import MuiTypography from "@material-ui/core/Typography";
 import classNames from "classnames";
-
+import { Field, FieldProps, Form, FormikProps } from "formik";
+import React, { useState } from "react";
+import * as Yup from "yup";
 import { Formik } from "../../../components/form/Formik";
 import { InputText } from "../../../components/form/InputText";
-import { CardContentProps } from "../../../types/card";
-
-import { onEditCard } from "./_utils";
-import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { useTooltipStyles } from "./_cardStyles";
+import { onEditCard } from "./_utils";
 
 interface CardDetailContentTitleProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  cardContents: CardContentProps[] | undefined;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   title: string;
+  disabled?: boolean;
 }
 
 interface FormValues {
@@ -30,13 +31,18 @@ interface FormValues {
 }
 
 const validationSchema = Yup.object().shape({
-  title: Yup.string().required("Povinné"),
+  title: Yup.string()
+    .required("Povinné")
+    .max(255, "Smí mít maximálně 255 znaků"),
 });
 
 export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   title,
+  disabled,
 }) => {
   const [edit, setEdit] = useState<boolean>(false);
 
@@ -47,7 +53,14 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
   const classesTooltip = useTooltipStyles();
 
   const onSubmit = (values: FormValues) => {
-    onEditCard("name", values.title, card, setCardContent);
+    onEditCard(
+      "name",
+      values.title,
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents
+    );
     setEdit(false);
   };
 
@@ -109,7 +122,7 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
         />
       ) : (
         <MuiTooltip
-          title="Kliknutím můžete editovat název karty."
+          title={disabled ? "" : "Kliknutím můžete editovat název karty."}
           enterDelay={500}
           leaveDelay={250}
           arrow={true}
@@ -117,10 +130,14 @@ export const CardDetailContentTitle: React.FC<CardDetailContentTitleProps> = ({
           classes={classesTooltip}
         >
           <MuiTypography
-            onClick={() => (card.lastVersion ? setEdit(true) : undefined)}
+            onClick={() =>
+              !disabled && currentCardContent.lastVersion
+                ? setEdit(true)
+                : undefined
+            }
             variant="h5"
             className={classNames(classesSpacing.mb1, {
-              [classesText.cursor]: card.lastVersion,
+              [classesText.cursor]: currentCardContent.lastVersion,
             })}
           >
             {title}

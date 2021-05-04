@@ -1,26 +1,34 @@
 import React, { useContext } from "react";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { Label } from "../../../components/card/Label";
+import { labelActiveSet } from "../../../context/actions/label";
+import { GlobalContext } from "../../../context/Context";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { LabelProps } from "../../../types/label";
 import { onEditCard } from "./_utils";
 
-import { CardContentProps } from "../../../types/card";
-import { GlobalContext } from "../../../context/Context";
-import { labelActiveSet } from "../../../context/actions/label";
-import { LabelProps } from "../../../types/label";
-import { Label } from "../../../components/card/Label";
-
 interface CardDetailContentLabelViewProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   label: LabelProps;
+  disabled?: boolean;
 }
 
 const CardDetailContentLabelView: React.FC<
   CardDetailContentLabelViewProps & RouteComponentProps
-> = ({ card, setCardContent, label, history }) => {
+> = ({
+  card,
+  setCard,
+  currentCardContent,
+  setCardContents,
+  label,
+  history,
+  disabled,
+}) => {
   const context: any = useContext(GlobalContext);
 
   const dispatch: Function = context.dispatch;
@@ -31,8 +39,15 @@ const CardDetailContentLabelView: React.FC<
   };
 
   const handleDelete = () => {
-    const labels = card.card.labels.filter((lab) => lab.id !== label.id);
-    onEditCard("labels", labels, card, setCardContent);
+    const labels = card.labels.filter((lab) => lab.id !== label.id);
+    onEditCard(
+      "labels",
+      labels,
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents
+    );
   };
 
   return (
@@ -40,7 +55,9 @@ const CardDetailContentLabelView: React.FC<
       <Label
         label={label}
         onClick={handleLabelClick}
-        onDelete={card.lastVersion ? handleDelete : undefined}
+        onDelete={
+          !disabled && currentCardContent.lastVersion ? handleDelete : undefined
+        }
       />
     </React.Fragment>
   );

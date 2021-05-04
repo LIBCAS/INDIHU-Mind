@@ -1,31 +1,29 @@
-import React, { useState, useEffect, useContext } from "react";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
+import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-
-import { Form, Field, FieldProps, FormikProps } from "formik";
+import { Field, FieldProps, Form, FormikProps } from "formik";
+import React, { useContext, useEffect, useState } from "react";
 import { Formik } from "../../../components/form/Formik";
-import { GlobalContext, StateProps } from "../../../context/Context";
-import { labelGet } from "../../../context/actions/label";
-import { CreateLabel } from "../../../components/tabContent/CreateLabel";
 import { Select } from "../../../components/form/Select";
-
-import { LabelProps } from "../../../types/label";
-import { OptionType } from "../../../components/select/_types";
-import { parseLabel } from "../../cardCreate/_utils";
-import { CardContentProps } from "../../../types/card";
 import { Modal } from "../../../components/portal/Modal";
 import { Popover } from "../../../components/portal/Popover";
-import { onEditCard } from "./_utils";
-
+import { OptionType } from "../../../components/select/_types";
+import { CreateLabel } from "../../../components/tabContent/CreateLabel";
+import { labelGet } from "../../../context/actions/label";
+import { GlobalContext, StateProps } from "../../../context/Context";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
 import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { LabelProps } from "../../../types/label";
+import { parseLabel } from "../../cardCreate/_utils";
 import { useStyles } from "./_cardStyles";
+import { onEditCard } from "./_utils";
 
 interface CardDetailContentAddLabelFormProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   openForm: any;
@@ -39,7 +37,9 @@ interface FormValues {
 
 export const CardDetailContentAddLabelForm: React.FC<CardDetailContentAddLabelFormProps> = ({
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   openForm,
   setOpenForm,
   anchorEl,
@@ -64,9 +64,9 @@ export const CardDetailContentAddLabelForm: React.FC<CardDetailContentAddLabelFo
   };
   useEffect(() => {
     if (initialValues.labels.length === 0) {
-      setInitialValues({ labels: card.card.labels.map((l) => l.id) });
+      setInitialValues({ labels: card.labels.map((l) => l.id) });
     }
-  }, [card.card.labels, state.label.labels, initialValues.labels.length]);
+  }, [card.labels, state.label.labels, initialValues.labels.length]);
 
   useEffect(() => {
     const flatten = state.label.labels.map(parseLabel);
@@ -78,7 +78,14 @@ export const CardDetailContentAddLabelForm: React.FC<CardDetailContentAddLabelFo
     const resultTransformed = state.label.labels.filter((o) =>
       values.labels.some((id) => id === o.id)
     );
-    onEditCard("labels", resultTransformed, card, setCardContent);
+    onEditCard(
+      "labels",
+      resultTransformed,
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents
+    );
     setOpenForm(false);
   };
   return (
@@ -106,7 +113,7 @@ export const CardDetailContentAddLabelForm: React.FC<CardDetailContentAddLabelFo
                       )}
                       variant="h5"
                     >
-                      Štítky karty {card.card.name}
+                      Štítky karty {card.name}
                     </Typography>
                     <Field
                       name="labels"

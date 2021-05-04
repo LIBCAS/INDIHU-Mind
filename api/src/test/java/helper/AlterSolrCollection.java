@@ -1,8 +1,15 @@
 package helper;
 
 import core.exception.GeneralException;
+import core.file.IndexedFileRef;
 import core.index.IndexedDomainObject;
+import core.notification.IndexedNotification;
+import core.report.IndexedReport;
 import cz.cas.lib.indihumind.card.IndexedCard;
+import cz.cas.lib.indihumind.citation.IndexedCitation;
+import cz.cas.lib.indihumind.citationtemplate.IndexedReferenceTemplate;
+import cz.cas.lib.indihumind.document.IndexedAttachmentFile;
+import cz.cas.lib.indihumind.security.user.IndexedUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.solr.core.mapping.SolrDocument;
@@ -10,6 +17,7 @@ import org.springframework.data.solr.core.mapping.SolrDocument;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,10 +33,21 @@ public interface AlterSolrCollection {
      * collection.
      *
      * @return set of classes which should have {@link SolrDocument#collection()} modified.
-     * @implNote This method does not use {@code Class<? extends IndexedDomainObject>} because {@link
-     *         IndexedCard} is not such child.
      */
-    Set<Class<?>> getIndexedClassesForSolrAnnotationModification();
+    default Set<Class<? extends IndexedDomainObject>> getIndexedClassesForSolrAnnotationModification() {
+        return Set.of(
+                // UAS
+                IndexedFileRef.class,
+                IndexedNotification.class,
+                IndexedReport.class,
+                // INDIHU Mind
+                IndexedCard.class,
+                IndexedUser.class,
+                IndexedCitation.class,
+                IndexedReferenceTemplate.class,
+                IndexedAttachmentFile.class
+        );
+    }
 
 
     /**
@@ -42,11 +61,15 @@ public interface AlterSolrCollection {
      *         interface's methods.
      */
     default void modifySolrDocumentAnnotationForIndexedClasses() {
-        for (Class<?> clazz : getIndexedClassesForSolrAnnotationModification()) {
-            if (IndexedCard.class.isAssignableFrom(clazz))
+        Set<Class<? extends IndexedDomainObject>> indexedClasses = new HashSet<>(getIndexedClassesForSolrAnnotationModification());
+        indexedClasses.add(IndexedCard.class);
+
+        for (Class<? extends IndexedDomainObject> clazz : indexedClasses) {
+            if (IndexedCard.class.isAssignableFrom(clazz)) {
                 modifySolrDocumentAnnotation(IndexedCard.class, getCardTestCollectionName());
-            else if (IndexedDomainObject.class.isAssignableFrom(clazz))
+            } else {
                 modifySolrDocumentAnnotation(clazz, getUasTestCollectionName());
+            }
         }
     }
 

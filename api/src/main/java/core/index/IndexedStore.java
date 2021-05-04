@@ -112,7 +112,7 @@ public interface IndexedStore<T extends DomainObject, U extends IndexedDomainObj
             index(instance);
             counter++;
             if (counter % 20 == 0 || counter == instances.size()) {
-                indexedStoreLogger.info(String.format("reindexed %d records of type:'%s' of core:'%s'", counter, getUType().getSimpleName(), getIndexCollection()));
+                indexedStoreLogger.debug(String.format("reindexed %d records of type:'%s' of core:'%s'", counter, getUType().getSimpleName(), getIndexCollection()));
             }
         }
         indexedStoreLogger.trace(String.format("reindexed all %d records of type:'%s' of core:'%s'", instances.size(), getUType().getSimpleName(), getIndexCollection()));
@@ -271,7 +271,6 @@ public interface IndexedStore<T extends DomainObject, U extends IndexedDomainObj
      * Returns populated @Field annotation object for attribute
      * going deeper to nested objects if needed and also to generics (Set, List, ...)
      * <p>
-     * fixme: add support for arrays
      *
      * @param fieldName name of the field
      * @return populated annotation object

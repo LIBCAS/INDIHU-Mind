@@ -1,8 +1,7 @@
 package cz.cas.lib.indihumind.advancedsearch.searchable;
 
-import cz.cas.lib.indihumind.card.IndexedCard;
+import cz.cas.lib.indihumind.citation.IndexedCitation;
 
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -13,7 +12,7 @@ import javax.validation.constraints.NotNull;
 public interface AdvancedSearchClass {
 
     /**
-     * Return name of Solr field that represents entity's owner ID (e.g. {@link IndexedCard#getUserId()})
+     * Return name of Solr field that represents entity's owner ID (e.g. {@link IndexedCitation#getUserId()})
      *
      * This field is used in pre-filter, query must return entities of user that requested them.
      *
@@ -21,15 +20,5 @@ public interface AdvancedSearchClass {
      */
     @NotNull
     String getUserIdField();
-
-    /**
-     * Return name of Solr field that is represents deletion of entity. (e.g. {@link IndexedCard#getDeleted()})
-     *
-     * This field is used in pre-filter, query must not return deleted entities.
-     *
-     * @return name of solr field
-     */
-    @Nullable
-    String getDeletedField();
 
 }

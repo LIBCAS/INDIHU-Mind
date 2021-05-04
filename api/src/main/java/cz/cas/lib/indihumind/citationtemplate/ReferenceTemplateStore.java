@@ -2,6 +2,7 @@ package cz.cas.lib.indihumind.citationtemplate;
 
 import core.index.IndexedDatedStore;
 import cz.cas.lib.indihumind.advancedsearch.searchable.AdvancedSearchStore;
+import cz.cas.lib.indihumind.util.Reindexable;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.Criteria;
 import org.springframework.stereotype.Repository;
@@ -14,17 +15,17 @@ import static java.util.Objects.requireNonNull;
  * Indexed repository for indexed {@link IndexedReferenceTemplate} and class {@link ReferenceTemplate}
  */
 @Repository
-public class ReferenceTemplateStore extends IndexedDatedStore<ReferenceTemplate, QReferenceTemplate, IndexedReferenceTemplate> implements AdvancedSearchStore<IndexedReferenceTemplate> {
+public class ReferenceTemplateStore extends IndexedDatedStore<ReferenceTemplate, QReferenceTemplate, IndexedReferenceTemplate> implements AdvancedSearchStore<IndexedReferenceTemplate>, Reindexable {
 
     public ReferenceTemplateStore() {
         super(ReferenceTemplate.class, QReferenceTemplate.class, IndexedReferenceTemplate.class);
     }
 
-    public final String indexType = "template";
+    public static final String INDEX_TYPE = "template";
 
     @Override
     public String getIndexType() {
-        return indexType;
+        return INDEX_TYPE;
     }
 
     /**
@@ -52,6 +53,15 @@ public class ReferenceTemplateStore extends IndexedDatedStore<ReferenceTemplate,
         return indexed;
     }
 
+    @Override
+    public void reindexEverything() {
+        dropReindex();
+    }
+
+    @Override
+    public void removeAllDataFromIndex() {
+        removeAllIndexes();
+    }
 
     // ------------------------------------ ADVANCED SEARCH MIXIN ------------------------------------
     @Override

@@ -1,4 +1,4 @@
-package cz.cas.lib.indihumind.card;
+package cz.cas.lib.indihumind.cardcontent;
 
 import core.store.DatedStore;
 import org.springframework.stereotype.Repository;
@@ -22,7 +22,7 @@ public class CardContentStore extends DatedStore<CardContent, QCardContent> {
         return cardContent;
     }
 
-    public List<CardContent> findAllOfCard(String cardId) {
+    public List<CardContent> findCardContentsForCard(String cardId) {
         List<CardContent> cardContents = query()
                 .select(qObject())
                 .where(qObject().card.id.eq(cardId))

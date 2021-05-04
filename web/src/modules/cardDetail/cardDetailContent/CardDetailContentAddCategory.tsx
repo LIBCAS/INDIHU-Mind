@@ -1,27 +1,31 @@
-import React, { useState, useRef } from "react";
-import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
 import MuiIconButton from "@material-ui/core/IconButton";
 import MuiTooltip from "@material-ui/core/Tooltip";
-import { CardContentProps } from "../../../types/card";
-
+import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
+import React, { useRef, useState } from "react";
+import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { CardDetailContentAddCategoryForm } from "./CardDetailContentAddCategoryForm";
 
-import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
-
 interface CardDetailContentAddCategoryProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  cardContents: CardContentProps[] | undefined;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   refreshCard: () => void;
+  disabled?: boolean;
 }
 
 export const CardDetailContentAddCategory: React.FC<CardDetailContentAddCategoryProps> = ({
   card,
-  cardContent,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  cardContents,
+  setCardContents,
   refreshCard,
+  disabled,
 }) => {
   const classesSpacing = useSpacingStyles();
 
@@ -43,6 +47,7 @@ export const CardDetailContentAddCategory: React.FC<CardDetailContentAddCategory
             aria-label="add-category"
             component="span"
             onClick={handleAddCategory}
+            disabled={disabled}
           >
             <MuiAddCircleIcon fontSize="default" />
           </MuiIconButton>
@@ -51,8 +56,9 @@ export const CardDetailContentAddCategory: React.FC<CardDetailContentAddCategory
       {openForm && (
         <CardDetailContentAddCategoryForm
           card={card}
-          cardContent={cardContent}
-          setCardContent={setCardContent}
+          setCard={setCard}
+          currentCardContent={currentCardContent}
+          setCardContents={setCardContents}
           openForm={openForm}
           setOpenForm={setOpenForm}
           anchorEl={anchorEl}

@@ -1,5 +1,6 @@
 package core.index.global;
 
+import core.Changed;
 import core.index.IndexedStore;
 import core.store.Transactional;
 import core.util.Utils;
@@ -11,6 +12,8 @@ import java.util.List;
 
 @Slf4j
 @Service
+@Deprecated
+@Changed("Use StoreReindexer class and Reindexable interface")
 public class GlobalReindexer {
     private List<IndexedStore> stores;
 
@@ -34,18 +37,18 @@ public class GlobalReindexer {
                 .map(Utils::unwrap)
                 .filter(store -> storeClasses == null || storeClasses.contains(store.getClass()))
                 .forEach(store -> {
-                    log.info("Reindexing entity:'{}', store {}", store.getUType().getSimpleName(), store.getClass().getName());
+                    log.info("Reindexing entity:'{}' for store:'{}'...", store.getUType().getSimpleName(), store.getClass().getName());
                     store.dropReindex();
-                    log.info("Reindexing complete");
+                    log.info("Reindexing for store:'{}' complete", store.getClass().getName());
                 });
         else
             stores.stream()
                     .map(Utils::unwrap)
                     .filter(store -> storeClasses == null || storeClasses.contains(store.getClass()))
                     .forEach(store -> {
-                        log.info("Reindexing store {}", store.getClass().getName());
+                        log.info("Reindexing entity:'{}' for store:'{}'...", store.getUType().getSimpleName(), store.getClass().getName());
                         store.reindex();
-                        log.info("Reindexing complete");
+                        log.info("Reindexing for store:'{}' complete", store.getClass().getName());
                     });
     }
 

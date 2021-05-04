@@ -6,9 +6,8 @@ import core.exception.GeneralException;
 import cz.cas.lib.indihumind.exception.ContentLengthRequiredException;
 import cz.cas.lib.indihumind.exception.ForbiddenFileException;
 import cz.cas.lib.indihumind.validation.ForbiddenFileResolver;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import cz.cas.lib.indihumind.validation.Uuid;
+import lombok.*;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,7 +20,9 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static core.exception.BadArgument.ErrorCode.UNSUPPORTED_URL_FORMAT;
@@ -41,6 +42,11 @@ public class IndihuMindUtils {
      */
     public static final String AUTHOR_NAME_ENCODING = "#&&#";
 
+    @Getter
+    @Setter
+    public static class IdList {
+        private List<@Uuid String> ids = new ArrayList<>();
+    }
 
     public static long stringByteSize(String value) {
         if (value == null) return 0L;
@@ -113,11 +119,11 @@ public class IndihuMindUtils {
             throw new ForbiddenFileException(FILE_FORBIDDEN, fullFileName);
     }
 
-    public static ResponseEntity<InputStreamResource> createResponseEntityPdfFile(InputStream generatedPdfFile, String fileName) {
+    public static ResponseEntity<InputStreamResource> createResponseEntityFromFile(InputStream generatedPdfFile, String fileName, MediaType mediaType) {
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + ".pdf\"")
-                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .contentType(mediaType)
                 .body(new InputStreamResource(generatedPdfFile));
     }
 

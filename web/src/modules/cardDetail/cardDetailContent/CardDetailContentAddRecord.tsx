@@ -1,25 +1,29 @@
-import React, { useState, useRef } from "react";
-import { CardContentProps } from "../../../types/card";
-import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiIconButton from "@material-ui/core/IconButton";
+import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
-
+import React, { useRef, useState } from "react";
+import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { CardDetailContentAddRecordForm } from "./CardDetailContentAddRecordForm";
 
-import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
-
 interface CardDetailContentAddRecordProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
+  disabled?: boolean;
 }
 
 export const CardDetailContentAddRecord: React.FC<CardDetailContentAddRecordProps> = ({
   card,
-  cardContent,
-  setCardContent,
+  setCard,
+
+  currentCardContent,
+
+  setCardContents,
+  disabled,
 }) => {
   const classesSpacing = useSpacingStyles();
 
@@ -41,6 +45,7 @@ export const CardDetailContentAddRecord: React.FC<CardDetailContentAddRecordProp
             aria-label="add-citation"
             component="span"
             onClick={handleAddCitation}
+            disabled={disabled}
           >
             <MuiAddCircleIcon fontSize="default" />
           </MuiIconButton>
@@ -48,8 +53,9 @@ export const CardDetailContentAddRecord: React.FC<CardDetailContentAddRecordProp
       </div>
       <CardDetailContentAddRecordForm
         card={card}
-        cardContent={cardContent}
-        setCardContent={setCardContent}
+        setCard={setCard}
+        currentCardContent={currentCardContent}
+        setCardContents={setCardContents}
         openForm={openForm}
         setOpenForm={setOpenForm}
         anchorEl={anchorEl}

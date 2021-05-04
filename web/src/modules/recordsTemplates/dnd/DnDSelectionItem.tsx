@@ -1,15 +1,20 @@
-import React from "react";
-import classNames from "classnames";
+import { Tooltip } from "@material-ui/core";
 import AddCircleIcon from "@material-ui/icons/AddCircle";
 import InfoIcon from "@material-ui/icons/Info";
-import { Tooltip } from "@material-ui/core";
+import classNames from "classnames";
 import { FormikProps } from "formik";
-
-import { Item } from "./_types";
-import { useStyles } from "./_dndStyles";
-import { createMarcLabel } from "../_utils";
-import { FirstNameFormat, MultipleAuthorsFormat, OrderFormat } from "../_enums";
 import { find } from "lodash";
+import React from "react";
+import {
+  AuthorsAndJoiner,
+  AuthorsSeparator,
+  FirstNameFormat,
+  MultipleAuthorsFormat,
+  OrderFormat,
+} from "../_enums";
+import { createMarcLabel } from "../_utils";
+import { useStyles } from "./_dndStyles";
+import { Item } from "./_types";
 
 interface DnDSelectionItemProps {
   id: string;
@@ -23,6 +28,7 @@ interface DnDSelectionItemProps {
   code?: string;
   indicator1?: string;
   indicator2?: string;
+  __hidden__?: boolean;
 }
 
 export const DnDSelectionItem: React.FC<DnDSelectionItemProps> = ({
@@ -36,6 +42,7 @@ export const DnDSelectionItem: React.FC<DnDSelectionItemProps> = ({
   code,
   indicator1,
   indicator2,
+  __hidden__,
 }) => {
   const classes = useStyles();
 
@@ -72,6 +79,14 @@ export const DnDSelectionItem: React.FC<DnDSelectionItemProps> = ({
           createName("orderFormat"),
           OrderFormat.FIRSTNAME_FIRST
         );
+        formikBag.setFieldValue(
+          createName("separator"),
+          AuthorsSeparator.COMMA
+        );
+        formikBag.setFieldValue(
+          createName("andJoiner"),
+          AuthorsAndJoiner.CZECH_AND
+        );
       }
 
       cardsAdded.push(newCard);
@@ -96,7 +111,7 @@ export const DnDSelectionItem: React.FC<DnDSelectionItemProps> = ({
         {text}
       </div>
       <div className={classes.cardSelectionIcons}>
-        {tag && (
+        {tag && !__hidden__ && (
           <Tooltip
             title={createMarcLabel({ tag, code, indicator1, indicator2 })}
           >

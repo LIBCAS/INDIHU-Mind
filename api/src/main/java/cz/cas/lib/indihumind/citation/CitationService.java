@@ -11,10 +11,12 @@ import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.CardStore;
 import cz.cas.lib.indihumind.citation.dto.CreateCitationDto;
 import cz.cas.lib.indihumind.citation.dto.UpdateCitationDto;
+import cz.cas.lib.indihumind.citation.view.CitationRef;
+import cz.cas.lib.indihumind.citation.view.CitationRefStore;
+import cz.cas.lib.indihumind.document.AttachmentFile;
 import cz.cas.lib.indihumind.document.AttachmentFileStore;
 import cz.cas.lib.indihumind.exception.NameAlreadyExistsException;
 import cz.cas.lib.indihumind.security.delegate.UserDelegate;
-import cz.cas.lib.indihumind.util.IndihuMindUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -33,10 +35,12 @@ import static cz.cas.lib.indihumind.exception.NameAlreadyExistsException.ErrorCo
 public class CitationService {
 
     private MarcFieldsValidator marcFieldsValidator;
-    private CitationStore store;
     private AttachmentFileStore documentStore;
     private UserDelegate userDelegate;
     private CardStore cardStore;
+
+    private CitationStore store;
+    private CitationRefStore citationRefStore;
 
     public Citation find(String id) {
         Citation marcRecord = store.find(id);
@@ -52,50 +56,17 @@ public class CitationService {
 
         Citation citation = new Citation();
         citation.setOwner(userDelegate.getUser());
-        citation.setName(dto.getName());
-        citation.setDataFields(dto.getDataFields());
-        citation.setContent(dto.getContent());
+        transformDto(dto, citation);
 
-        // enforce addUniqueConstraint `vzb_record_of_user_uniqueness` of columnNames="name,owner_id"
-        Citation nameExists = store.findEqualNameDifferentId(citation);
-        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Citation.class, nameExists.getId(), nameExists.getOwner()));
-
-        citation.setDocuments(asSet(documentStore.findAllInList(dto.getDocuments())));
-        Citation savedRecord = store.save(citation);
-
-        // Card is owner, save in cardStore
-        List<Card> linkedCards = cardStore.findAllInList(dto.getLinkedCards());
-        linkedCards.forEach(card -> card.addCitation(savedRecord));
-        cardStore.save(linkedCards);
-
-        return savedRecord;
+        return store.save(citation);
     }
-
 
     @Transactional
     public Citation update(UpdateCitationDto dto) {
         marcFieldsValidator.validate(dto.getDataFields());
 
         Citation citation = find(dto.getId());
-        citation.setName(dto.getName());
-        citation.setDataFields(dto.getDataFields());
-        citation.setContent(dto.getContent());
-
-        // enforce addUniqueConstraint `vzb_record_of_user_uniqueness` of columnNames="name,owner_id"
-        Citation nameExists = store.findEqualNameDifferentId(citation);
-        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Citation.class, nameExists.getId(), nameExists.getOwner()));
-
-        citation.setDocuments(asSet(documentStore.findAllInList(dto.getDocuments())));
-
-        if (IndihuMindUtils.isCollectionModified(citation.getLinkedCards(), dto.getLinkedCards())) {
-            List<Card> oldCards = cardStore.findCardsOfCitation(citation);
-            oldCards.forEach(card -> card.removeCitation(citation));
-            cardStore.save(oldCards);
-
-            List<Card> newCards = cardStore.findAllInList(dto.getLinkedCards());
-            newCards.forEach(card -> card.addCitation(citation));
-            cardStore.save(newCards);
-        }
+        transformDto(dto, citation);
 
         return store.save(citation);
     }
@@ -105,13 +76,7 @@ public class CitationService {
     public void delete(String id) {
         Citation entity = find(id);
 
-        List<Card> cardsOfCitation = cardStore.findCardsOfCitation(entity);
-        log.debug(String.format("Deleting record %s of user %s and removing it from cards=[%s]",
-                entity.getName(), entity.getOwner(), IndihuMindUtils.prettyPrintCollectionIds(cardsOfCitation)));
-
-        cardsOfCitation.forEach(card -> card.removeCitation(entity));
-        cardStore.save(cardsOfCitation);
-
+        entity.setLinkedCards(Collections.emptyList());
         entity.setDocuments(Collections.emptySet());
         store.save(entity);
 
@@ -119,13 +84,35 @@ public class CitationService {
     }
 
 
-    public Result<Citation> findAll(Params params) {
+    public Result<CitationRef> findAll(Params params) {
         addPrefilter(params, new Filter(IndexedCitation.USER_ID, FilterOperation.EQ, userDelegate.getId(), null));
-        return store.findAll(params);
+        return citationRefStore.findAll(params);
     }
 
     public Collection<Citation> findByUser() {
         return store.findByUser(userDelegate.getId());
+    }
+
+
+    /**
+     * Transform dto into citation with checking validity of other entities (cards and documents)
+     */
+    private void transformDto(CreateCitationDto dto, Citation citation) {
+        citation.setName(dto.getName());
+        citation.setDataFields(dto.getDataFields());
+        citation.setContent(dto.getContent());
+
+        // enforce addUniqueConstraint `vzb_record_of_user_uniqueness` of columnNames="name,owner_id"
+        Citation nameExists = store.findEqualNameDifferentId(citation);
+        isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Citation.class, nameExists.getId(), nameExists.getOwner()));
+
+        List<AttachmentFile> documents = documentStore.findAllInList(dto.getDocuments());
+        documents.forEach(document -> eq(document.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, AttachmentFile.class, document.getId())));
+        citation.setDocuments(documents);
+
+        List<Card> cards = cardStore.findAllInList(dto.getLinkedCards());
+        cards.forEach(card -> eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, card.getId())));
+        citation.setLinkedCards(cards);
     }
 
 
@@ -154,4 +141,8 @@ public class CitationService {
         this.documentStore = documentStore;
     }
 
+    @Inject
+    public void setCitationRefStore(CitationRefStore citationRefStore) {
+        this.citationRefStore = citationRefStore;
+    }
 }

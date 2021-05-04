@@ -1,5 +1,6 @@
 package core.report;
 
+import core.domain.DomainObject;
 import core.exception.GeneralException;
 import core.exception.MissingAttribute;
 import core.exception.MissingObject;
@@ -17,9 +18,11 @@ import java.io.ByteArrayInputStream;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static core.exception.MissingAttribute.ErrorCode.MISSING_ATTRIBUTE;
 import static core.util.Utils.notNull;
@@ -29,9 +32,8 @@ import static core.util.Utils.notNull;
  */
 @Service
 public class ReportGenerator {
-
-    /** Key under which data for jasper are stored. Data must be stored in {@link Collection}. */
-    public static final String REPORT_ENTITIES = "entities";
+    /** Key under which data source should be stored if supplying data to Jasper's DataSet with report's parameter */
+    public static final String DATASOURCE_PARAMETER = "CollectionBeanParam";
     /** Key under which CSV delimiter is stored. Must be of {@link String} type. */
     public static final String CSV_DELIMITER = "csvDelimiter";
 
@@ -50,10 +52,11 @@ public class ReportGenerator {
      * @return {@link GeneratedReportDto} containing generated content
      * @throws UnsupportedTemplateException If template file has unsupported content type
      */
-    public GeneratedReportDto generate(String reportId, Map<String, Object> params, ReportTemplateType exportTo) {
+    public GeneratedReportDto generate(String reportId, List<?> jasperDataSource, Map<String, Object> params, ReportTemplateType exportTo) {
         ReportTemplate reportTemplate = store.find(reportId);
         notNull(reportTemplate, () -> new MissingObject(MissingObject.ErrorCode.ENTITY_IS_NULL, ReportTemplate.class, reportId));
 
+        // user supplied params + some generic params
         Map<String, Object> allParams = gatherParameters(params);
 
         FileRef template = reportTemplate.getTemplate();
@@ -63,7 +66,7 @@ public class ReportGenerator {
         try {
             repository.reset(template);
 
-            JasperPrint compiledJasperWithData = generateJasper(template, allParams);
+            JasperPrint compiledJasperWithData = generateJasper(template, jasperDataSource, allParams);
 
             switch (exportTo) {
                 case JSXML_TO_DOCX:
@@ -94,26 +97,22 @@ public class ReportGenerator {
     }
 
     /**
-     * Generates {@link ReportTemplate} specified by id and {@link Map} of params and stores it as a file in
+     * Creates a report file.
+     * Provide ID of {@link ReportTemplate} that is saved in DB and contains a file reference to the .jrxml template.
+     *
+     * Generated report file is stored on the file system.
+     * Generates {@link ReportTemplate} specified by id and {@link Map} of userSuppliedParams and stores it as a file in
      * {@link FileRepository}.
      *
-     * @param reportId Id of the {@link ReportTemplate} to generate
-     * @param index    Should the content be indexed
-     * @param params   User supplied parameters
+     * @param reportId           Id of the {@link ReportTemplate} to generate
+     * @param userSuppliedParams Parameters from user
      * @return {@link FileRef} containing reference to generated content
      * @throws UnsupportedTemplateException If template file has unsupported content type
      */
-    public FileRef generateToFile(String reportId, Map<String, Object> params, boolean index, ReportTemplateType exportTo) {
+    public FileRef generateToFileWithExtension(String reportId, List<? extends DomainObject> entities, Map<String, Object> userSuppliedParams, ReportTemplateType exportTo) {
+        List<?> jasperDataSource = constructDataSource(entities);
 
-        GeneratedReportDto generatedReportDto = generate(reportId, params, exportTo);
-
-        ByteArrayInputStream contentStream = new ByteArrayInputStream(generatedReportDto.getContent());
-
-        return repository.create(contentStream, generatedReportDto.getName(), generatedReportDto.getContentType(), index);
-    }
-
-    public FileRef generateToFileWithExtension(String reportId, Map<String, Object> params, boolean index, ReportTemplateType exportTo) {
-        GeneratedReportDto generatedReportDto = generate(reportId, params, exportTo);
+        GeneratedReportDto generatedReportDto = generate(reportId, jasperDataSource, userSuppliedParams, exportTo);
 
         ByteArrayInputStream contentStream = new ByteArrayInputStream(generatedReportDto.getContent());
 
@@ -121,19 +120,40 @@ public class ReportGenerator {
         String extension = exportTo.getExtension();
         String fileWithNewExtension = fileNameBase + (extension.startsWith(".") ? extension : "." + extension);
 
-        return repository.create(contentStream, fileWithNewExtension, exportTo.getContentType(), index);
+        return repository.create(contentStream, fileWithNewExtension, exportTo.getContentType(), false);
+    }
+
+    /**
+     * Prepare data source for Jasper Reports in format of:
+     * <pre>
+     *     [
+     *       { "entity" : { DomainObject such as Card or Citation } },
+     *       { "entity" : { DomainObject such as Card or Citation } },
+     *       { "entity" : { DomainObject such as Card or Citation } },
+     *       ...
+     *     ]
+     * </pre>
+     */
+    private List<? extends Map<String, ? extends DomainObject>> constructDataSource(List<? extends DomainObject> entities) {
+        if (entities == null) return Collections.emptyList();
+        return entities.stream().map(e -> Map.of("entity", e)).collect(Collectors.toList());
     }
 
 
-    private JasperPrint generateJasper(FileRef template, Map<String, Object> params) {
+    private JasperPrint generateJasper(FileRef template, List<?> jasperDataSource, Map<String, Object> params) {
         try {
             JasperReport compiledTemplate = JasperCompileManager.compileReport(template.getStream());
+            compiledTemplate.getPropertiesMap().setProperty("net.sf.jasperreports.print.keep.full.text", "true");
 
-            Object entities = params.get(REPORT_ENTITIES);
-            if (entities == null)
-                throw new ReportGenerateException("Data for report template were not provided under key:" + REPORT_ENTITIES);
+            JRDataSource dataSource;
+            if (params.containsKey(DATASOURCE_PARAMETER)) {
+                // if data source is supplied with parameter then use empty data source to avoid overriding
+                dataSource = new JREmptyDataSource();
+            } else {
+                dataSource = new JRBeanCollectionDataSource(jasperDataSource);
+            }
 
-            return JasperFillManager.fillReport(compiledTemplate, params, new JRBeanCollectionDataSource((Collection<?>) entities));
+            return JasperFillManager.fillReport(compiledTemplate, params, dataSource);
         } catch (JRException e) {
             throw new ReportGenerateException("Unable to compile Jasper report", e);
         }

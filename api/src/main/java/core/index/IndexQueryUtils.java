@@ -2,7 +2,6 @@ package core.index;
 
 import core.exception.BadArgument;
 import core.index.dto.*;
-import cz.cas.lib.indihumind.card.CardStore;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.solr.core.DefaultQueryParser;
@@ -28,8 +27,7 @@ public class IndexQueryUtils {
     /**
      * Map containing index type as key and field map as value.
      * Field map contains field name as key and its config as value.
-     * Every {@link IndexedStore} must have unique value of {@link IndexedStore#getIndexType()},
-     * the same applies for every custom index store and its index types, e.g. {@link CardStore#getIndexType()}.
+     * Every {@link IndexedStore} must have unique value of {@link IndexedStore#getIndexType()}.
      */
     public static Map<String, Map<String, IndexField>> INDEXED_FIELDS_MAP = new HashMap<>();
 

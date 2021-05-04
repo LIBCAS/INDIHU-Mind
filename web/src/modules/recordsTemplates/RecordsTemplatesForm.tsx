@@ -1,42 +1,38 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { Button, Typography } from "@material-ui/core";
 import classNames from "classnames";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-import { get, find, filter } from "lodash";
-import { Typography } from "@material-ui/core";
-import { Button } from "@material-ui/core";
-import { Formik, Form, FormikProps, Field, FieldProps } from "formik";
-import { v4 as uuid } from "uuid";
+import { Field, FieldProps, Form, Formik, FormikProps } from "formik";
+import { filter, find, get } from "lodash";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import { DndProvider } from "react-dnd";
-
-import { GlobalContext, StateProps } from "../../context/Context";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { v4 as uuid } from "uuid";
+import { Divider } from "../../components/divider/Divider";
+import { CustomTextField } from "../../components/form/CustomTextField";
+import { InputText } from "../../components/form/InputText";
 import { Loader } from "../../components/loader/Loader";
 import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
-
+import { GlobalContext, StateProps } from "../../context/Context";
+import {
+  STATUS_ERROR_COUNT_CHANGE,
+  STATUS_ERROR_TEXT_SET,
+} from "../../context/reducers/status";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-
+import { theme } from "../../theme/theme";
 import { RecordTemplateProps } from "../../types/recordTemplate";
+import { api } from "../../utils/api";
+import { notEmpty, notLongerThan255 } from "../../utils/form/validate";
 import DnD from "./dnd/DnD";
 import { DnDSelection } from "./dnd/DnDSelection";
 import { Item } from "./dnd/_types";
-import { notEmpty } from "../../utils/form/validate";
-import { InputText } from "../../components/form/InputText";
-import { Divider } from "../../components/divider/Divider";
-import { api } from "../../utils/api";
 import {
-  STATUS_ERROR_TEXT_SET,
-  STATUS_ERROR_COUNT_CHANGE,
-} from "../../context/reducers/status";
-import { parseTemplate, createStyle, createMarcId, isCreator } from "./_utils";
-import { useStyles } from "./_recordsTemplatesStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-import {
-  specialTags,
-  punctuation,
   otherTags as defaultOtherTags,
+  punctuation,
+  specialTags,
 } from "./_enums";
-import { CustomTextField } from "../../components/form/CustomTextField";
-import { theme } from "../../theme/theme";
+import { useStyles } from "./_recordsTemplatesStyles";
+import { createMarcId, createStyle, isCreator, parseTemplate } from "./_utils";
 
 type RecordsTemplatesFormValues = RecordTemplateProps;
 
@@ -127,6 +123,8 @@ const RecordsTemplatesFormView: React.FC<
                     firstNameFormat: getValue("firstNameFormat"),
                     multipleAuthorsFormat: getValue("multipleAuthorsFormat"),
                     orderFormat: getValue("orderFormat"),
+                    separator: getValue("separator"),
+                    andJoiner: getValue("andJoiner"),
                   }
                 : {}),
             };
@@ -214,7 +212,7 @@ const RecordsTemplatesFormView: React.FC<
                           validate={(value: string) =>
                             /[.[\]]/.test(value)
                               ? "Text nesmí obsahovat znaky . [ ]"
-                              : undefined
+                              : notLongerThan255(value)
                           }
                         />
                         <Button
@@ -237,7 +235,9 @@ const RecordsTemplatesFormView: React.FC<
                 <div className={classes.recordTemplateFormMainPanel}>
                   <Field
                     name="name"
-                    validate={notEmpty}
+                    validate={(value: any) =>
+                      notLongerThan255(value) || notEmpty(value)
+                    }
                     render={({ field, form }: FieldProps<any>) => (
                       <InputText
                         label="Název"

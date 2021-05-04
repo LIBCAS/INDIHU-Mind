@@ -16,8 +16,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -31,11 +29,6 @@ public class PasswordApiTest extends ApiTest {
 
     @Inject private UserService userService;
     @Inject private PasswordTokenStore tokenStore;
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.emptySet();
-    }
 
     private final User userWithForgottenPwd = UserBuilder.builder().password("pwd").email("test@mail.cz").allowed(true).build();
 

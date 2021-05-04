@@ -1,7 +1,10 @@
 package cz.cas.lib.indihumind;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import core.index.dto.*;
-import cz.cas.lib.indihumind.card.*;
+import cz.cas.lib.indihumind.card.Card;
+import cz.cas.lib.indihumind.card.CardStore;
+import cz.cas.lib.indihumind.card.IndexedCard;
 import cz.cas.lib.indihumind.card.dto.CreateCardDto;
 import cz.cas.lib.indihumind.card.dto.UpdateCardContentDto;
 import cz.cas.lib.indihumind.card.dto.UpdateCardDto;
@@ -12,18 +15,17 @@ import cz.cas.lib.indihumind.cardcategory.Category;
 import cz.cas.lib.indihumind.cardcategory.CategoryStore;
 import cz.cas.lib.indihumind.cardcommnet.CardComment;
 import cz.cas.lib.indihumind.cardcommnet.CardCommentStore;
+import cz.cas.lib.indihumind.cardcontent.CardContent;
+import cz.cas.lib.indihumind.cardcontent.CardContentStore;
 import cz.cas.lib.indihumind.cardlabel.Label;
 import cz.cas.lib.indihumind.cardlabel.LabelStore;
-import cz.cas.lib.indihumind.document.AttachmentFile;
-import cz.cas.lib.indihumind.document.AttachmentFileStore;
-import cz.cas.lib.indihumind.document.LocalAttachmentFile;
-import cz.cas.lib.indihumind.document.UrlAttachmentFile;
+import cz.cas.lib.indihumind.document.*;
 import cz.cas.lib.indihumind.init.builders.*;
 import cz.cas.lib.indihumind.security.user.Roles;
 import cz.cas.lib.indihumind.security.user.User;
 import cz.cas.lib.indihumind.security.user.UserService;
 import cz.cas.lib.indihumind.security.user.UserStore;
-import cz.cas.lib.indihumind.util.BulkFlagSetDto;
+import cz.cas.lib.indihumind.util.IndihuMindUtils;
 import helper.ApiTest;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
@@ -36,10 +38,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.inject.Inject;
 import java.awt.*;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
+import java.util.UUID;
 
-import static core.util.Utils.asList;
 import static core.util.Utils.asSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -66,11 +68,6 @@ public class CardApiTest extends ApiTest {
     private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(false).build();
 
 
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedCard.class);
-    }
-
     @Before
     public void before() {
         transactionTemplate.execute((t) -> userService.create(user));
@@ -86,8 +83,8 @@ public class CardApiTest extends ApiTest {
         Card card = CardBuilder.builder().pid(1).name("c").owner(user).labels(labelGreen, labelRed).categories(categoryFirst, categorySecond, categoryThird).build();
 
         transactionTemplate.execute(t -> {
-            labelStore.save(asList(labelGreen, labelRed));
-            categoryStore.save(asList(categoryFirst, categorySecond, categoryThird));
+            labelStore.save(List.of(labelGreen, labelRed));
+            categoryStore.save(List.of(categoryFirst, categorySecond, categoryThird));
             cardStore.save(card);
             return null;
         });
@@ -98,21 +95,6 @@ public class CardApiTest extends ApiTest {
                 .andExpect(jsonPath("$.pid", is(1)))
                 .andExpect(jsonPath("$.categories", hasSize(3)))
                 .andExpect(jsonPath("$.labels", hasSize(2)));
-
-
-        // CardApi.find() returns soft-deleted cards as well
-        transactionTemplate.execute(t -> {
-            cardStore.delete(card);
-            return null;
-        });
-
-        securedMvc().perform(get(CARD_API_URL + card.getId())
-                .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pid", is(1)))
-                .andExpect(jsonPath("$.deleted", is(notNullValue())))
-                .andExpect(jsonPath("$.categories", hasSize(3)))
-                .andExpect(jsonPath("$.labels", hasSize(2)));
     }
 
     @Test
@@ -120,7 +102,7 @@ public class CardApiTest extends ApiTest {
         Card card1 = CardBuilder.builder().pid(1).name("Holá karta").owner(user).build();
         Card card2 = CardBuilder.builder().pid(2).name("Karta číslo 1 prvního uživatele, druh").owner(user).build();
         Card card3 = CardBuilder.builder().pid(3).name("Karta číslo 2 prvního uživatele, první verze").owner(user).build();
-        transactionTemplate.execute(t -> cardStore.save(asList(card1, card2, card3)));
+        transactionTemplate.execute(t -> cardStore.save(List.of(card1, card2, card3)));
 
         Params paramsNameDesc = new Params();
         paramsNameDesc.setSort("name");
@@ -166,7 +148,7 @@ public class CardApiTest extends ApiTest {
 
         transactionTemplate.execute(t -> {
             labelStore.save(label);
-            categoryStore.save(asList(categoryFirst, categorySecond, categoryThird));
+            categoryStore.save(List.of(categoryFirst, categorySecond, categoryThird));
             return null;
         });
 
@@ -176,9 +158,9 @@ public class CardApiTest extends ApiTest {
         createCardDto.setId(UUID.randomUUID().toString());
         createCardDto.setName("nejm");
         createCardDto.setNote("blah");
-        createCardDto.setAttributes(asList(attributeString, attributeDouble));
-        createCardDto.setLabels(asList(label.getId()));
-        createCardDto.setCategories(asList(categoryFirst.getId(), categorySecond.getId()));
+        createCardDto.setAttributes(List.of(attributeString, attributeDouble));
+        createCardDto.setLabels(List.of(label.getId()));
+        createCardDto.setCategories(List.of(categoryFirst.getId(), categorySecond.getId()));
 
         //create new card with first content
         String firstContentJson = securedMvc().perform(
@@ -196,11 +178,11 @@ public class CardApiTest extends ApiTest {
                 .andReturn().getResponse().getContentAsString();
 
         Params params = new Params();
-        params.setFilter(asList(new Filter(IndexedCard.LABELS, FilterOperation.CONTAINS, label.getName(), null)));
+        params.setFilter(List.of(new Filter(IndexedCard.LABEL_NAMES, FilterOperation.CONTAINS, label.getName(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
-        params.setFilter(asList(new Filter(IndexedCard.CATEGORIES, FilterOperation.CONTAINS, categoryFirst.getName(), null)));
+        params.setFilter(List.of(new Filter(IndexedCard.CATEGORY_NAMES, FilterOperation.CONTAINS, categoryFirst.getName(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
-        params.setFilter(asList(new Filter(IndexedCard.CATEGORY_IDS, FilterOperation.EQ, categoryFirst.getId(), null)));
+        params.setFilter(List.of(new Filter(IndexedCard.CATEGORY_IDS, FilterOperation.EQ, categoryFirst.getId(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
 
         CardContent content = objectMapper.readValue(firstContentJson, CardContent.class);
@@ -225,18 +207,18 @@ public class CardApiTest extends ApiTest {
                 .andExpect(jsonPath("$.card.pid", is(1)))
                 .andExpect(jsonPath("$.card.labels", hasSize(1)));
 
-        params.setFilter(asList(new Filter("labels", FilterOperation.CONTAINS, label.getName(), null)));
+        params.setFilter(List.of(new Filter("labels", FilterOperation.CONTAINS, label.getName(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
-        params.setFilter(asList(new Filter("categories", FilterOperation.CONTAINS, categoryFirst.getName(), null)));
+        params.setFilter(List.of(new Filter("categories", FilterOperation.CONTAINS, categoryFirst.getName(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
-        params.setFilter(asList(new Filter("category_ids", FilterOperation.EQ, categoryFirst.getId(), null)));
+        params.setFilter(List.of(new Filter("category_ids", FilterOperation.EQ, categoryFirst.getId(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
 
         //update card, not content
         UpdateCardDto updateCardDto = new UpdateCardDto();
-        updateCardDto.setCategories(asList(categoryFirst.getId(), categorySecond.getId(), categoryThird.getId()));
-        updateCardDto.setLabels(asList());
-        updateCardDto.setLinkedCards(asList(contentCard.getId())); // should ignore reference to itself
+        updateCardDto.setCategories(List.of(categoryFirst.getId(), categorySecond.getId(), categoryThird.getId()));
+        updateCardDto.setLabels(List.of());
+        updateCardDto.setLinkedCards(List.of(contentCard.getId())); // should ignore reference to itself
         updateCardDto.setNote(contentCard.getStructuredNote().getData());
         updateCardDto.setName(contentCard.getName());
 
@@ -256,20 +238,20 @@ public class CardApiTest extends ApiTest {
                 .andExpect(jsonPath("$.card.linkedCards", hasSize(0)))
                 .andExpect(jsonPath("$.card.linkingCards", hasSize(0)));
 
-        params.setFilter(asList(new Filter("labels", FilterOperation.CONTAINS, label.getName(), null)));
+        params.setFilter(List.of(new Filter("labels", FilterOperation.CONTAINS, label.getName(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(0L);
-        params.setFilter(asList(new Filter("categories", FilterOperation.CONTAINS, categoryFirst.getName(), null)));
+        params.setFilter(List.of(new Filter("categories", FilterOperation.CONTAINS, categoryFirst.getName(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
-        params.setFilter(asList(new Filter("category_ids", FilterOperation.EQ, categoryFirst.getId(), null)));
+        params.setFilter(List.of(new Filter("category_ids", FilterOperation.EQ, categoryFirst.getId(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
-        params.setFilter(asList(new Filter("categories", FilterOperation.CONTAINS, categoryThird.getName(), null)));
+        params.setFilter(List.of(new Filter("categories", FilterOperation.CONTAINS, categoryThird.getName(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
-        params.setFilter(asList(new Filter("category_ids", FilterOperation.EQ, categoryThird.getId(), null)));
+        params.setFilter(List.of(new Filter("category_ids", FilterOperation.EQ, categoryThird.getId(), null)));
         assertThat(cardStore.findAll(params).getCount()).isEqualTo(1L);
 
         //update content and create it as new version
         updateCardContentDto.setNewVersion(true);
-        updateCardContentDto.setAttributes(asList(attributeDouble));
+        updateCardContentDto.setAttributes(List.of(attributeDouble));
 
         securedMvc().perform(
                 put(CARD_API_URL + contentCard.getId() + "/content")
@@ -304,16 +286,24 @@ public class CardApiTest extends ApiTest {
         Attribute attributeString = AttributeBuilder.builder().cardContent(cardContent1).ordinalNumber(1).name("blah").type(AttributeType.STRING).value("s").jsonValue(null).build();
 
         User otherUser = new User();
-
         transactionTemplate.execute(t -> {
             userStore.save(otherUser);
             labelStore.save(label);
             categoryStore.save(category);
-            cardStore.save(asList(nonDeletedCard, card1));
+            cardStore.save(nonDeletedCard);
+            return null;
+        });
+
+        transactionTemplate.execute(t -> {
+            cardStore.save(List.of(card1));
             cardContentStore.save(cardContent1);
             attributeStore.save(attributeString);
-            nonDeletedCard.setLinkedCards(asSet(card1));
-            cardStore.save(asList(nonDeletedCard, card1));
+            return null;
+        });
+
+        transactionTemplate.execute(t -> {
+            nonDeletedCard.setLinkedCards(asSet(card1.toReference()));
+            cardStore.save(List.of(nonDeletedCard));
             return null;
         });
 
@@ -326,40 +316,44 @@ public class CardApiTest extends ApiTest {
                         .with(mockedUser(otherUser.getId(), Roles.USER)))
                 .andExpect(status().isForbidden());
 
-        // without soft-delete flag
+        // without TRASHED flag
         securedMvc().perform(
                 delete(CARD_API_URL + card1.getId())
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isForbidden());
 
-        // with soft-delete flag
+        // put card in trash bin
         transactionTemplate.execute(t -> {
-            cardStore.delete(card1);
+            card1.setStatus(Card.CardStatus.TRASHED);
+            cardStore.save(card1);
             return null;
         });
+        // empty trash bin
         securedMvc().perform(
                 delete(CARD_API_URL + card1.getId())
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().isOk());
 
+        // list cards from trash bin
+        securedMvc().perform(
+                post(CARD_API_URL + "trash-bin")
+                        .content(objectMapper.writeValueAsString(new Params()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count", is(0)))
+                .andExpect(jsonPath("$.items", hasSize(0)));
 
-        Collection<Card> all = cardStore.findAll();
-        assertThat(all).hasSize(1);
-        assertThat(all).hasOnlyOneElementSatisfying(card -> {
-            SoftAssertions softly = new SoftAssertions();
-            softly.assertThat(card.getLinkedCards()).isEmpty();
-            softly.assertThat(card.getLinkingCards()).isEmpty();
-            softly.assertThat(card.getLabels()).containsExactlyInAnyOrder(label);
-            softly.assertAll();
-        });
-
-        assertThat(categoryStore.find(category.getId())).isNotNull();
-        assertThat(attributeStore.findAll()).isEmpty();
-        assertThat(cardContentStore.findAll()).isEmpty();
-
-        fromIndex = cardStore.findAll(new Params());
-        assertThat(fromIndex.getCount()).isEqualTo(1L);
-        assertThat(fromIndex.getItems()).containsExactlyInAnyOrder(nonDeletedCard);
+        // list other cards
+        securedMvc().perform(
+                post(CARD_API_URL + "parametrized")
+                        .content(objectMapper.writeValueAsString(new Params()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(mockedUser(user.getId(), Roles.USER)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.count", is(1)))
+                .andExpect(jsonPath("$.items", hasSize(1)))
+                .andExpect(jsonPath("$.items[0].id", is(nonDeletedCard.getId())));
     }
 
 
@@ -372,144 +366,147 @@ public class CardApiTest extends ApiTest {
 
         transactionTemplate.execute(t -> {
             userStore.save(otherUser);
-            cardStore.save(asList(card1, card2, card3));
+            cardStore.save(List.of(card1, card2, card3));
             return null;
         });
 
-        BulkFlagSetDto cardsDto = new BulkFlagSetDto();
-        cardsDto.setIds(asList(card1.getId(), card2.getId(), card3.getId()));
-        cardsDto.setValue(Boolean.TRUE);
-        String cardsDtoJson = objectMapper.writeValueAsString(cardsDto);
+        IndihuMindUtils.IdList cardsDto = new IndihuMindUtils.IdList();
+        cardsDto.setIds(List.of(card1.getId(), card2.getId(), card3.getId()));
 
-        // other user soft-deleting card of another user
+        // other user attempting to put card which he does not own in trash bin
         securedMvc().perform(
-                post(CARD_API_URL + "set-softdelete")
-                        .content(cardsDtoJson)
+                post(CARD_API_URL + "status")
+                        .content(objectMapper.writeValueAsString(cardsDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(mockedUser(otherUser.getId(), Roles.USER)))
                 .andExpect(status().isForbidden());
 
-        // set soft-delete flag
+        // put in trash bin
         securedMvc().perform(
-                post(CARD_API_URL + "set-softdelete")
-                        .content(cardsDtoJson)
+                post(CARD_API_URL + "status")
+                        .content(objectMapper.writeValueAsString(cardsDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().isOk());
 
-        assertThat(cardStore.find(card1.getId()).getDeleted()).isNotNull();
-        assertThat(cardStore.find(card2.getId()).getDeleted()).isNotNull();
-        assertThat(cardStore.find(card3.getId()).getDeleted()).isNotNull();
+        assertThat(cardStore.find(card1.getId()).getStatus()).isEqualTo(Card.CardStatus.TRASHED);
+        assertThat(cardStore.find(card2.getId()).getStatus()).isEqualTo(Card.CardStatus.TRASHED);
+        assertThat(cardStore.find(card3.getId()).getStatus()).isEqualTo(Card.CardStatus.TRASHED);
 
-        // unset soft-delete flag
-        cardsDto.setIds(asList(card1.getId(), card3.getId()));
-        cardsDto.setValue(Boolean.FALSE);
-        cardsDtoJson = objectMapper.writeValueAsString(cardsDto);
+        // restore from trash bin
+        cardsDto.setIds(List.of(card1.getId(), card3.getId()));
         securedMvc().perform(
-                post(CARD_API_URL + "set-softdelete")
-                        .content(cardsDtoJson)
+                post(CARD_API_URL + "status")
+                        .content(objectMapper.writeValueAsString(cardsDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().is2xxSuccessful());
+                .andExpect(status().isOk());
 
-        assertThat(cardStore.find(card1.getId()).getDeleted()).isNull();
-        assertThat(cardStore.find(card2.getId()).getDeleted()).isNotNull();
-        assertThat(cardStore.find(card3.getId()).getDeleted()).isNull();
+        assertThat(cardStore.find(card1.getId()).getStatus()).isEqualTo(Card.CardStatus.AVAILABLE);
+        assertThat(cardStore.find(card2.getId()).getStatus()).isEqualTo(Card.CardStatus.TRASHED);
+        assertThat(cardStore.find(card3.getId()).getStatus()).isEqualTo(Card.CardStatus.AVAILABLE);
     }
 
     @Test
     public void deleteZeroCardsInTrashBin() throws Exception {
         User otherUser = new User();
+        Card otherUserTrashedCard = CardBuilder.builder().pid(1).name("other user card").status(Card.CardStatus.TRASHED).owner(otherUser).build();
+
         Card card1 = CardBuilder.builder().pid(1).name("card1").owner(user).build();
-        Card softDeleted1 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
-        Card softDeleted2 = CardBuilder.builder().pid(3).name("card3").owner(user).build();
-        Card softDeletedOtherUser = CardBuilder.builder().pid(3).name("card3").owner(otherUser).build();
+        Card card2 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
+        Card card3 = CardBuilder.builder().pid(3).name("card3").owner(user).build();
 
         // normal card and 2 deleted assert2
         transactionTemplate.execute(t -> {
             userStore.save(otherUser);
-            cardStore.save(asList(card1, softDeleted1, softDeleted2, softDeletedOtherUser));
+            cardStore.save(List.of(card1, card2, card3, otherUserTrashedCard));
             return null;
         });
 
-        // no cards in trash
+        // remove cards from trash bin (but there is 0 cards)
         String contentAsString = securedMvc().perform(
-                delete(CARD_API_URL + "soft-deleted")
+                delete(CARD_API_URL + "trash-bin")
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+        Result<Card> result = objectMapper.readValue(contentAsString, new TypeReference<>() {});
 
-        assertThat(Long.parseLong(contentAsString)).isEqualTo(0L);
+        assertThat(result.getCount()).isEqualTo(0L);
+        assertThat(result.getItems()).isEmpty();
+
         Card fromDb1 = cardStore.find(card1.getId());
         assertThat(fromDb1).isNotNull();
         assertThat(fromDb1.getDeleted()).isNull();
-        Card fromDb2 = cardStore.find(softDeleted1.getId());
+        assertThat(fromDb1.getStatus()).isEqualTo(Card.CardStatus.AVAILABLE);
+        Card fromDb2 = cardStore.find(card2.getId());
         assertThat(fromDb2).isNotNull();
         assertThat(fromDb2.getDeleted()).isNull();
-        Card fromDb3 = cardStore.find(softDeleted2.getId());
+        assertThat(fromDb2.getStatus()).isEqualTo(Card.CardStatus.AVAILABLE);
+        Card fromDb3 = cardStore.find(card3.getId());
         assertThat(fromDb3).isNotNull();
         assertThat(fromDb3.getDeleted()).isNull();
-        Card fromDbOtherUser = cardStore.find(softDeletedOtherUser.getId());
+        assertThat(fromDb3.getStatus()).isEqualTo(Card.CardStatus.AVAILABLE);
+        Card fromDbOtherUser = cardStore.find(otherUserTrashedCard.getId());
         assertThat(fromDbOtherUser).isNotNull();
         assertThat(fromDbOtherUser.getDeleted()).isNull();
+        assertThat(fromDbOtherUser.getStatus()).isEqualTo(Card.CardStatus.TRASHED);
     }
 
     @Test
     public void delete2CardsInTrashBin() throws Exception {
         User otherUser = new User();
+        Card otherUserTrashedCard = CardBuilder.builder().pid(1).name("other user card").owner(otherUser).status(Card.CardStatus.TRASHED).build();
+
         Card card1 = CardBuilder.builder().pid(1).name("card1").owner(user).build();
-        Card softDeleted1 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
-        Card softDeleted2 = CardBuilder.builder().pid(3).name("card3").owner(user).build();
-        Card softDeletedOtherUser = CardBuilder.builder().pid(3).name("card3").owner(otherUser).build();
+        Card card2 = CardBuilder.builder().pid(2).name("card2").owner(user).status(Card.CardStatus.TRASHED).build();
+        Card card3 = CardBuilder.builder().pid(3).name("card3").owner(user).status(Card.CardStatus.TRASHED).build();
 
         transactionTemplate.execute(t -> {
             userStore.save(otherUser);
-            cardStore.save(asList(card1, softDeleted1, softDeleted2, softDeletedOtherUser));
-            cardStore.delete(softDeleted1);
-            cardStore.delete(softDeleted2);
-            cardStore.delete(softDeletedOtherUser);
+            cardStore.save(List.of(card1, card2, card3, otherUserTrashedCard));
             return null;
         });
 
-        // soft-deleted 2 of user, 1 of other user -> card of other user is untouched
+        // remove from trash bin 2 cards, do not remove other user's card from their trash bin
         String contentAsString = securedMvc().perform(
-                delete(CARD_API_URL + "soft-deleted")
+                delete(CARD_API_URL + "trash-bin")
                         .with(mockedUser(user.getId(), Roles.USER)))
-                .andExpect(status().is2xxSuccessful())
+                .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+        Result<Card> result = objectMapper.readValue(contentAsString, new TypeReference<>() {});
 
-        assertThat(Long.parseLong(contentAsString)).isEqualTo(2L);
+        assertThat(result.getCount()).isEqualTo(2L);
+        assertThat(result.getItems()).isEmpty();
+
         Card fromDb1 = cardStore.find(card1.getId());
         assertThat(fromDb1).isNotNull();
         assertThat(fromDb1.getDeleted()).isNull();
-        Card fromDb2 = cardStore.find(softDeleted1.getId());
+        assertThat(fromDb1.getStatus()).isEqualTo(Card.CardStatus.AVAILABLE);
+        Card fromDb2 = cardStore.find(card2.getId());
         assertThat(fromDb2).isNull();
-        Card fromDb3 = cardStore.find(softDeleted2.getId());
+        Card fromDb3 = cardStore.find(card3.getId());
         assertThat(fromDb3).isNull();
-        Card fromDbOtherUser = cardStore.find(softDeletedOtherUser.getId());
+        Card fromDbOtherUser = cardStore.find(otherUserTrashedCard.getId());
         assertThat(fromDbOtherUser).isNotNull();
-        assertThat(fromDbOtherUser.getDeleted()).isNotNull();
+        assertThat(fromDbOtherUser.getDeleted()).isNull();
+        assertThat(fromDbOtherUser.getStatus()).isEqualTo(Card.CardStatus.TRASHED);
     }
 
     @Test
-    public void listSoftDeleted() throws Exception {
-        Card delCard1 = CardBuilder.builder().pid(1).name("A1, Soft Deleted Card").owner(user).build();
-        Card delCard2 = CardBuilder.builder().pid(4).name("A4, Soft Deleted Card").owner(user).build();
-        Card delCard3 = CardBuilder.builder().pid(6).name("A6, Soft Deleted Card").owner(user).build();
+    public void listCardsInTrashBin() throws Exception {
+        Card trashed1 = CardBuilder.builder().pid(1).name("A1,Trashed Card").owner(user).status(Card.CardStatus.TRASHED).build();
+        Card trashed2 = CardBuilder.builder().pid(3).name("A3,Trashed Card").owner(user).status(Card.CardStatus.TRASHED).build();
+        Card trashed3 = CardBuilder.builder().pid(5).name("A5,Trashed Card").owner(user).status(Card.CardStatus.TRASHED).build();
 
-        Card normalCard1 = CardBuilder.builder().pid(2).name("A2, NormalCard").owner(user).build();
-        Card normalCard2 = CardBuilder.builder().pid(5).name("A5, NormalCard").owner(user).build();
+        Card card4 = CardBuilder.builder().pid(2).name("A2, NormalCard").owner(user).build();
+        Card card5 = CardBuilder.builder().pid(4).name("A4, NormalCard").owner(user).build();
 
         User otherUser = UserBuilder.builder().password("password").email("otherUser@mail.cz").allowed(true).build();
-        Card delCardForOtherUser = CardBuilder.builder().pid(3).name("A3 Other user deleted card").owner(otherUser).build();
+        Card trashedOther = CardBuilder.builder().pid(1).name("A3 Other user deleted card").owner(otherUser).status(Card.CardStatus.TRASHED).build();
 
         transactionTemplate.execute((t) -> {
             userService.create(otherUser);
-            cardStore.save(asList(delCard1, normalCard1, delCardForOtherUser, delCard2, normalCard2, delCard3));
-            cardStore.delete(delCard1);
-            cardStore.delete(delCard2);
-            cardStore.delete(delCard3);
-            cardStore.delete(delCardForOtherUser);
+            cardStore.save(List.of(trashed1, trashed2, trashed3, card4, card5, card5, trashedOther));
             return null;
         });
 
@@ -523,31 +520,31 @@ public class CardApiTest extends ApiTest {
         params.setPageSize(2);
 
         securedMvc().perform(
-                post(CARD_API_URL + "deleted")
+                post(CARD_API_URL + "trash-bin")
                         .content(objectMapper.writeValueAsString(params))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count", is(3)))
                 .andExpect(jsonPath("$.items", hasSize(2)))
-                .andExpect(jsonPath("$.items[0].id", is(delCard1.getId())))
-                .andExpect(jsonPath("$.items[1].id", is(delCard2.getId())));
+                .andExpect(jsonPath("$.items[0].id", is(trashed1.getId())))
+                .andExpect(jsonPath("$.items[1].id", is(trashed2.getId())));
 
         params = new Params();
-        params.setSorting(asList(new SortSpecification("name", Order.DESC)));
+        params.setSorting(List.of(new SortSpecification("name", Order.DESC)));
         params.setPage(0);
         params.setPageSize(2);
 
         securedMvc().perform(
-                post(CARD_API_URL + "deleted")
+                post(CARD_API_URL + "trash-bin")
                         .content(objectMapper.writeValueAsString(params))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.count", is(3)))
                 .andExpect(jsonPath("$.items", hasSize(2)))
-                .andExpect(jsonPath("$.items[0].id", is(delCard3.getId())))
-                .andExpect(jsonPath("$.items[1].id", is(delCard2.getId())));
+                .andExpect(jsonPath("$.items[0].id", is(trashed3.getId())))
+                .andExpect(jsonPath("$.items[1].id", is(trashed2.getId())));
 
         fromIndex = cardStore.findAll(new Params());
         assertThat(fromIndex.getCount()).isEqualTo(6L);
@@ -562,13 +559,13 @@ public class CardApiTest extends ApiTest {
         content.setCard(card);
         transactionTemplate.execute(t -> cardContentStore.save(content));
 
-        LocalAttachmentFile localFile = LocalAttachmentBuilder.builder().id(UUID.randomUUID().toString()).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
-        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().id(UUID.randomUUID().toString()).owner(user).link("https://upload.wikimedia.org/wikipedia/commons/f/f0/LogoMUNI-2018.png").name("url file").size(1024L).contentType(MediaType.IMAGE_PNG_VALUE).type("png").build();
-        transactionTemplate.execute(t -> fileStore.save(asList(localFile, urlFile)));
+        LocalAttachmentFile localFile = LocalAttachmentBuilder.builder().id(UUID.randomUUID().toString()).provider(AttachmentFileProviderType.LOCAL).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().id(UUID.randomUUID().toString()).owner(user).provider(AttachmentFileProviderType.URL).link("https://upload.wikimedia.org/wikipedia/commons/f/f0/LogoMUNI-2018.png").name("url file").size(1024L).contentType(MediaType.IMAGE_PNG_VALUE).type("png").build();
+        transactionTemplate.execute(t -> fileStore.save(List.of(localFile, urlFile)));
 
         //update card, not content
         UpdateCardDto updateCardDto = new UpdateCardDto();
-        updateCardDto.setFiles(asList(localFile.getId()));
+        updateCardDto.setFiles(List.of(localFile.getId()));
         updateCardDto.setNote("{ Updated note }");
         updateCardDto.setRawNote("Raw updated text");
         updateCardDto.setName("New updated Name");
@@ -587,13 +584,13 @@ public class CardApiTest extends ApiTest {
 
         AttachmentFile fromDbLocal = fileStore.find(localFile.getId());
         assertThat(fromDbLocal).isNotNull();
-        assertThat(fromDbLocal.getLinkedCards()).containsExactly(card);
+        assertThat(fromDbLocal.getLinkedCards()).containsExactly(card.toReference());
         AttachmentFile fromDbUrl = fileStore.find(urlFile.getId());
         assertThat(fromDbUrl).isNotNull();
         assertThat(fromDbUrl.getLinkedCards()).isEmpty();
 
 
-        updateCardDto.setFiles(asList(urlFile.getId()));
+        updateCardDto.setFiles(List.of(urlFile.getId()));
 
         securedMvc().perform(
                 put(CARD_API_URL + card.getId())
@@ -611,7 +608,7 @@ public class CardApiTest extends ApiTest {
         assertThat(fromDbLocal.getLinkedCards()).isEmpty();
         fromDbUrl = fileStore.find(urlFile.getId());
         assertThat(fromDbUrl).isNotNull();
-        assertThat(fromDbUrl.getLinkedCards()).containsExactly(card);
+        assertThat(fromDbUrl.getLinkedCards()).containsExactly(card.toReference());
     }
 
     @Test
@@ -624,24 +621,25 @@ public class CardApiTest extends ApiTest {
         assertThat(cardStore.find(card.getId())).isNotNull();
         assertThat(cardStore.find(card.getId()).getComments()).containsExactlyInAnyOrder(comment);
 
-        BulkFlagSetDto cardsDto = new BulkFlagSetDto();
-        cardsDto.setIds(asList(card.getId()));
-        cardsDto.setValue(Boolean.TRUE);
+        IndihuMindUtils.IdList cardsDto = new IndihuMindUtils.IdList();
+        cardsDto.setIds(List.of(card.getId()));
 
         securedMvc().perform(
-                post(CARD_API_URL + "set-softdelete")
+                post(CARD_API_URL + "status")
                         .content(objectMapper.writeValueAsString(cardsDto))
                         .contentType(MediaType.APPLICATION_JSON)
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk());
 
         String contentAsString = securedMvc().perform(
-                delete(CARD_API_URL + "soft-deleted")
+                delete(CARD_API_URL + "trash-bin")
                         .with(mockedUser(user.getId(), Roles.USER)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
+        Result<Card> result = objectMapper.readValue(contentAsString, new TypeReference<>() {});
 
-        assertThat(Long.parseLong(contentAsString)).isEqualTo(1L);
+        assertThat(result.getCount()).isEqualTo(1L);
+        assertThat(result.getItems()).isEmpty();
 
         Card fromDb = cardStore.find(card.getId());
         assertThat(fromDb).isNull();
@@ -661,7 +659,6 @@ public class CardApiTest extends ApiTest {
         contentB.setLastVersion(true);
         contentB.setCard(cardB);
         transactionTemplate.execute(t -> cardContentStore.save(List.of(content, contentB)));
-
 
         //update card, not content
         UpdateCardDto dtoUpdateCardB = new UpdateCardDto();
@@ -686,12 +683,12 @@ public class CardApiTest extends ApiTest {
 
         Card cardAFromDb = cardStore.find(cardA.getId());
         assertThat(cardAFromDb).isNotNull();
-        assertThat(cardAFromDb.getLinkedCards()).containsExactly(cardB);
-        assertThat(cardAFromDb.getLinkingCards()).containsExactly(cardB);
+        assertThat(cardAFromDb.getLinkedCards()).containsExactly(cardB.toReference());
+        assertThat(cardAFromDb.getLinkingCards()).containsExactly(cardB.toReference());
         Card cardBFromDb = cardStore.find(cardB.getId());
         assertThat(cardBFromDb).isNotNull();
-        assertThat(cardBFromDb.getLinkedCards()).containsExactly(cardA);
-        assertThat(cardBFromDb.getLinkingCards()).containsExactly(cardA);
+        assertThat(cardBFromDb.getLinkedCards()).containsExactly(cardA.toReference());
+        assertThat(cardBFromDb.getLinkingCards()).containsExactly(cardA.toReference());
 
         // setting links to make card B reference itself
         dtoUpdateCardB.setLinkedCards(List.of(cardA.getId(), cardB.getId()));
@@ -711,12 +708,34 @@ public class CardApiTest extends ApiTest {
 
         cardAFromDb = cardStore.find(cardA.getId());
         assertThat(cardAFromDb).isNotNull();
-        assertThat(cardAFromDb.getLinkedCards()).containsExactly(cardB);
-        assertThat(cardAFromDb.getLinkingCards()).containsExactly(cardB);
+        assertThat(cardAFromDb.getLinkedCards()).containsExactly(cardB.toReference());
+        assertThat(cardAFromDb.getLinkingCards()).containsExactly(cardB.toReference());
         cardBFromDb = cardStore.find(cardB.getId());
         assertThat(cardBFromDb).isNotNull();
-        assertThat(cardBFromDb.getLinkedCards()).containsExactly(cardA);
-        assertThat(cardBFromDb.getLinkingCards()).containsExactly(cardA);
+        assertThat(cardBFromDb.getLinkedCards()).containsExactly(cardA.toReference());
+        assertThat(cardBFromDb.getLinkingCards()).containsExactly(cardA.toReference());
+    }
+
+    @Test
+    public void updateCardInTrashBin() throws Exception {
+        Card cardA = CardBuilder.builder().pid(1).name("A").status(Card.CardStatus.TRASHED).owner(user).build();
+        transactionTemplate.execute(t -> cardStore.save(List.of(cardA)));
+        CardContent content = new CardContent();
+        content.setLastVersion(true);
+        content.setCard(cardA);
+
+        //update card
+        UpdateCardDto dto = new UpdateCardDto();
+        dto.setNote("{ Updated note }");
+        dto.setRawNote("Raw updated text");
+        dto.setName("New updated Name");
+
+        securedMvc().perform(
+                put(CARD_API_URL + cardA.getId())
+                        .with(mockedUser(user.getId(), Roles.USER))
+                        .content(objectMapper.writeValueAsString(dto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
     }
 
 }

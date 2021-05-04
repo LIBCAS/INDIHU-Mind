@@ -1,23 +1,29 @@
-import React, { useState, useRef } from "react";
-import { CardContentProps } from "../../../types/card";
+import MuiIconButton from "@material-ui/core/IconButton";
 import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
-import MuiIconButton from "@material-ui/core/IconButton";
-import { CardDetailContentAddLabelForm } from "./CardDetailContentAddLabelForm";
+import React, { useRef, useState } from "react";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { CardDetailContentAddLabelForm } from "./CardDetailContentAddLabelForm";
 
 interface CardDetailContentAddLabelProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  cardContents: CardContentProps[] | undefined;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
+  disabled?: boolean;
 }
 
 export const CardDetailContentAddLabel: React.FC<CardDetailContentAddLabelProps> = ({
   card,
-  cardContent,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  cardContents,
+  setCardContents,
+  disabled,
 }) => {
   const classesSpacing = useSpacingStyles();
 
@@ -39,6 +45,7 @@ export const CardDetailContentAddLabel: React.FC<CardDetailContentAddLabelProps>
             aria-label="add-label"
             component="span"
             onClick={handleAddLabel}
+            disabled={disabled}
           >
             <MuiAddCircleIcon fontSize="default" />
           </MuiIconButton>
@@ -46,9 +53,10 @@ export const CardDetailContentAddLabel: React.FC<CardDetailContentAddLabelProps>
       </div>
       {openForm && (
         <CardDetailContentAddLabelForm
+          currentCardContent={currentCardContent}
           card={card}
-          cardContent={cardContent}
-          setCardContent={setCardContent}
+          setCard={setCard}
+          setCardContents={setCardContents}
           openForm={openForm}
           setOpenForm={setOpenForm}
           anchorEl={anchorEl}

@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid";
 import { AttributeType } from "../../../enums";
 import { AttributeProps } from "../../../types/attribute";
 // import { parseAttributeForApi } from "../../../utils/card";
-import { CardContentProps } from "../../../types/card";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { api } from "../../../utils/api";
 import { getAttributeTypeDefaultValue } from "../../../utils/attribute";
 import { parseAttributeForApi } from "../../../utils/card";
@@ -55,42 +55,59 @@ let controller = new AbortController();
 export const updateCardContent = (
   field: string,
   value: any,
-  card: CardContentProps,
-  setCardContent: React.Dispatch<
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>,
+  currentCardContent: CardContentProps,
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >
 ) => {
-  setCardContent((prevCardContent) => {
-    return transformCardContent(field, value, prevCardContent, card);
-  });
+  if (field !== "attributes")
+    setCard((prev) => (prev ? { ...prev, [field]: value } : undefined));
+  else
+    setCardContents((prevCardContent) => {
+      return transformCardContent(
+        field,
+        value,
+        prevCardContent,
+        currentCardContent
+      );
+    });
 };
 
 export const onEditCard = (
   field: string,
   value: any,
-  card: CardContentProps,
-  setCardContent: React.Dispatch<
+  card: CardProps,
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>,
+  currentCardContent: CardContentProps,
+  setCurrentCardContent: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >,
-  onSuccess = () => {},
-  onError = (e: Error) => {}
+  onSuccess = () => { },
+  onError = (e: Error) => { }
 ) => {
-  updateCardContent(field, value, card, setCardContent);
+  updateCardContent(
+    field,
+    value,
+    setCard,
+    currentCardContent,
+    setCurrentCardContent
+  );
 
   const createIds = (o: any) => o.id;
 
   const mapFieldValue = (field: string, newField?: string) => {
-    const fieldValue = card.card[`${field}`];
+    const fieldValue = card[`${field}`];
     const value =
       fieldValue &&
-      typeof fieldValue !== "string" &&
-      typeof fieldValue !== "number"
+        typeof fieldValue !== "string" &&
+        typeof fieldValue !== "number"
         ? (fieldValue as any).map(createIds)
         : null;
     return value ? { [`${newField || field}`]: value } : {};
   };
 
-  let { id, name, note, comments } = card.card;
+  let { id, name, note, comments } = card;
 
   const fieldsVersioned = ["attributes"];
 
@@ -118,7 +135,7 @@ export const onEditCard = (
       [field]: value,
     };
     api()
-      .put(`card/${card.card.id}/content`, {
+      .put(`card/${currentCardContent.card.id}/content`, {
         json: body,
         signal: controller.signal,
       })
@@ -176,14 +193,16 @@ export const deleteAttribute = (
 };
 export const onSubmitAttribute = (
   values: AttributeProps,
-  card: CardContentProps,
-  setCardContent: React.Dispatch<
+  card: CardProps,
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>,
+  currentCardContent: CardContentProps,
+  setCurrentCardContent: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >,
   setOpen: Function,
   previousAttribute?: AttributeProps
 ) => {
-  const { attributes } = card;
+  const { attributes } = currentCardContent;
   if (values.type === AttributeType.DATE || AttributeType.DATETIME) {
     values = parseAttributeForApi(values);
   }
@@ -203,19 +222,28 @@ export const onSubmitAttribute = (
       ordinalNumber: i,
     }));
   }
-  onEditCard("attributes", orderedAttributes, card, setCardContent);
+  onEditCard(
+    "attributes",
+    orderedAttributes,
+    card,
+    setCard,
+    currentCardContent,
+    setCurrentCardContent
+  );
   setOpen(false);
 };
 
 export const onDeleteAttribute = (
-  card: CardContentProps,
-  setCardContent: React.Dispatch<
+  card: CardProps,
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>,
+  currentCardContent: CardContentProps,
+  setCurrentCardContent: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >,
   setOpen: Function,
   previousAttribute: AttributeProps
 ) => {
-  const { attributes } = card;
+  const { attributes } = currentCardContent;
   let orderedAttributes;
   const attributesPreviousId = attributes.filter(
     (att: AttributeProps) => att.id !== previousAttribute.id
@@ -223,7 +251,14 @@ export const onDeleteAttribute = (
   orderedAttributes = attributesPreviousId.map(
     (att: AttributeProps, i: number) => ({ ...att, ordinalNumber: i })
   );
-  onEditCard("attributes", orderedAttributes, card, setCardContent);
+  onEditCard(
+    "attributes",
+    orderedAttributes,
+    card,
+    setCard,
+    currentCardContent,
+    setCurrentCardContent
+  );
   setOpen(false);
 };
 
@@ -247,8 +282,8 @@ export const onNoteUploadError = (
       ? e.response.status === 400
         ? "Popis přesahuje povolenou velikost 10MB."
         : e.response.status === 409
-        ? "Popis přesahuje celkovou kvotu uživatele."
-        : "Nepodařilo se změnit popis"
+          ? "Popis přesahuje celkovou kvotu uživatele."
+          : "Nepodařilo se změnit popis"
       : "Nepodařilo se upravit kartu";
   setError && setError({ isError: true, message: errMessage });
   afterErrorCB();

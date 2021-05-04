@@ -1,11 +1,9 @@
-import React from "react";
-import MaterialPopover from "@material-ui/core/Popover";
 import Paper from "@material-ui/core/Paper";
+import MaterialPopover from "@material-ui/core/Popover";
 import classNames from "classnames";
+import React from "react";
 import ReactResizeDetector from "react-resize-detector";
-
 import { ButtonCancel } from "../control/ButtonCancel";
-
 import { useStyles } from "./PopoverStyles";
 
 interface PopoverProps {
@@ -15,7 +13,7 @@ interface PopoverProps {
   content: any;
   autoWidth?: boolean;
   cancelButton?: boolean;
-  width?: number;
+  width?: number | string;
   overflowVisible?: boolean;
   anchorReference?: "anchorEl" | "none" | "anchorPosition";
 }
@@ -71,7 +69,7 @@ export const Popover: React.FC<PopoverProps> = ({
         className={classNames(classes.paper, {
           [classes.autoWidth]: autoWidth,
         })}
-        style={width ? { width } : {}}
+        style={width ? { minWidth: width, maxWidth: width } : {}}
       >
         {cancelButton && (
           <ButtonCancel variant="popover" onClick={() => setOpen(false)} />

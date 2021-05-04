@@ -2,6 +2,7 @@ package cz.cas.lib.indihumind.init.builders;
 
 import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.citation.Citation;
+import cz.cas.lib.indihumind.document.AttachmentFileProviderType;
 import cz.cas.lib.indihumind.document.UrlAttachmentFile;
 import cz.cas.lib.indihumind.security.user.User;
 
@@ -56,6 +57,11 @@ public final class UrlAttachmentBuilder {
 
     public UrlAttachmentBuilder type(String type) {
         urlAttachmentFile.setType(type);
+        return this;
+    }
+
+    public UrlAttachmentBuilder provider(AttachmentFileProviderType type) {
+        urlAttachmentFile.setProviderType(type);
         return this;
     }
 

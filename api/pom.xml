@@ -17,6 +17,7 @@
 
     <properties>
         <java.version>11</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Libraries -->
         <jmockit.version>1.46</jmockit.version>
@@ -28,7 +29,7 @@
         <j2html.version>1.4.0</j2html.version>
         <tika-core.version>1.24.1</tika-core.version>
         <spring-mvc-test-utils.version>3.0.0</spring-mvc-test-utils.version>
-        <jasper-reports.version>6.10.0</jasper-reports.version>
+        <jasper-reports.version>6.16.0</jasper-reports.version>
         <xdocreport.version>1.0.6</xdocreport.version>
         <poi.version>3.15</poi.version>
         <jxls.version>2.4.2</jxls.version>
@@ -256,6 +257,10 @@
                         <groupId>com.lowagie</groupId>
                         <artifactId>itext</artifactId>
                     </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jdt</groupId>
+                    <artifactId>ecj</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -273,6 +278,14 @@
                     <artifactId>bcprov-jdk14</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>cz.cas.lib.font</groupId>
+            <artifactId>arial</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${pom.basedir}/src/main/jar/true-arial.jar</systemPath>
         </dependency>
 
         <!-- working with excel .xls(x) files -->

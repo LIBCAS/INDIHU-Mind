@@ -1,54 +1,48 @@
 package cz.cas.lib.indihumind.security.jwt;
 
 import core.security.UserDetails;
+import core.security.UserDetailsService;
 import core.security.jwt.spi.JwtHandler;
-import cz.cas.lib.indihumind.security.delegate.UserDelegate;
-import cz.cas.lib.indihumind.security.user.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import javax.inject.Inject;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+
+import static core.util.Utils.notNull;
 
 @Service
 @Slf4j
 public class VzbJwtHandler implements JwtHandler {
-    public UserDetails parseClaims(Map<String, Object> claims) {
-        User user = new User();
-        user.setId((String) claims.get("sub"));
-        user.setEmail((String) claims.get("email"));
 
-        List<String> authorityNames = (List<String>) claims.get("authorities");
-        Set<GrantedAuthority> authorities = authorityNames.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toSet());
-        return new UserDelegate(user, authorities);
+    private UserDetailsService userDetailsService;
+
+    public UserDetails parseClaims(Map<String, Object> claims) {
+        String userId = (String) claims.get("sub");
+        UserDetails user = userDetailsService.loadUserById(userId); // fully load user with roles and permissions from DB
+        notNull(user, () -> new BadCredentialsException("User not found."));
+        return user;
     }
 
-    public Map<String, Object> createClaims(UserDetails userDetails) {
+    public Map<String, Object> createClaims(UserDetails delegate) {
+        String[] roles = delegate.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .toArray(String[]::new);
 
-        if (userDetails instanceof UserDelegate) {
-            UserDelegate delegate = (UserDelegate) userDetails;
-            User user = delegate.getUser();
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("sub", delegate.getId());
+        claims.put("email", delegate.getEmail());
+        claims.put("authorities", roles);
 
-            String[] roles = userDetails.getAuthorities()
-                    .stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .toArray(String[]::new);
+        return claims;
+    }
 
-            Map<String, Object> claims = new LinkedHashMap<>();
-            claims.put("sub", user.getId());
-            claims.put("email", user.getEmail());
-            claims.put("authorities", roles);
-
-            return claims;
-        } else {
-            throw new UnsupportedOperationException();
-        }
+    @Inject
+    public void setUserDetailsService(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
     }
 }

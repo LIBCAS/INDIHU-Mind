@@ -1,17 +1,16 @@
-import React, { useState } from "react";
-import { FormikProps, Field, FieldProps } from "formik";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
+import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
+import { Field, FieldProps, FormikProps } from "formik";
+import React, { useState } from "react";
 import * as Yup from "yup";
-
-import { Attachment, AttachmentUpdateProps } from "./_types";
 import { Formik } from "../../components/form/Formik";
 import { InputText } from "../../components/form/InputText";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
 import { Loader } from "../../components/loader/Loader";
+import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { Attachment, AttachmentUpdateProps } from "./_types";
 import { fileUpdate } from "./_utils";
 
 interface AttachmentCardRenameProps {
@@ -58,7 +57,9 @@ export const AttachmentCardRename: React.FC<AttachmentCardRenameProps> = ({
         }}
         enableReinitialize
         validationSchema={Yup.object().shape({
-          name: Yup.string().required("Povinné"),
+          name: Yup.string()
+            .required("Povinné")
+            .max(255, "Smí mít maximálně 255 znaků"),
         })}
         onSubmit={onSubmit}
         render={(formikBag: FormikProps<AttachmentUpdateProps>) => (

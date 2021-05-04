@@ -14,7 +14,12 @@ import java.util.stream.Collectors;
 public enum Typeface {
     UPPERCASE(1) {
         String apply(String data) {
-            return data.toUpperCase();
+            return data.toUpperCase() // revert back HTML entities to comply with parser
+                    .replace("&AMP;", "&amp;")
+                    .replace("&APOS;", "&apos;")
+                    .replace("&LT;", "&lt;")
+                    .replace("&GT;", "&gt;")
+                    .replace("&QUOT;", "&quot;");
         }
     },
     ITALIC(2) {

@@ -86,3 +86,14 @@ export enum OrderFormat {
   FIRSTNAME_FIRST = "FIRSTNAME_FIRST",
   LASTNAME_FIRST = "LASTNAME_FIRST",
 }
+
+export enum AuthorsSeparator {
+  COMMA = "COMMA",
+  DASH = "DASH",
+}
+
+export enum AuthorsAndJoiner {
+  ENGLISH_AND = "ENGLISH_AND",
+  CZECH_AND = "CZECH_AND",
+  AMPERSAND = "AMPERSAND",
+}

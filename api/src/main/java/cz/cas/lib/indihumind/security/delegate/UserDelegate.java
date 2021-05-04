@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 public class UserDelegate implements UserDetails {
+
     @Getter
-    @Setter
     private User user;
 
     @Setter
@@ -85,7 +85,6 @@ public class UserDelegate implements UserDetails {
 
     @Override
     public Collection<GrantedAuthority> getAuthorities() {
-        HashSet<GrantedAuthority> allAuthorities = new HashSet<>(authorities);
-        return allAuthorities;
+        return new HashSet<>(authorities);
     }
 }

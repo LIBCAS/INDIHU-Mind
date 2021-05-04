@@ -1,26 +1,30 @@
-import React, { useState, useRef } from "react";
-import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiIconButton from "@material-ui/core/IconButton";
+import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
-
-import { CardContentProps } from "../../../types/card";
+import React, { useRef, useState } from "react";
 import { Popover } from "../../../components/portal/Popover";
-
-import { CardDetailContentAddAttributeForm } from "./CardDetailContentAddAttributeForm";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { CardDetailContentAddAttributeForm } from "./CardDetailContentAddAttributeForm";
 
 interface CardDetailContentAddAttributeProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  cardContents: CardContentProps[] | undefined;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
+  disabled?: boolean;
 }
 
 export const CardDetailContentAddAttribute: React.FC<CardDetailContentAddAttributeProps> = ({
   card,
-  cardContent,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  cardContents,
+  setCardContents,
+  disabled,
 }) => {
   const classesSpacing = useSpacingStyles();
 
@@ -41,6 +45,7 @@ export const CardDetailContentAddAttribute: React.FC<CardDetailContentAddAttribu
           aria-label="add-attribute"
           component="span"
           onClick={handleAddAttribute}
+          disabled={disabled}
         >
           <MuiAddCircleIcon fontSize="default" />
         </MuiIconButton>
@@ -53,9 +58,10 @@ export const CardDetailContentAddAttribute: React.FC<CardDetailContentAddAttribu
         content={
           <CardDetailContentAddAttributeForm
             setOpen={setPopoverOpen}
+            currentCardContent={currentCardContent}
             card={card}
-            cardContent={cardContent}
-            setCardContent={setCardContent}
+            setCard={setCard}
+            setCardContents={setCardContents}
           />
         }
       />

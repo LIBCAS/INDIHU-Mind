@@ -1,6 +1,6 @@
 package cz.cas.lib.indihumind.init.builders;
 
-import cz.cas.lib.indihumind.card.CardContent;
+import cz.cas.lib.indihumind.cardcontent.CardContent;
 import cz.cas.lib.indihumind.cardattribute.Attribute;
 import cz.cas.lib.indihumind.cardattribute.AttributeType;
 

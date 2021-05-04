@@ -1,36 +1,35 @@
-import React, { useContext } from "react";
+import { Button, Grid, Typography } from "@material-ui/core";
+import Paper from "@material-ui/core/Paper";
+import { Theme } from "@material-ui/core/styles/createMuiTheme";
 import MaterialTable from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
-import Paper from "@material-ui/core/Paper";
-import classNames from "classnames";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
-import { Theme } from "@material-ui/core/styles/createMuiTheme";
-import { useTheme } from "@material-ui/styles";
-import { Grid, Typography, Button } from "@material-ui/core";
 import Delete from "@material-ui/icons/Delete";
-
-import { GlobalContext } from "../../context/Context";
-import { ConditionalWrapper } from "../conditionalWrapper/ConditionalWrapper";
-import { api } from "../../utils/api";
-import {
-  STATUS_ERROR_TEXT_SET,
-  STATUS_ERROR_COUNT_CHANGE,
-} from "../../context/reducers/status";
-import { TableGroupActions } from "./TableGroupActions";
-import { TableActions } from "./TableActions";
-import { TableCheckbox } from "./TableCheckbox";
-import { TableHeader } from "./TableHeader";
-import { TableValue } from "./TableValue";
+import { useTheme } from "@material-ui/styles";
+import classNames from "classnames";
+import React, { useContext } from "react";
 import { Popconfirm } from "../../components/portal/Popconfirm";
-import { TableComponentProps } from "./_types";
+import { GlobalContext } from "../../context/Context";
+import {
+  STATUS_ERROR_COUNT_CHANGE,
+  STATUS_ERROR_TEXT_SET,
+} from "../../context/reducers/status";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles } from "./_styles";
+import { api } from "../../utils/api";
+import { ConditionalWrapper } from "../conditionalWrapper/ConditionalWrapper";
 import { PrintTable } from "../print/PrintTable";
+import { TableActions } from "./TableActions";
+import { TableCheckbox } from "./TableCheckbox";
+import { TableGroupActions } from "./TableGroupActions";
+import { TableHeader } from "./TableHeader";
+import { TableValue } from "./TableValue";
 import { pageSizeOptions } from "./_enums";
+import { useStyles } from "./_styles";
+import { TableComponentProps } from "./_types";
 
 export const TableComponent: React.FC<TableComponentProps> = ({
   baseUrl,
@@ -43,6 +42,7 @@ export const TableComponent: React.FC<TableComponentProps> = ({
   enableRowActions = false,
   enableGroupEdit = false,
   enableGroupDelete = false,
+  enableCardsExports = false,
   redirectOnEdit = false,
   enablePrint = false,
   enableSort = true,
@@ -190,6 +190,7 @@ export const TableComponent: React.FC<TableComponentProps> = ({
               groupEditMapper,
               onGroupEdit,
               onGroupDelete,
+              enableCardsExports,
             }}
           />
           {enablePrint && (
@@ -230,6 +231,7 @@ export const TableComponent: React.FC<TableComponentProps> = ({
                       onDoubleClick={() =>
                         enableRowClick && navigateToDetail(row)
                       }
+                      style={{ cursor: enableRowClick ? "pointer" : "initial" }}
                     >
                       <TableCell
                         onClick={(e: any) => {

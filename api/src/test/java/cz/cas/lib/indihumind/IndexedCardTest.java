@@ -10,16 +10,20 @@ import core.sequence.SequenceStore;
 import core.store.DomainStore;
 import cz.cas.lib.indihumind.card.*;
 import cz.cas.lib.indihumind.card.dto.CardSearchResultDto;
+import cz.cas.lib.indihumind.card.view.CardListDto;
+import cz.cas.lib.indihumind.card.view.CardRefStore;
 import cz.cas.lib.indihumind.cardattribute.Attribute;
 import cz.cas.lib.indihumind.cardattribute.AttributeStore;
 import cz.cas.lib.indihumind.cardattribute.AttributeType;
 import cz.cas.lib.indihumind.cardcategory.Category;
 import cz.cas.lib.indihumind.cardcategory.CategoryStore;
+import cz.cas.lib.indihumind.cardcontent.CardContent;
+import cz.cas.lib.indihumind.cardcontent.CardContentStore;
+import cz.cas.lib.indihumind.cardcontent.view.CardContentListDtoStore;
 import cz.cas.lib.indihumind.cardlabel.Label;
 import cz.cas.lib.indihumind.cardlabel.LabelStore;
 import cz.cas.lib.indihumind.document.*;
 import cz.cas.lib.indihumind.init.builders.*;
-import cz.cas.lib.indihumind.security.user.IndexedUser;
 import cz.cas.lib.indihumind.security.user.User;
 import cz.cas.lib.indihumind.security.user.UserService;
 import cz.cas.lib.indihumind.security.user.UserStore;
@@ -36,8 +40,10 @@ import java.awt.*;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
+import java.util.Properties;
 
 import static core.util.Utils.asList;
 import static core.util.Utils.asSet;
@@ -59,6 +65,8 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
     private static final AssignedRoleService assignedRoleService = new AssignedRoleService();
 
     // ----------------------  DOMAIN STORES   ----------------------
+    private static final CardIndexFacade cardIndexFacade = new CardIndexFacade();
+    private static final CardContentListDtoStore contentDtoStore = new CardContentListDtoStore();
     private static final CardContentStore cardContentStore = new CardContentStore();
     private static final AttributeStore attributeStore = new AttributeStore();
     private static final AssignedRoleStore assignedRoleStore = new AssignedRoleStore();
@@ -68,12 +76,13 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
     // -----------  INDEXED STORES - SET TEMPLATE IN @BeforeClass  -----------
     private static final UserStore userStore = new UserStore();
     private static final CardStore cardStore = new CardStore();
+    private static final CardRefStore cardRefStore = new CardRefStore();
     private static final LabelStore labelStore = new LabelStore();
     private static final AttachmentFileStore attachmentFileStore = new AttachmentFileStore();
 
     // for initialization in @Before before()
-    private static final List<DomainStore<?,?>> allStores = asList(
-            userStore, cardStore, cardContentStore, attributeStore,
+    private static final List<DomainStore<?, ?>> allStores = asList(
+            userStore, cardStore, cardRefStore, contentDtoStore, cardContentStore, attributeStore,
             labelStore, categoryStore, sequenceStore, assignedRoleStore,
             attachmentFileStore
     );
@@ -88,10 +97,42 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
         return props.getProperty("vzb.index.uasTestCollectionName");
     }
 
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Set.of(IndexedCard.class, IndexedAttachmentFile.class, IndexedUser.class);
+
+    @BeforeClass
+    public static void beforeClass() throws IOException {
+        attributeStore.setObjectMapper(objectMapper);
+        props.load(ClassLoader.getSystemResourceAsStream("application.properties"));
+
+        String solrClientUrl = props.getProperty("vzb.index.endpoint");
+        SolrClient solrClient = new HttpSolrClient.Builder().withBaseSolrUrl(solrClientUrl).build();
+        SolrTemplate solrTemplate = new SolrTemplate(solrClient);
+        solrTemplate.afterPropertiesSet();
+
+        cardStore.setTemplate(solrTemplate);
+        cardRefStore.setTemplate(solrTemplate);
+        cardStore.setCardContentListDtoStore(contentDtoStore);
+        cardService.setStore(cardStore);
+        cardService.setAttributeStore(attributeStore);
+
+        cardIndexFacade.setCardRefStore(cardRefStore);
+        cardIndexFacade.setSolrClient(solrClient);
+
+        userService.setStore(userStore);
+        userService.setSequenceStore(sequenceStore);
+        userService.setPasswordEncoder(new BCryptPasswordEncoder());
+
+        assignedRoleService.setStore(assignedRoleStore);
+        AuditLogger auditLogger = new AuditLogger();
+        auditLogger.setMapper(objectMapper);
+        assignedRoleService.setLogger(auditLogger);
+        userService.setAssignedRoleService(assignedRoleService);
+
+        userStore.setAssignedRoleStore(assignedRoleStore);
+        userStore.setTemplate(solrTemplate);
+
+        attachmentFileStore.setTemplate(solrTemplate);
     }
+
 
     @Before
     public void before() {
@@ -109,7 +150,7 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
     @Test
     public void search() {
         SoftAssertions softly = new SoftAssertions();
-        Result<CardSearchResultDto> result = cardService.simpleSearch("druh", userId, 0, 0);
+        Result<CardSearchResultDto> result = cardService.simpleHighlightSearch("druh", 0, 0, userId);
 
         softly.assertThat(result.getCount()).isEqualTo(3L);
         softly.assertAll();
@@ -121,13 +162,13 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
 
         softly.assertThat(result.getItems().get(0).getHighlightMap().size()).isEqualTo(2);
         softly.assertThat(result.getItems().get(0).getHighlightMap().get(IndexedCard.NAME)).isNotNull();
-        softly.assertThat(result.getItems().get(0).getHighlightMap().get(IndexedCard.ATTACHMENT_FILES_NAMES)).isNotNull();
+        softly.assertThat(result.getItems().get(0).getHighlightMap().get(IndexedCard.DOCUMENT_NAMES)).isNotNull();
         softly.assertThat(result.getItems().get(0).getHighlightedAttributes().size()).isEqualTo(1);
         softly.assertThat(result.getItems().get(0).getHighlightedAttributes().get(0).getName()).isEqualTo("Atribut první");
         softly.assertAll();
 
         softly.assertThat(result.getItems().get(1).getHighlightMap().size()).isEqualTo(2);
-        softly.assertThat(result.getItems().get(1).getHighlightMap().get(IndexedCard.CATEGORIES)).isNotNull();
+        softly.assertThat(result.getItems().get(1).getHighlightMap().get(IndexedCard.CATEGORY_NAMES)).isNotNull();
         softly.assertThat(result.getItems().get(1).getHighlightMap().get(IndexedCard.NOTE)).isNotNull();
         softly.assertThat(result.getItems().get(1).getHighlightedAttributes().size()).isEqualTo(1);
         softly.assertThat(result.getItems().get(1).getHighlightedAttributes().get(0).getName()).isEqualTo("Zařazení");
@@ -141,7 +182,7 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
 
     @Test
     public void categoriesFacets() {
-        Map<String, Long> categoryFacets = cardStore.findCategoryFacets(userId);
+        Map<String, Long> categoryFacets = cardIndexFacade.findCategoryFacets(userId);
         assertThat(categoryFacets.keySet()).hasSize(4);
         assertThat(categoryFacets.values().stream().reduce(0L, Long::sum)).isEqualTo(5L);
     }
@@ -149,7 +190,7 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
     @Test
     public void defaultList() {
         Params params = new Params();
-        Result<Card> all = cardService.findAll(params);
+        Result<CardListDto> all = cardService.findAll(params);
         assertThat(all.getCount()).isEqualTo(5L);
         assertThat(all.getItems().size()).isEqualTo(5);
     }
@@ -169,50 +210,18 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
         params.setSort(IndexedCard.NAME);
         params.setOrder(Order.ASC);
 
-        Result<Card> all = cardService.findAll(params);
+        Result<CardListDto> all = cardService.findAll(params);
         assertThat(all.getCount()).isEqualTo(3L);
-        assertThat(all.getItems()).containsExactly(cardFirst, cardSecond, cardThird);
+        assertThat(all.getItems()).extracting("id").containsExactly(cardFirst.getId(), cardSecond.getId(), cardThird.getId());
 
         params.setOrder(Order.DESC);
         all = cardService.findAll(params);
-        assertThat(all.getItems()).containsExactly(cardThird, cardSecond, cardFirst);
-    }
-
-
-    @BeforeClass
-    public static void beforeClass() throws IOException {
-        attributeStore.setObjectMapper(objectMapper);
-        props.load(ClassLoader.getSystemResourceAsStream("application.properties"));
-
-        String solrClientUrl = props.getProperty("vzb.index.endpoint");
-        SolrClient solrClient = new HttpSolrClient.Builder().withBaseSolrUrl(solrClientUrl).build();
-        SolrTemplate solrTemplate = new SolrTemplate(solrClient);
-        solrTemplate.afterPropertiesSet();
-
-        cardStore.setTemplate(solrTemplate);
-        cardStore.setCardContentStore(cardContentStore);
-        cardService.setStore(cardStore);
-        cardService.setAttributeStore(attributeStore);
-        cardStore.setSolrClient(solrClient);
-
-        userService.setStore(userStore);
-        userService.setSequenceStore(sequenceStore);
-        userService.setPasswordEncoder(new BCryptPasswordEncoder());
-
-        assignedRoleService.setStore(assignedRoleStore);
-        AuditLogger auditLogger = new AuditLogger();
-        auditLogger.setMapper(objectMapper);
-        assignedRoleService.setLogger(auditLogger);
-        userService.setAssignedRoleService(assignedRoleService);
-
-        userStore.setAssignedRoleStore(assignedRoleStore);
-        userStore.setTemplate(solrTemplate);
-
-        attachmentFileStore.setTemplate(solrTemplate);
+        assertThat(all.getItems()).extracting("id").containsExactly(cardThird.getId(), cardSecond.getId(), cardFirst.getId());
     }
 
     private void clearTables() {
         attributeStore.clearTable();
+        contentDtoStore.clearTable();
         cardContentStore.clearTable();
         cardStore.clearTable();
         labelStore.clearTable();
@@ -290,15 +299,19 @@ public class IndexedCardTest extends DbTest implements AlterSolrCollection {
         userService.create(regularUser);
         labelStore.save(asList(l1, l2, l3));
         categoryStore.save(asList(cat1, cat2, cat3, cat4, cat5));
-        cardStore.save(asList(card1, card2, card3, card4, card5));
+        cardStore.save(card1);
+        cardStore.save(card2);
+        cardStore.save(card3);
+        cardStore.save(card4);
+        cardStore.save(card5);
         attachmentFileStore.save(asList(ef, extFile, locFile));
 
         cardContentStore.save(asList(cc1, cc2, cc3, cc4, cc5, cc5, cc6, card5Content));
         attributeStore.save(asList(a1, a2, a3, a4, a5, a51, a52, a6, a7, a8, a9, a10, a101, a11, a12, a13, a14, a141, a142, a15, cc4a1, cc4a2, cc4a3));
 
-        card1.setDocuments(asSet(ef));
-        card5.setDocuments(asSet(extFile, locFile));
-        card4.getLinkedCards().add(card5);
+        card1.setDocuments(asSet(ef.toReference()));
+        card5.setDocuments(asSet(extFile.toReference(), locFile.toReference()));
+        card4.getLinkedCards().add(card5.toReference());
         cardStore.save(asList(card1, card2, card3, card4, card5));
 
         return regularUser.getId();

@@ -123,6 +123,12 @@ public class Utils {
         return Arrays.copyOf(a, a.length, Object[].class);
     }
 
+    public static <T extends RuntimeException> void notEmpty(Collection<?> collection, Supplier<T> supplier) {
+        if (collection == null || collection.isEmpty()) {
+            throw supplier.get();
+        }
+    }
+
     public static <T extends RuntimeException> void notNull(Object o, Supplier<T> supplier) {
         if (o == null) {
             throw supplier.get();
@@ -342,7 +348,7 @@ public class Utils {
             ByteSource source = Resources.asByteSource(url);
             return source.openStream();
         } catch (IllegalArgumentException ex) {
-            throw new MissingObject(FILE_IS_MISSING, "template");
+            throw new MissingObject(FILE_IS_MISSING, path);
         }
     }
 

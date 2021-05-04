@@ -1,19 +1,16 @@
-import React from "react";
-import { FormikProps, Field, FieldProps } from "formik";
 import Button from "@material-ui/core/Button";
-
-import { CardContentProps } from "../../../types/card";
-import { AttributeProps } from "../../../types/attribute";
-import { AttributeTypeEnum } from "../../../enums";
-import { notEmpty } from "../../../utils/form/validate";
-
+import { Field, FieldProps, FormikProps } from "formik";
+import React from "react";
 import { Formik } from "../../../components/form/Formik";
-import { Select } from "../../../components/form/Select";
 import { InputText } from "../../../components/form/InputText";
-
-import { useStyles } from "./_cardStyles";
+import { Select } from "../../../components/form/Select";
+import { AttributeTypeEnum } from "../../../enums";
+import { AttributeProps } from "../../../types/attribute";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { notEmpty, notLongerThan255 } from "../../../utils/form/validate";
 import { CardDetailContentAddAttributeFormValue } from "./CardDetailContentAddAttributeFormValue";
-import { onSubmitAttribute, onChangeType } from "./_utils";
+import { useStyles } from "./_cardStyles";
+import { onChangeType, onSubmitAttribute } from "./_utils";
 
 const initialValues = {
   id: "",
@@ -24,9 +21,10 @@ const initialValues = {
 };
 
 interface CardDetailContentAddAttributeFormProp {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   setOpen: Function;
@@ -35,7 +33,9 @@ interface CardDetailContentAddAttributeFormProp {
 
 export const CardDetailContentAddAttributeForm: React.FC<CardDetailContentAddAttributeFormProp> = ({
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   setOpen,
   previousAttribute,
 }) => {
@@ -47,7 +47,9 @@ export const CardDetailContentAddAttributeForm: React.FC<CardDetailContentAddAtt
         onSubmitAttribute(
           values,
           card,
-          setCardContent,
+          setCard,
+          currentCardContent,
+          setCardContents,
           setOpen,
           previousAttribute
         );
@@ -65,7 +67,9 @@ export const CardDetailContentAddAttributeForm: React.FC<CardDetailContentAddAtt
           <div className={classes.attributeWrapper}>
             <Field
               name="name"
-              validate={notEmpty}
+              validate={(value: any) =>
+                notLongerThan255(value) || notEmpty(value)
+              }
               render={({ field, form }: FieldProps<AttributeProps>) => (
                 <InputText
                   field={field}

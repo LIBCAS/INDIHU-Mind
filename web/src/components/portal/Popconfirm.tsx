@@ -1,6 +1,5 @@
-import React, { useRef, useState } from "react";
 import MuiTooltip from "@material-ui/core/Tooltip";
-
+import React, { useRef, useState } from "react";
 import { Popoverconfirm } from "./Popoverconfirm";
 
 interface PopconfirmProps {
@@ -11,6 +10,7 @@ interface PopconfirmProps {
   acceptText?: string;
   cancelText?: string;
   onOpenCallback?: Function;
+  disabled?: boolean;
 }
 
 export const Popconfirm: React.FC<PopconfirmProps> = ({
@@ -21,6 +21,7 @@ export const Popconfirm: React.FC<PopconfirmProps> = ({
   cancelText,
   onConfirmClick,
   onOpenCallback,
+  disabled,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -33,8 +34,10 @@ export const Popconfirm: React.FC<PopconfirmProps> = ({
         ref={ref}
         onClick={(e) => {
           e.stopPropagation();
-          setOpen((prev) => !prev);
-          onOpenCallback && onOpenCallback();
+          if (!disabled) {
+            setOpen((prev) => !prev);
+            onOpenCallback && onOpenCallback();
+          }
         }}
       >
         {(tooltip && (

@@ -1,25 +1,23 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import { RouteComponentProps } from "react-router-dom";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
-import classNames from "classnames";
 import Fade from "@material-ui/core/Fade";
 import Grid from "@material-ui/core/Grid";
-
+import Typography from "@material-ui/core/Typography";
+import classNames from "classnames";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { RouteComponentProps } from "react-router-dom";
+import { CardTile } from "../../components/card/CardTile";
+import { Loader } from "../../components/loader/Loader";
+import { Popconfirm } from "../../components/portal/Popconfirm";
 import { GlobalContext } from "../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
-import { plural } from "../../utils/lang";
-import { CardProps } from "../../types/card";
-import { api } from "../../utils/api";
-import { Popconfirm } from "../../components/portal/Popconfirm";
-import { Loader } from "../../components/loader/Loader";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-
-import { CardTile } from "../../components/card/CardTile";
+import { CardProps } from "../../types/card";
+import { api } from "../../utils/api";
+import { plural } from "../../utils/lang";
 
 let controller = new AbortController();
 
@@ -36,7 +34,7 @@ export const Bin: React.FC<RouteComponentProps> = () => {
     controller = new AbortController();
     setLoading(true);
     api()
-      .post(`card/deleted`, {
+      .post(`card/trash-bin`, {
         signal: controller.signal,
         json: { page: 0, pageSize: 30, order: "DESC" },
       })
@@ -52,10 +50,9 @@ export const Bin: React.FC<RouteComponentProps> = () => {
   }, [dispatch]);
 
   const onRestore = (card: any) => {
-    api().post(`card/set-softdelete`, {
+    api().post(`card/status`, {
       json: {
         ids: [card.id],
-        value: false,
       },
     });
     setCards((prevCards) => prevCards.filter((c) => c.id !== card.id));
@@ -83,14 +80,14 @@ export const Bin: React.FC<RouteComponentProps> = () => {
   const onRemoveAll = () => {
     setLoading(true);
     api()
-      .delete(`card/soft-deleted`)
-      .json<number>()
+      .delete(`card/trash-bin`)
+      .json()
       .then((res: any) => {
         setLoading(false);
         setCards([]);
         dispatch({
           type: STATUS_ERROR_TEXT_SET,
-          payload: `${res} ${plural(res, [
+          payload: `${res.count} ${plural(res.count, [
             "karta byla vysypána",
             "karty byly vysypány",
             "karet bylo vysypáno",

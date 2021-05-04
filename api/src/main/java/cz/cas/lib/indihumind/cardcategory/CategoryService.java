@@ -6,6 +6,7 @@ import core.exception.ForbiddenObject;
 import core.exception.MissingObject;
 import core.store.Transactional;
 import cz.cas.lib.indihumind.card.Card;
+import cz.cas.lib.indihumind.card.CardIndexFacade;
 import cz.cas.lib.indihumind.card.CardStore;
 import cz.cas.lib.indihumind.exception.NameAlreadyExistsException;
 import cz.cas.lib.indihumind.security.delegate.UserDelegate;
@@ -31,6 +32,7 @@ public class CategoryService {
     private CategoryStore store;
     private UserDelegate userDelegate;
     private CardStore cardStore;
+    private CardIndexFacade cardIndexFacade;
     private TaskExecutor taskExecutor;
 
     @Transactional
@@ -84,7 +86,7 @@ public class CategoryService {
         Collection<Category> unstructuredCategoriesFromDb = store.findByUser(ownerId);
 
         // for counting cards of subcategories
-        Map<String, Long> categoryIdsWithCardsCount = cardStore.findCategoryFacets(ownerId);
+        Map<String, Long> categoryIdsWithCardsCount = cardIndexFacade.findCategoryFacets(ownerId);
 
         Map<String, CategoryDto> categoryDtos = unstructuredCategoriesFromDb.stream()
                 .collect(Collectors.toMap(DomainObject::getId, CategoryDto::new));
@@ -139,6 +141,11 @@ public class CategoryService {
     @Inject
     public void setCardStore(CardStore cardStore) {
         this.cardStore = cardStore;
+    }
+
+    @Inject
+    public void setCardIndexFacade(CardIndexFacade cardIndexFacade) {
+        this.cardIndexFacade = cardIndexFacade;
     }
 
     @Inject

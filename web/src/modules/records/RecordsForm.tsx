@@ -1,49 +1,51 @@
-import React, { useState, useEffect, useContext } from "react";
-import { FormikProps, Field, FieldProps } from "formik";
-import Button from "@material-ui/core/Button";
 import { Tooltip } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
 import InfoIcon from "@material-ui/icons/Info";
 import classNames from "classnames";
-import { compact, get, find, filter, forEach } from "lodash";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-
-import { notEmpty } from "../../utils/form/validate";
-import { GlobalContext, StateProps } from "../../context/Context";
-import { Formik } from "../../components/form/Formik";
-import { Loader } from "../../components/loader/Loader";
-import { InputText } from "../../components/form/InputText";
+import { Field, FieldProps, FormikProps } from "formik";
+import { compact, filter, find, forEach, get } from "lodash";
+import React, { useContext, useEffect, useState } from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { Divider } from "../../components/divider/Divider";
 import { AsyncSelect } from "../../components/form/AsyncSelect";
 import { Editor } from "../../components/form/Editor";
-import { Divider } from "../../components/divider/Divider";
+import { Formik } from "../../components/form/Formik";
+import { InputText } from "../../components/form/InputText";
+import { Loader } from "../../components/loader/Loader";
 import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
-import { useStyles } from "./_recordsStyles";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-
-import {
-  RecordProps,
-  MarcEntity,
-  DataFieldsEntity,
-  SubfieldsEntity,
-  FormDataField,
-} from "../../types/record";
-import { onSubmitRecord, contentNotEmpty } from "./_utils";
+import { Select } from "../../components/select";
 import { recordGetMarc } from "../../context/actions/record";
-import { CreatorField } from "./CreatorField";
+import { GlobalContext, StateProps } from "../../context/Context";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { LinkedCardProps } from "../../types/card";
+import { FileProps } from "../../types/file";
 import {
-  isCreator,
-  getCreatorLabel,
-  isCorporate,
+  DataFieldsEntity,
+  FormDataField,
+  MarcEntity,
+  RecordProps,
+  SubfieldsEntity,
+} from "../../types/record";
+import { notEmpty, notLongerThan255 } from "../../utils/form/validate";
+import { getFiles } from "../attachments/_utils";
+import { getCards } from "../cards/_utils";
+import {
   clearCreatorValue,
   createMarcLabel,
+  getCreatorLabel,
+  isCorporate,
+  isCreator,
 } from "../recordsTemplates/_utils";
-import { getFiles } from "../attachments/_utils";
-import { FileProps } from "../../types/file";
-import { getCards } from "../cards/_utils";
-import { LinkedCardProps } from "../../types/card";
-import { Select } from "../../components/select";
+import { CreatorField } from "./CreatorField";
 import { DefaultCreators, RecordTypes } from "./_enums";
-import { parseRecord, createCreatorRegex } from "./_utils";
+import { useStyles } from "./_recordsStyles";
+import {
+  contentNotEmpty,
+  createCreatorRegex,
+  onSubmitRecord,
+  parseRecord,
+} from "./_utils";
 
 export interface RecordRequest {
   created?: string;
@@ -342,7 +344,9 @@ const RecordsFormView: React.FC<RecordsFormProps & RouteComponentProps> = ({
                 >
                   <Field
                     name="name"
-                    validate={notEmpty}
+                    validate={(value: any) =>
+                      notLongerThan255(value) || notEmpty(value)
+                    }
                     render={({ field, form }: FieldProps<RecordFormValues>) => (
                       <>
                         <InputText

@@ -2,6 +2,8 @@ package cz.cas.lib.indihumind.document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import cz.cas.lib.indihumind.document.view.DocumentRef;
+import cz.cas.lib.indihumind.document.view.DocumentRefLocal;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,9 +22,6 @@ import java.io.InputStream;
 @DiscriminatorValue("LOCAL")
 @Entity
 public class LocalAttachmentFile extends AttachmentFile implements DownloadableAttachment {
-
-    @Transient
-    private final AttachmentFileProviderType providerType = AttachmentFileProviderType.LOCAL;
 
     /**
      * Content type of the file e.g. {@link org.springframework.http.MediaType#IMAGE_PNG_VALUE}
@@ -45,4 +44,10 @@ public class LocalAttachmentFile extends AttachmentFile implements DownloadableA
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long size;
 
+    @Override
+    public DocumentRef toReference() {
+        DocumentRefLocal ref = new DocumentRefLocal();
+        ref.setId(id);
+        return ref;
+    }
 }

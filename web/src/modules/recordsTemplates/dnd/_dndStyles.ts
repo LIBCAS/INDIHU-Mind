@@ -1,5 +1,5 @@
-import { makeStyles } from "@material-ui/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import { makeStyles } from "@material-ui/styles";
 
 export const useStyles = makeStyles((theme: Theme) => {
   return {
@@ -13,16 +13,6 @@ export const useStyles = makeStyles((theme: Theme) => {
       position: "relative",
       marginBottom: ".5rem",
       marginRight: ".5rem",
-    },
-    cardMenu: {
-      position: "absolute",
-      top: -40,
-      left: 0,
-      zIndex: 10,
-      height: 36,
-      background: "white",
-      border: `1px solid ${theme.palette.grey[500]}`,
-      borderRadius: 4,
     },
     cardMenuRight: {
       left: "auto",
@@ -53,7 +43,8 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     creatorSelect: {
       margin: 4,
-      minWidth: 220,
+      minWidth: 260,
+      maxWidth: 260,
     },
     cardSelection: {
       border: `1px solid ${theme.palette.grey[500]}`,
@@ -63,6 +54,8 @@ export const useStyles = makeStyles((theme: Theme) => {
       backgroundColor: "white",
       display: "flex",
       alignItems: "center",
+      width: "100%",
+      justifyContent: "space-between",
       "&:hover": {
         "& $cardSelectionText": {
           width: "calc(100% - 24px)",
@@ -73,6 +66,7 @@ export const useStyles = makeStyles((theme: Theme) => {
         "& $cardSelectionIcons": {
           display: "flex",
           alignItems: "center",
+          justifyContent: "flex-end",
         },
       },
     },

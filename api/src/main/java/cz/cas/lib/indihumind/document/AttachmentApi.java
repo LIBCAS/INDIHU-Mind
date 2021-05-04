@@ -4,6 +4,7 @@ import core.index.dto.Params;
 import core.index.dto.Result;
 import cz.cas.lib.indihumind.document.dto.CreateAttachmentDto;
 import cz.cas.lib.indihumind.document.dto.UpdateAttachmentDto;
+import cz.cas.lib.indihumind.document.view.DocumentListDto;
 import cz.cas.lib.indihumind.exception.ForbiddenFileException;
 import cz.cas.lib.indihumind.exception.UserQuotaReachedException;
 import cz.cas.lib.indihumind.security.user.Roles;
@@ -80,10 +81,10 @@ public class AttachmentApi {
 
     @ApiOperation(value = "Retrieves all instances complying with parameters")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = AttachmentFile.class, responseContainer = LIST)
+            @ApiResponse(code = 200, message = "OK", response = DocumentListDto.class, responseContainer = LIST)
     })
     @PostMapping(value = "/parametrized", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public Result<AttachmentFile> list(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
+    public Result<DocumentListDto> list(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
         return service.findAll(params);
     }
 

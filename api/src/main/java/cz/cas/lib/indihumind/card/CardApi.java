@@ -8,10 +8,12 @@ import cz.cas.lib.indihumind.card.dto.CardSearchResultDto;
 import cz.cas.lib.indihumind.card.dto.CreateCardDto;
 import cz.cas.lib.indihumind.card.dto.UpdateCardContentDto;
 import cz.cas.lib.indihumind.card.dto.UpdateCardDto;
+import cz.cas.lib.indihumind.card.view.CardListDto;
+import cz.cas.lib.indihumind.cardcontent.CardContent;
+import cz.cas.lib.indihumind.cardcontent.view.CardContentListDto;
 import cz.cas.lib.indihumind.security.delegate.UserDelegate;
 import cz.cas.lib.indihumind.security.user.Roles;
-import cz.cas.lib.indihumind.util.BulkFlagSetDto;
-import cz.cas.lib.indihumind.util.ResponseContainer;
+import cz.cas.lib.indihumind.util.IndihuMindUtils;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
@@ -26,6 +28,7 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 import static core.util.Utils.addPrefilter;
+import static cz.cas.lib.indihumind.util.ResponseContainer.LIST;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Slf4j
@@ -98,89 +101,72 @@ public class CardApi {
         return service.updateCardContent(cardId, updateCardDto);
     }
 
-
-    @ApiOperation(value = "Hard delete for a single card with soft-deletion flag and all card's contents",
-            notes = "Fully remove card from trash bin functionality")
+    @ApiOperation(value = "Delete single card from trash bin")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK, the card was fully removed"),
-            @ApiResponse(code = 403, message = "Card is not soft-deleted (in trash bin) | Entity not owned by logged in user"),
+            @ApiResponse(code = 200, message = "OK, card was deleted"),
+            @ApiResponse(code = 400, message = "Card is not in trash bin"),
+            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
             @ApiResponse(code = 404, message = "Entity not found for given ID")
     })
     @DeleteMapping(path = "/{id}")
     public void deleteCardInTrashBin(@ApiParam(value = "card id", required = true) @PathVariable("id") String id) {
-        service.eraseSingleCardFromTrashBin(id);
+        service.deleteSingleCardFromTrashBin(id);
     }
 
-
-    @ApiOperation(value = "Hard delete for all cards with soft-deletion flag and their contents",
-            notes = "Empty whole cards trash bin functionality")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK, all cards were fully removed"),
-    })
-    @DeleteMapping(path = "/soft-deleted")
-    public long deleteAllCardsInTrashBin() {
-        return service.eraseAllCardsFromTrashBin();
+    @ApiOperation(value = "Delete all cards from trash bin (empty trash bin functionality)")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "OK, All cards from trash bin were deleted")})
+    @DeleteMapping(path = "/trash-bin")
+    public Result<Card> deleteAllCardsInTrashBin() {
+        return service.deleteAllCardsFromTrashBin();
     }
 
-
-    @ApiOperation(value = "Operation to set soft-delete status for card")
+    @ApiOperation(value = "Discard or restore provided cards from trash bin")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK, card's soft-deletion flag updated"),
+            @ApiResponse(code = 200, message = "OK, cards' status was updated"),
             @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
             @ApiResponse(code = 404, message = "Entity not found for given ID")
     })
-    @PostMapping(path = "/set-softdelete", consumes = APPLICATION_JSON_VALUE)
-    public void switchSoftDeletionFlag(
-            @ApiParam(value = "DTO with cards IDs and value for set/unset soft-delete", required = true) @Valid @RequestBody BulkFlagSetDto dto) {
-        service.switchSoftDeletionFlag(dto);
+    @PostMapping(path = "/status", consumes = APPLICATION_JSON_VALUE)
+    public void switchCardTrashBinStatus(@ApiParam(value = "DTO with card IDs", required = true) @Valid @RequestBody IndihuMindUtils.IdList dto) {
+        service.switchCardTrashBinStatus(dto.getIds());
     }
 
-
     @ApiOperation(value = "Searches cards and returns results relevant to the search query.")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Searched cards", response = CardSearchResultDto.class, responseContainer = ResponseContainer.LIST)
-    })
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Searched cards", response = CardSearchResultDto.class, responseContainer = LIST)})
     @GetMapping(path = "/search", produces = APPLICATION_JSON_VALUE)
     public Result<CardSearchResultDto> simpleSearch(
             @ApiParam(value = "query string", required = true) @RequestParam(value = "q") String queryString,
-            @ApiParam(value = "page size, 0=disabled pagination") @RequestParam(value = "pageSize", required = false, defaultValue = "0") int pageSize,
+            @ApiParam(value = "page size") @RequestParam(value = "pageSize", required = false, defaultValue = "20") int pageSize,
             @ApiParam(value = "page number") @RequestParam(value = "page", required = false, defaultValue = "0") int pageNumber) {
-        return service.simpleSearch(queryString, userDelegate.getId(), pageSize, pageNumber);
+        return service.simpleHighlightSearch(queryString, pageNumber, pageSize, userDelegate.getId());
     }
 
-
-    @ApiOperation(value = "Retrieves all instances (that are not soft-deleted) that respect the selected parameters", notes = "POST Body variant")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "NON-soft-deleted cards", response = Card.class, responseContainer = ResponseContainer.LIST)
-    })
-    @PostMapping(value = "/parametrized", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public Result<Card> listParametrized(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
+    @ApiOperation(value = "List all cards (not in trash bin)")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = CardListDto.class, responseContainer = LIST)})
+    @PostMapping(value = "/parametrized", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public Result<CardListDto> listParametrized(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
         addPrefilter(params, new Filter(IndexedCard.USER_ID, FilterOperation.EQ, userDelegate.getId(), null));
-        addPrefilter(params, new Filter(IndexedCard.DELETED, FilterOperation.IS_NULL, null, null));
+        addPrefilter(params, new Filter(IndexedCard.STATUS, FilterOperation.EQ, Card.CardStatus.AVAILABLE.name(), null));
         return service.findAll(params);
     }
 
-
-    @ApiOperation(value = "Gets all soft-deleted cards complying with given parameters")
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Soft-deleted cards", response = Card.class, responseContainer = ResponseContainer.LIST)
-    })
-    @PostMapping(path = "/deleted", produces = APPLICATION_JSON_VALUE)
-    public Result<Card> listSoftDeleted(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
+    @ApiOperation(value = "List all cards in trash bin")
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Cards from trash bin", response = CardListDto.class, responseContainer = LIST)})
+    @PostMapping(path = "/trash-bin", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public Result<CardListDto> listAllCardsInTrashBin(@ApiParam(value = "Parameters to comply with", required = true) @Valid @RequestBody Params params) {
         addPrefilter(params, new Filter(IndexedCard.USER_ID, FilterOperation.EQ, userDelegate.getId(), null));
-        addPrefilter(params, new Filter(IndexedCard.DELETED, FilterOperation.NOT_NULL, null, null));
+        addPrefilter(params, new Filter(IndexedCard.STATUS, FilterOperation.EQ, Card.CardStatus.TRASHED.name(), null));
         return service.findAll(params);
     }
-
 
     @ApiOperation(value = "Gets all contents of the card.")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = CardContent.class, responseContainer = ResponseContainer.LIST),
+            @ApiResponse(code = 200, message = "OK", response = CardContentListDto.class, responseContainer = LIST),
             @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
             @ApiResponse(code = 404, message = "Entity not found for given ID")
     })
-    @GetMapping(path = "/{id}/content", produces = APPLICATION_JSON_VALUE)
-    public List<CardContent> findAllContents(@ApiParam(value = "card id", required = true) @PathVariable("id") String cardId) {
+    @GetMapping(path = "/{id}/contents", produces = APPLICATION_JSON_VALUE)
+    public List<CardContentListDto> findAllContents(@ApiParam(value = "card id", required = true) @PathVariable("id") String cardId) {
         return service.findAllContentsForCard(cardId);
     }
 

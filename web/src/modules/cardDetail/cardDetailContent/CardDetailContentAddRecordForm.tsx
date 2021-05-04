@@ -1,15 +1,14 @@
 import React from "react";
-
-import { CardContentProps } from "../../../types/card";
+import { AddRecordPopper } from "../../../components/record/AddRecordPopper";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { RecordProps } from "../../../types/record";
 import { onEditCard } from "./_utils";
 
-import { AddRecordPopper } from "../../../components/record/AddRecordPopper";
-import { RecordProps } from "../../../types/record";
-
 interface CardDetailContentAddRecordFormProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   openForm: any;
@@ -19,7 +18,9 @@ interface CardDetailContentAddRecordFormProps {
 
 export const CardDetailContentAddRecordForm: React.FC<CardDetailContentAddRecordFormProps> = ({
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   openForm,
   setOpenForm,
   anchorEl,
@@ -27,9 +28,11 @@ export const CardDetailContentAddRecordForm: React.FC<CardDetailContentAddRecord
   const onSubmit = async (values: RecordProps[]) => {
     onEditCard(
       "records",
-      [...card.card.records, ...values],
+      [...card.records, ...values],
       card,
-      setCardContent
+      setCard,
+      currentCardContent,
+      setCardContents
     );
     setOpenForm(false);
   };

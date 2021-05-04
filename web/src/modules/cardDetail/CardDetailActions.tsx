@@ -1,34 +1,35 @@
-import React, { useState, useContext } from "react";
-import classNames from "classnames";
-import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
-import Delete from "@material-ui/icons/Delete";
 import IconButton from "@material-ui/core/IconButton";
 import Tooltip from "@material-ui/core/Tooltip";
-
-import { GlobalContext } from "../../context/Context";
-
-import { onDeleteCard } from "../../utils/card";
-import { CardContentProps } from "../../types/card";
+import Delete from "@material-ui/icons/Delete";
+import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
+import classNames from "classnames";
+import React, { useContext, useState } from "react";
 import { Popconfirm } from "../../components/portal/Popconfirm";
-import { CardCreateRoot } from "../cardCreate/CardCreateRoot";
-import { CardPrint } from "./CardPrint";
-
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
+import { GlobalContext } from "../../context/Context";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles } from "./_cardDetailStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
+import { CardContentProps, CardProps } from "../../types/card";
+import { onDeleteCard } from "../../utils/card";
+import { CardCreateRoot } from "../cardCreate/CardCreateRoot";
 import { CardDetailContentId } from "./cardDetailContent/CardDetailContentId";
+import { CardPrint } from "./CardPrint";
+import { useStyles } from "./_cardDetailStyles";
 
 interface CardDetailActionsProps {
-  card: CardContentProps;
+  card: CardProps;
+  cardContent: CardContentProps;
   history: any;
   loadCard: Function;
+  isTrashed?: boolean;
 }
 
 export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
   card,
+  cardContent,
   history,
   loadCard,
+  isTrashed,
 }) => {
   const classes = useStyles();
   const classesLayout = useLayoutStyles();
@@ -38,10 +39,8 @@ export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
 
-  const cardInner = card.card;
-
   const handleDelete = () => {
-    onDeleteCard(cardInner.id, dispatch, () => history.push("/cards"));
+    onDeleteCard(card.id, dispatch, () => history.push("/cards"));
   };
 
   return (
@@ -56,15 +55,19 @@ export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
         </IconButton>
       </div>
       <div className={classes.actions}>
-        <CardDetailContentId card={cardInner} />
+        <CardDetailContentId card={card} />
         <CardPrint
-          card={{ ...cardInner, attributes: card.attributes }}
+          card={{ ...card, attributes: cardContent.attributes }}
           className={classesSpacing.ml1}
         />
         <Popconfirm
+          disabled={isTrashed || !cardContent.lastVersion}
           Button={
             <Tooltip title="Smazat">
-              <IconButton className={classes.iconSecondary}>
+              <IconButton
+                disabled={isTrashed || !cardContent.lastVersion}
+                className={classes.iconSecondary}
+              >
                 <Delete color="inherit" />
               </IconButton>
             </Tooltip>
@@ -78,7 +81,7 @@ export const CardDetailActions: React.FC<CardDetailActionsProps> = ({
       <CardCreateRoot
         open={showModal}
         setOpen={setShowModal}
-        item={card.card}
+        item={card}
         edit
         afterEdit={() => loadCard()}
       />

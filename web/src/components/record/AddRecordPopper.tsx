@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { AutoClosingPopper } from "../portal/AutoClosingPopper";
 import Button from "@material-ui/core/Button";
+import classNames from "classnames";
 import { Field, Formik, FormikProps } from "formik";
-import { Modal } from "../portal/Modal";
+import React, { useState } from "react";
+import { recordGet } from "../../context/actions/record";
 import { RecordsForm } from "../../modules/records/RecordsForm";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-import { useStyles } from "./_recordStyles";
-import classNames from "classnames";
 import { theme } from "../../theme/theme";
 import { AsyncSelect } from "../form/AsyncSelect";
-import { recordGet } from "../../context/actions/record";
+import { AutoClosingPopper } from "../portal/AutoClosingPopper";
+import { Modal } from "../portal/Modal";
+import { useStyles } from "./_recordStyles";
 
 interface AddRecordProps {
   open: boolean;

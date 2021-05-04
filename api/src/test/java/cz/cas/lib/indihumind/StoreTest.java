@@ -4,6 +4,7 @@ import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.CardStore;
 import cz.cas.lib.indihumind.cardcategory.Category;
 import cz.cas.lib.indihumind.cardcategory.CategoryStore;
+import cz.cas.lib.indihumind.cardcontent.view.CardContentListDtoStore;
 import cz.cas.lib.indihumind.document.*;
 import helper.AlterSolrCollection;
 import helper.DbTest;
@@ -16,7 +17,6 @@ import org.springframework.data.solr.core.SolrTemplate;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 
@@ -29,6 +29,7 @@ public class StoreTest extends DbTest implements AlterSolrCollection {
     private static final Properties props = new Properties();
 
     private static final CardStore cardStore = new CardStore();
+    private static final CardContentListDtoStore contentStore = new CardContentListDtoStore();
     private static final CategoryStore categoryStore = new CategoryStore();
     private static final AttachmentFileStore attachmentFileStore = new AttachmentFileStore();
     private static final LocalAttachmentFileStore localFileStore = new LocalAttachmentFileStore();
@@ -42,11 +43,6 @@ public class StoreTest extends DbTest implements AlterSolrCollection {
     @Override
     public String getUasTestCollectionName() {
         return props.getProperty("vzb.index.uasTestCollectionName");
-    }
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedAttachmentFile.class);
     }
 
     @BeforeClass
@@ -63,7 +59,8 @@ public class StoreTest extends DbTest implements AlterSolrCollection {
 
     @Before
     public void before() {
-        initializeStores(cardStore, categoryStore, attachmentFileStore, localFileStore);
+        initializeStores(cardStore, contentStore, categoryStore, attachmentFileStore, localFileStore);
+        cardStore.setCardContentListDtoStore(contentStore);
     }
 
     @Test
@@ -115,8 +112,10 @@ public class StoreTest extends DbTest implements AlterSolrCollection {
     public void attachmentStore() {
         LocalAttachmentFile local1 = new LocalAttachmentFile();
         local1.setName("l1");
+        local1.setProviderType(AttachmentFileProviderType.LOCAL);
         LocalAttachmentFile local2 = new LocalAttachmentFile();
         local2.setName("l2");
+        local2.setProviderType(AttachmentFileProviderType.LOCAL);
         ExternalAttachmentFile external1 = new ExternalAttachmentFile();
         external1.setName("e1");
         external1.setLink("");

@@ -1,10 +1,10 @@
-import React, { useState, useRef, useCallback } from "react";
-
-import { Table, Column, ColumnType } from "../../components/table";
+import React, { useCallback, useContext, useEffect } from "react";
+import { FileFromTemplateGenerator } from "../../components/file/FileFromTemplateGenerator";
+import { Column, ColumnType, Table } from "../../components/table";
+import { recordTemplateGet } from "../../context/actions/recordTemplate";
+import { GlobalContext } from "../../context/Context";
 import { RecordDetailContent } from "../recordDetail/RecordDetailContent";
-import { Button } from "@material-ui/core";
 import { RecordsForm } from "./RecordsForm";
-import { RecordsPdf } from "./RecordsPdf";
 
 const columns: Column[] = [
   {
@@ -20,29 +20,23 @@ const columns: Column[] = [
 ];
 
 export const Records: React.FC = () => {
-  const anchorEl = useRef(null);
-  const [open, setOpen] = useState(false);
+  const context: any = useContext(GlobalContext);
+
+  const dispatch: Function = context.dispatch;
   const Toolbar = useCallback(
     (checkboxRows: any) => (
-      <>
-        <Button
-          onClick={() => setOpen(true)}
-          ref={anchorEl}
-          variant="contained"
-          disabled={checkboxRows.length === 0}
-        >
-          Generovat PDF
-        </Button>
-        <RecordsPdf
-          anchorEl={anchorEl}
-          open={open}
-          setOpen={setOpen}
-          checkboxRows={checkboxRows}
-        />
-      </>
+      <FileFromTemplateGenerator
+        variant="citations"
+        checkboxRows={checkboxRows}
+      />
     ),
-    [open, anchorEl, setOpen]
+    []
   );
+
+  useEffect(() => {
+    recordTemplateGet(dispatch);
+  }, [dispatch]);
+
   return (
     <Table
       title="Citace"

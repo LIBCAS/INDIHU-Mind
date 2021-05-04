@@ -15,6 +15,7 @@ public class InheritanceTest {
         ObjectMapper mapper = new ObjectMapper();
 
         LocalAttachmentFile localFile = new LocalAttachmentFile();
+        localFile.setProviderType(AttachmentFileProviderType.LOCAL);
         String json = mapper.writeValueAsString(localFile);
         AttachmentFile deserialized = mapper.readValue(json, AttachmentFile.class);
         assertThat(deserialized).isInstanceOf(LocalAttachmentFile.class);
@@ -32,6 +33,7 @@ public class InheritanceTest {
         assertThat(deserialized).isInstanceOf(ExternalAttachmentFile.class);
 
         UrlAttachmentFile urlFile = new UrlAttachmentFile();
+        urlFile.setProviderType(AttachmentFileProviderType.URL);
         json = mapper.writeValueAsString(urlFile);
         deserialized = mapper.readValue(json, AttachmentFile.class);
         assertThat(deserialized).isInstanceOf(UrlAttachmentFile.class);

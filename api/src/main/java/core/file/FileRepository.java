@@ -156,17 +156,12 @@ public class FileRepository {
      *
      * @param id Id of the file
      * @return A single {@link FileRef}
-     * @throws MissingObject If there is no corresponding {@link FileRef}
-     * @throws BadArgument   If the specified id is not an {@link UUID}
+     * @throws BadArgument If the specified id is not an {@link UUID}
      */
     @Transactional
     public FileRef getRef(String id) {
         checkUUID(id);
-
-        FileRef fileRef = store.find(id);
-        notNull(fileRef, () -> new MissingObject(ENTITY_IS_NULL, FileRef.class, id));
-
-        return fileRef;
+        return store.find(id);
     }
 
     /**
@@ -184,7 +179,7 @@ public class FileRepository {
      * @throws BadArgument If any argument is null
      */
     @Transactional
-    public FileRef create(InputStream stream, String name, String contentType, boolean indexContent) {
+    public FileRef create(InputStream stream, String name, String contentType, boolean indexContent, String id) {
         notNull(stream, () -> new BadArgument(ARGUMENT_IS_NULL, "stream"));
         notNull(name, () -> new BadArgument(ARGUMENT_IS_NULL, "name"));
         notNull(contentType, () -> new BadArgument(ARGUMENT_IS_NULL, "contentType"));
@@ -193,6 +188,7 @@ public class FileRepository {
         final String finalContentType = recognizer.recognize(extension, contentType);
 
         FileRef ref = new FileRef();
+        if (id != null) ref.setId(id);
         ref.setName(name);
         ref.setContentType(finalContentType);
         ref.setIndexedContent(false);
@@ -208,7 +204,7 @@ public class FileRepository {
 
             Path path = Paths.get(basePath, ref.getId());
             Files.createDirectories(path.getParent());
-            copy(stream, path);
+            copy(stream, path, StandardCopyOption.REPLACE_EXISTING);
 
             if (indexContent) {
                 if (transformer.support(finalContentType, indexContentType)) {
@@ -226,6 +222,11 @@ public class FileRepository {
         });
 
         return store.save(ref);
+    }
+
+    @Transactional
+    public FileRef create(InputStream stream, String name, String contentType, boolean indexContent) {
+        return create(stream, name, contentType, indexContent, null);
     }
 
     /**

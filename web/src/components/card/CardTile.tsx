@@ -1,26 +1,31 @@
-import React from "react";
-import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
-import classNames from "classnames";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-
-import { useStyles } from "./_cardStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
-
-import { theme } from "../../theme/theme";
-import Card from "@material-ui/core/Card";
 import { CardActionArea } from "@material-ui/core";
+import Button from "@material-ui/core/Button";
+import Card from "@material-ui/core/Card";
+import Typography from "@material-ui/core/Typography";
+import classNames from "classnames";
+import React from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
+import { theme } from "../../theme/theme";
 import { LabelProps } from "../../types/label";
 import { Label } from "./Label";
+import { useStyles } from "./_cardStyles";
 
 interface CardCreateAddCardItemProps {
-  card: { id: string; name: string; rawNote: string; labels?: LabelProps[] };
+  card: {
+    id: string;
+    name: string;
+    rawNote: string;
+    labels?: LabelProps[];
+    status?: "AVAILABLE" | "TRASHED";
+  };
   onSelect?: (card: any) => void;
   onRestore?: (card: any) => void;
   onRemove?: (card: any) => void;
   onRemoveText?: string;
   topMargin?: number;
   showLabels?: boolean;
+  disabled?: boolean;
 }
 
 const CardTileView: React.FC<
@@ -34,6 +39,7 @@ const CardTileView: React.FC<
   history,
   topMargin = 1.5,
   showLabels = false,
+  disabled,
 }) => {
   const classes = useStyles();
   const classesText = useTextStyles();
@@ -63,13 +69,18 @@ const CardTileView: React.FC<
             [classes.cardLinkedNote]: rawNote,
           })}
         >
-          <Typography
-            variant="h6"
-            display="block"
-            className={classNames(classesText.textBold, classes.cardTileTitle)}
-          >
-            {card.name}
-          </Typography>
+          <div className={classes.cardTileTitle}>
+            <Typography
+              variant="h6"
+              display="block"
+              className={classNames(classesText.textBold)}
+            >
+              {card.name}
+            </Typography>
+            {card.status === "TRASHED" && (
+              <span className={classes.cardTileTrashedTag}>V KOŠI</span>
+            )}
+          </div>
           {rawNote && (
             <Typography
               variant="body1"
@@ -95,6 +106,7 @@ const CardTileView: React.FC<
             className={classNames(classes.cardLinkedButton)}
             fullWidth
             color="primary"
+            disabled={disabled}
           >
             Obnovit kartu
           </Button>
@@ -102,8 +114,10 @@ const CardTileView: React.FC<
         {onRemove && (
           <Button
             onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-              e.stopPropagation();
-              onRemove(card);
+              if (!disabled) {
+                e.stopPropagation();
+                onRemove(card);
+              }
             }}
             className={classNames(
               classes.cardLinkedButton,
@@ -111,6 +125,8 @@ const CardTileView: React.FC<
             )}
             fullWidth
             color="secondary"
+            style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+            disabled={disabled}
           >
             {onRemoveText ? onRemoveText : "Odebrat kartu"}
           </Button>

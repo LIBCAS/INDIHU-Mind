@@ -1,44 +1,40 @@
-import React, { useState } from "react";
-import Typography from "@material-ui/core/Typography";
-import { FieldProps, Field, Form } from "formik";
+import { IconButton } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import MuiTooltip from "@material-ui/core/Tooltip";
+import Typography from "@material-ui/core/Typography";
+import ArrowDownward from "@material-ui/icons/ArrowDownward";
+import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import classNames from "classnames";
-
-import { Popconfirm } from "../../../components/portal/Popconfirm";
+import { Field, FieldProps, Form } from "formik";
+import React, { useState } from "react";
+import { DateTimePicker } from "../../../components/form/DateTimePicker";
 import { Formik } from "../../../components/form/Formik";
+import { GPSPicker } from "../../../components/form/GPSPicker";
 import { InputText } from "../../../components/form/InputText";
 import { Switch } from "../../../components/form/Switch";
-import { DateTimePicker } from "../../../components/form/DateTimePicker";
-import { GPSPicker } from "../../../components/form/GPSPicker";
-
-import { CardContentProps } from "../../../types/card";
-import { AttributeProps } from "../../../types/attribute";
-
-import { parseAttribute } from "../../../utils/card";
-
-import { onSubmitAttribute, onDeleteAttribute, onEditCard } from "./_utils";
-import { useStyles } from "./_cardStyles";
-import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
+import { Popconfirm } from "../../../components/portal/Popconfirm";
+import { AttributeType } from "../../../enums";
 import { useStyles as useLayoutStyles } from "../../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
-import { useArrowStyles } from "./_cardStyles";
-import { AttributeType } from "../../../enums";
+import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
+import { AttributeProps } from "../../../types/attribute";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { validateAttributeType } from "../../../utils/attribute";
-
-import ArrowUpward from "@material-ui/icons/ArrowUpward";
-import ArrowDownward from "@material-ui/icons/ArrowDownward";
-import { IconButton } from "@material-ui/core";
+import { parseAttribute } from "../../../utils/card";
+import { useArrowStyles, useStyles } from "./_cardStyles";
+import { onDeleteAttribute, onEditCard, onSubmitAttribute } from "./_utils";
 
 interface CardDetailContentAttributeProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   attribute: AttributeProps;
   attributeIndex: number;
   attributes: AttributeProps[];
+  disabled?: boolean;
 }
 
 interface FormValues {
@@ -48,9 +44,12 @@ interface FormValues {
 export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProps> = ({
   attribute,
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   attributeIndex,
   attributes,
+  disabled,
 }) => {
   const classesText = useTextStyles();
 
@@ -68,7 +67,14 @@ export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProp
   const { type } = attribute;
 
   const onRemoveAttribute = () => {
-    onDeleteAttribute(card, setCardContent, () => {}, attribute);
+    onDeleteAttribute(
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents,
+      () => {},
+      attribute
+    );
   };
 
   const onSubmitValue = (values: FormValues) => {
@@ -76,7 +82,15 @@ export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProp
       ...attribute,
       value: values.attributeValue,
     };
-    onSubmitAttribute(att, card, setCardContent, () => {}, attribute);
+    onSubmitAttribute(
+      att,
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents,
+      () => {},
+      attribute
+    );
     setEditValue(false);
   };
 
@@ -84,10 +98,22 @@ export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProp
     let attributesNewOrder = attributes;
     const attributeToSwapWith = attributesNewOrder[attributeIndex + offset];
 
+    //swap items for FE
     attributesNewOrder[attributeIndex + offset] = attribute;
     attributesNewOrder[attributeIndex] = attributeToSwapWith;
+    //swap ordinalNumbers for BE
+    attributesNewOrder[attributeIndex + offset].ordinalNumber =
+      attributeToSwapWith.ordinalNumber;
+    attributesNewOrder[attributeIndex].ordinalNumber = attribute.ordinalNumber;
 
-    onEditCard("attributes", attributesNewOrder, card, setCardContent);
+    onEditCard(
+      "attributes",
+      attributesNewOrder,
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents
+    );
   };
 
   return (
@@ -124,7 +150,7 @@ export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProp
         leaveDelay={250}
         arrow={true}
         placement="right"
-        open={tooltipOpen && !editValue}
+        open={!disabled && tooltipOpen && !editValue}
         onOpen={() => setTooltipOpen(!editValue)}
         onClose={() => setTooltipOpen(false)}
       >
@@ -137,15 +163,24 @@ export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProp
             classes.attributeItemWrapper,
             !editValue && classes.attributeItemNotEditing
           )}
-          onClick={() => (card.lastVersion ? setEditValue(true) : undefined)}
+          onClick={() =>
+            !disabled && currentCardContent.lastVersion
+              ? setEditValue(true)
+              : undefined
+          }
         >
           <Typography
             className={classNames(classesSpacing.mr1, {
-              [classesText.cursor]: !editValue && card.lastVersion,
+              [classesText.cursor]:
+                !editValue && currentCardContent.lastVersion,
             })}
             component="span"
             variant="subtitle1"
-            onClick={() => (card.lastVersion ? setEditValue(true) : undefined)}
+            onClick={() =>
+              !disabled && currentCardContent.lastVersion
+                ? setEditValue(true)
+                : undefined
+            }
           >
             <strong>{attribute.name}</strong>
           </Typography>
@@ -282,13 +317,16 @@ export const CardDetailContentAttribute: React.FC<CardDetailContentAttributeProp
           ) : (
             <Typography
               className={classNames({
-                [classesText.cursor]: !editValue && card.lastVersion,
+                [classesText.cursor]:
+                  !editValue && currentCardContent.lastVersion,
               })}
               variant="body2"
               component="span"
             >
               {parseAttribute(attribute, () =>
-                card.lastVersion ? setEditValue(true) : undefined
+                !disabled && currentCardContent.lastVersion
+                  ? setEditValue(true)
+                  : undefined
               )}
             </Typography>
           )}

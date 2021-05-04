@@ -2,7 +2,6 @@ package cz.cas.lib.indihumind;
 
 import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.CardStore;
-import cz.cas.lib.indihumind.card.IndexedCard;
 import cz.cas.lib.indihumind.cardcategory.Category;
 import cz.cas.lib.indihumind.cardcategory.CategoryStore;
 import cz.cas.lib.indihumind.cardlabel.Label;
@@ -24,8 +23,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.util.Collections;
-import java.util.Set;
 
 import static core.util.Utils.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,11 +43,6 @@ public class LabelApiTest extends ApiTest {
     @Inject private CategoryStore categoryStore;
 
     private final User user = UserBuilder.builder().password("password").email("mail").allowed(false).build();
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedCard.class);
-    }
 
     @Before
     public void before() {

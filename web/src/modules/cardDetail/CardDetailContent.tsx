@@ -8,7 +8,7 @@ import { CardTile } from "../../components/card/CardTile";
 import { Gallery } from "../../components/gallery";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { CardContentProps, LinkedCardProps } from "../../types/card";
+import { CardContentProps, CardProps, LinkedCardProps } from "../../types/card";
 import { CardDetailContentAddAttribute } from "./cardDetailContent/CardDetailContentAddAttribute";
 import { CardDetailContentAddCategory } from "./cardDetailContent/CardDetailContentAddCategory";
 import { CardDetailContentAddFile } from "./cardDetailContent/CardDetailContentAddFile";
@@ -27,21 +27,27 @@ import { useStyles } from "./_cardDetailStyles";
 import { loadNote } from "./_utils";
 
 interface CardDetailContentProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  cardContents: CardContentProps[] | undefined;
   history: any;
-  setCardContent: React.Dispatch<
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   refreshCard: () => void;
+  isTrashed: boolean;
 }
 
 export const CardDetailContent: React.FC<CardDetailContentProps> = ({
   card,
-  cardContent,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  cardContents,
+  setCardContents,
   history,
   refreshCard,
+  isTrashed,
 }) => {
   const classes = useStyles();
 
@@ -53,8 +59,6 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
     history.push(`/card/${card.id}`);
   };
 
-  const cardInner = card.card;
-
   const [structuredNote, setStructuredNote] = useState<null | {
     data: string;
     id: string;
@@ -64,143 +68,174 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
 
   const fetchNote = useCallback(async () => {
     setLoadingNote(true);
-    const structuredNoteFetched = await loadNote(card.card.id);
+    const structuredNoteFetched = await loadNote(currentCardContent.card.id);
     setStructuredNote(structuredNoteFetched);
     setLoadingNote(false);
-  }, [card.card.id]);
+  }, [currentCardContent.card.id]);
   useEffect(() => {
     fetchNote();
   }, [fetchNote]);
 
   const connectedCards = uniqWith(
-    [...cardInner.linkedCards, ...cardInner.linkingCards],
+    [...card.linkedCards, ...card.linkingCards],
     isEqual
   );
 
+  const isLatestVersion = currentCardContent.lastVersion;
+
   return (
     <React.Fragment>
-      <CardDetailContentTitle
-        title={cardInner.name}
-        card={card}
-        cardContent={cardContent}
-        setCardContent={setCardContent}
-      />
-
-      <Gallery className={classesSpacing.mt1} items={cardInner.documents} />
-
-      <MuiToolbar disableGutters={true}>
-        <MuiTypography style={{ marginTop: "15px" }} variant="h6">
-          Kategorie
-        </MuiTypography>
-        {card.lastVersion && (
-          <CardDetailContentAddCategory
+      {isLatestVersion && (
+        <>
+          <CardDetailContentTitle
             card={card}
-            cardContent={cardContent}
-            setCardContent={setCardContent}
-            refreshCard={refreshCard}
+            setCard={setCard}
+            title={card.name}
+            currentCardContent={currentCardContent}
+            cardContents={cardContents}
+            setCardContents={setCardContents}
+            disabled={isTrashed}
           />
-        )}
-      </MuiToolbar>
-      {(cardInner.categories.length &&
-        cardInner.categories.length > 0 &&
-        cardInner.categories.map((cat) => (
-          <CardDetailContentCategory
-            key={cat.id}
-            category={cat}
+
+          <Gallery className={classesSpacing.mt1} items={card.documents} />
+
+          <MuiToolbar disableGutters={true}>
+            <MuiTypography style={{ marginTop: "15px" }} variant="h6">
+              Kategorie
+            </MuiTypography>
+            {currentCardContent.lastVersion && (
+              <CardDetailContentAddCategory
+                card={card}
+                setCard={setCard}
+                currentCardContent={currentCardContent}
+                cardContents={cardContents}
+                setCardContents={setCardContents}
+                refreshCard={refreshCard}
+                disabled={isTrashed}
+              />
+            )}
+          </MuiToolbar>
+          {(card.categories.length &&
+            card.categories.length > 0 &&
+            card.categories.map((cat) => (
+              <CardDetailContentCategory
+                card={card}
+                setCard={setCard}
+                key={cat.id}
+                category={cat}
+                currentCardContent={currentCardContent}
+                setCardContents={setCardContents}
+                disabled={isTrashed}
+              />
+            ))) || (
+            <MuiTypography variant="subtitle2">
+              Tato karta nemá kategorie
+            </MuiTypography>
+          )}
+
+          <MuiToolbar disableGutters={true}>
+            <MuiTypography style={{ marginTop: "15px" }} variant="h6">
+              Popis
+            </MuiTypography>
+          </MuiToolbar>
+          {loadingNote && (
+            <LinearProgress style={{ width: "100%" }} color="primary" />
+          )}
+          <CardDetailContentNote
             card={card}
-            cardContent={cardContent}
-            setCardContent={setCardContent}
+            setCard={setCard}
+            setStructuredNote={setStructuredNote}
+            note={structuredNote ? structuredNote.data : null}
+            currentCardContent={currentCardContent}
+            setCardContents={setCardContents}
+            disabled={isTrashed}
           />
-        ))) || (
-        <MuiTypography variant="subtitle2">
-          Tato karta nemá kategorie
-        </MuiTypography>
+          <MuiToolbar disableGutters={true}>
+            <MuiTypography style={{ marginTop: "15px" }} variant="h6">
+              Štítky
+            </MuiTypography>
+            {currentCardContent.lastVersion && (
+              <CardDetailContentAddLabel
+                card={card}
+                setCard={setCard}
+                currentCardContent={currentCardContent}
+                cardContents={cardContents}
+                setCardContents={setCardContents}
+                disabled={isTrashed}
+              />
+            )}
+          </MuiToolbar>
+          <div
+            className={classNames(classesLayout.flex, classesLayout.flexWrap)}
+          >
+            {(card.labels.length &&
+              card.labels.length > 0 &&
+              card.labels.map((label) => (
+                <CardDetailContentLabel
+                  card={card}
+                  setCard={setCard}
+                  key={label.id}
+                  label={label}
+                  currentCardContent={currentCardContent}
+                  setCardContents={setCardContents}
+                  disabled={isTrashed}
+                />
+              ))) || (
+              <MuiTypography variant="subtitle2">
+                Tato karta nemá štítky
+              </MuiTypography>
+            )}
+          </div>
+
+          <MuiToolbar disableGutters={true}>
+            <MuiTypography style={{ marginTop: "15px" }} variant="h6">
+              Citace
+            </MuiTypography>
+            {currentCardContent.lastVersion && (
+              <CardDetailContentAddRecord
+                card={card}
+                setCard={setCard}
+                currentCardContent={currentCardContent}
+                setCardContents={setCardContents}
+                disabled={isTrashed}
+              />
+            )}
+          </MuiToolbar>
+          <div
+            className={classNames(classesLayout.flex, classesLayout.flexWrap)}
+          >
+            {(card.records.length &&
+              card.records.length > 0 &&
+              card.records.map((record) => (
+                <CardDetailContentRecord
+                  card={card}
+                  setCard={setCard}
+                  key={record.id}
+                  record={record}
+                  currentCardContent={currentCardContent}
+                  setCardContents={setCardContents}
+                  disabled={isTrashed}
+                />
+              ))) || (
+              <MuiTypography variant="subtitle2">
+                Tato karta nemá citace
+              </MuiTypography>
+            )}
+          </div>
+        </>
       )}
-
-      <MuiToolbar disableGutters={true}>
-        <MuiTypography style={{ marginTop: "15px" }} variant="h6">
-          Popis
-        </MuiTypography>
-      </MuiToolbar>
-      {loadingNote && (
-        <LinearProgress style={{ width: "100%" }} color="primary" />
-      )}
-      <CardDetailContentNote
-        setStructuredNote={setStructuredNote}
-        note={structuredNote ? structuredNote.data : null}
-        card={card}
-        cardContent={cardContent}
-        setCardContent={setCardContent}
-      />
-      <MuiToolbar disableGutters={true}>
-        <MuiTypography style={{ marginTop: "15px" }} variant="h6">
-          Štítky
-        </MuiTypography>
-        {card.lastVersion && (
-          <CardDetailContentAddLabel
-            card={card}
-            cardContent={cardContent}
-            setCardContent={setCardContent}
-          />
-        )}
-      </MuiToolbar>
-      <div className={classNames(classesLayout.flex, classesLayout.flexWrap)}>
-        {(cardInner.labels.length &&
-          cardInner.labels.length > 0 &&
-          cardInner.labels.map((label) => (
-            <CardDetailContentLabel
-              key={label.id}
-              label={label}
-              card={card}
-              cardContent={cardContent}
-              setCardContent={setCardContent}
-            />
-          ))) || (
-          <MuiTypography variant="subtitle2">
-            Tato karta nemá štítky
-          </MuiTypography>
-        )}
-      </div>
-
-      <MuiToolbar disableGutters={true}>
-        <MuiTypography style={{ marginTop: "15px" }} variant="h6">
-          Citace
-        </MuiTypography>
-        {card.lastVersion && (
-          <CardDetailContentAddRecord
-            card={card}
-            cardContent={cardContent}
-            setCardContent={setCardContent}
-          />
-        )}
-      </MuiToolbar>
-      <div className={classNames(classesLayout.flex, classesLayout.flexWrap)}>
-        {(cardInner.records.length &&
-          cardInner.records.length > 0 &&
-          cardInner.records.map((record) => (
-            <CardDetailContentRecord
-              key={record.id}
-              record={record}
-              card={card}
-              cardContent={cardContent}
-              setCardContent={setCardContent}
-            />
-          ))) || (
-          <MuiTypography variant="subtitle2">
-            Tato karta nemá citace
-          </MuiTypography>
-        )}
-      </div>
-
       <MuiToolbar disableGutters={true}>
         <MuiTypography style={{ marginTop: "15px" }} variant="h6">
           Atributy
         </MuiTypography>
-        {card.lastVersion && (
+        {currentCardContent.lastVersion && (
           <CardDetailContentAddAttribute
             card={card}
-            cardContent={cardContent}
-            setCardContent={setCardContent}
+            setCard={setCard}
+            currentCardContent={currentCardContent}
+            cardContents={cardContents}
+            setCardContents={setCardContents}
+            disabled={isTrashed}
           />
         )}
       </MuiToolbar>
@@ -211,19 +246,21 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
           classesSpacing.mt1
         )}
       >
-        {(card.attributes &&
-          card.attributes.length &&
-          card.attributes.length > 0 &&
-          card.attributes.map((attribute, index) => {
+        {(currentCardContent.attributes &&
+          currentCardContent.attributes.length &&
+          currentCardContent.attributes.length > 0 &&
+          currentCardContent.attributes.map((attribute, index) => {
             return (
               <CardDetailContentAttribute
-                key={attribute.id}
                 card={card}
-                cardContent={cardContent}
-                setCardContent={setCardContent}
+                setCard={setCard}
+                key={attribute.id}
+                currentCardContent={currentCardContent}
+                setCardContents={setCardContents}
                 attribute={attribute}
                 attributeIndex={index}
-                attributes={card.attributes}
+                attributes={currentCardContent.attributes}
+                disabled={isTrashed}
               />
             );
           })) || (
@@ -232,52 +269,72 @@ export const CardDetailContent: React.FC<CardDetailContentProps> = ({
           </MuiTypography>
         )}
       </div>
+      {isLatestVersion && (
+        <>
+          <MuiToolbar disableGutters={true}>
+            <MuiTypography style={{ marginTop: "15px" }} variant="h6">
+              Soubory
+            </MuiTypography>
+            {currentCardContent.lastVersion && (
+              <CardDetailContentAddFile
+                card={card}
+                setCard={setCard}
+                currentCardContent={currentCardContent}
+                setCardContents={setCardContents}
+                refreshCard={refreshCard}
+                disabled={isTrashed}
+              />
+            )}
+          </MuiToolbar>
+          <div>
+            <CardDetailContentFile
+              card={card}
+              setCard={setCard}
+              currentCardContent={currentCardContent}
+              setCardContents={setCardContents}
+              disabled={isTrashed}
+            />
+          </div>
 
-      <MuiToolbar disableGutters={true}>
-        <MuiTypography style={{ marginTop: "15px" }} variant="h6">
-          Soubory
-        </MuiTypography>
-        {card.lastVersion && (
-          <CardDetailContentAddFile
-            card={card}
-            cardContent={cardContent}
-            setCardContent={setCardContent}
-            refreshCard={refreshCard}
-          />
-        )}
-      </MuiToolbar>
-      <div>
-        <CardDetailContentFile
-          card={card}
-          cardContent={cardContent}
-          setCardContent={setCardContent}
-        />
-      </div>
+          <MuiToolbar disableGutters={true}>
+            <MuiTypography style={{ marginTop: "15px" }} variant="h6">
+              Propojené karty
+            </MuiTypography>
+          </MuiToolbar>
 
-      <MuiToolbar disableGutters={true}>
-        <MuiTypography style={{ marginTop: "15px" }} variant="h6">
-          Propojené karty
-        </MuiTypography>
-      </MuiToolbar>
-
-      <div className={classes.columnsWrapper}>
-        {card.lastVersion && (
-          <CardDetailContentCard card={card} setCardContent={setCardContent} />
-        )}
-        {connectedCards.map((connectedCard) => (
-          <CardTile
-            key={connectedCard.id}
-            card={connectedCard}
-            onSelect={onSelect}
-            onRemove={() => {
-              const removedCards = cardInner.linkedCards.filter(
-                (lc) => lc.id !== connectedCard.id
-              );
-              onEditCard("linkedCards", removedCards, card, setCardContent);
-            }}
-          />
-        ))}
-      </div>
+          <div className={classes.columnsWrapper}>
+            {currentCardContent.lastVersion && (
+              <CardDetailContentCard
+                card={card}
+                setCard={setCard}
+                disabled={isTrashed}
+                currentCardContent={currentCardContent}
+                setCardContents={setCardContents}
+              />
+            )}
+            {connectedCards.map((connectedCard) => (
+              <CardTile
+                key={connectedCard.id}
+                card={connectedCard}
+                onSelect={onSelect}
+                onRemove={() => {
+                  const removedCards = card.linkedCards.filter(
+                    (lc) => lc.id !== connectedCard.id
+                  );
+                  onEditCard(
+                    "linkedCards",
+                    removedCards,
+                    card,
+                    setCard,
+                    currentCardContent,
+                    setCardContents
+                  );
+                }}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </React.Fragment>
   );
 };

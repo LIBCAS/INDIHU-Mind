@@ -34,8 +34,4 @@ public class SolrConfig {
         return template;
     }
 
-    @Bean(name = "SchemaSolrTemplate")
-    public SolrTemplate arclibXmlSolrTemplate(SolrClient client) throws Exception {
-        return new SolrTemplate(client);
-    }
 }

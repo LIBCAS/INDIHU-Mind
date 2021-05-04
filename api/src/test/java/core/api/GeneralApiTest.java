@@ -31,11 +31,6 @@ public class GeneralApiTest extends ApiTest {
 
     private String missingId;
 
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.emptySet();
-    }
-
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);

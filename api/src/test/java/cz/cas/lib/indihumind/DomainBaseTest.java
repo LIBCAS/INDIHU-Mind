@@ -1,11 +1,15 @@
 package cz.cas.lib.indihumind;
 
 import core.store.Transactional;
-import cz.cas.lib.indihumind.card.*;
+import cz.cas.lib.indihumind.card.Card;
+import cz.cas.lib.indihumind.card.CardService;
+import cz.cas.lib.indihumind.card.CardStore;
 import cz.cas.lib.indihumind.card.dto.UpdateCardContentDto;
 import cz.cas.lib.indihumind.cardattribute.*;
 import cz.cas.lib.indihumind.cardcategory.Category;
 import cz.cas.lib.indihumind.cardcategory.CategoryStore;
+import cz.cas.lib.indihumind.cardcontent.CardContent;
+import cz.cas.lib.indihumind.cardcontent.CardContentStore;
 import cz.cas.lib.indihumind.cardlabel.Label;
 import cz.cas.lib.indihumind.cardlabel.LabelStore;
 import cz.cas.lib.indihumind.cardtemplate.CardTemplate;
@@ -35,12 +39,13 @@ public class DomainBaseTest {
 
     @Inject private AttributeStore attributeStore;
     @Inject private CardStore cardStore;
+    @Inject private CardService cardService;
+
     @Inject private CategoryStore categoryStore;
     @Inject private LabelStore labelStore;
     @Inject private UserService userService;
     @Inject private CardTemplateStore cardTemplateStore;
     @Inject private AttributeTemplateStore attributeTemplateStore;
-    @Inject private CardService cardService;
     @Inject private TransactionTemplate transactionTemplate;
     @Inject private CardContentStore cardContentStore;
 
@@ -129,16 +134,17 @@ public class DomainBaseTest {
         cardService.updateCardContent(card1.getId(), updateCardContentDto2);
         cardService.createTemplateFromCardVersion(cc1.getId());
 
-        card2.setLinkedCards(asSet(card1));
-        cardService.getStore().save(card2);
+        card2.setLinkedCards(asSet(card1.toReference()));
+        cardStore.save(card2);
+        card1 = cardService.find(card1.getId());
 
         card1.setCategories(asSet(category1, category2));
         card1.setLabels(asSet(labelRed, labelBlue));
-        card1.setLinkedCards(asSet(card2));
-        cardService.getStore().save(card1);
+        card1.setLinkedCards(asSet(card2.toReference()));
+        cardStore.save(card1);
         card1.setCategories(asSet(category1, category3));
         card1.setLabels(asSet());
-        cardService.getStore().save(card1);
+        cardStore.save(card1);
 
         Card card = cardService.find(card1.getId());
 
@@ -146,8 +152,8 @@ public class DomainBaseTest {
         assertThat(card.getCategories()).containsExactlyInAnyOrder(category1, category3);
         assertThat(card.getLabels()).isEmpty();
         assertThat(card.getLinkedCards()).hasSize(1);
-        assertThat(card.getLinkedCards()).containsExactlyInAnyOrder(card2);
+        assertThat(card.getLinkedCards()).containsExactlyInAnyOrder(card2.toReference());
         assertThat(card.getLinkingCards()).hasSize(1);
-        assertThat(card.getLinkingCards()).containsExactlyInAnyOrder(card2);
+        assertThat(card.getLinkingCards()).containsExactlyInAnyOrder(card2.toReference());
     }
 }

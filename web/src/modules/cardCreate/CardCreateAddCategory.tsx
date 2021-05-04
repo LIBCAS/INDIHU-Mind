@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
 import { Field, FieldProps } from "formik";
-
-import { GlobalContext, StateProps } from "../../context/Context";
-import { categoryGet } from "../../context/actions/category";
-import { CreateCategory } from "../../components/tabContent/CreateCategory";
-import { Modal } from "../../components/portal/Modal";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Select } from "../../components/form/Select";
-
-import { CategoryProps } from "../../types/category";
+import { Modal } from "../../components/portal/Modal";
 import { OptionType } from "../../components/select/_types";
-
+import { CreateCategory } from "../../components/tabContent/CreateCategory";
+import { categoryGet } from "../../context/actions/category";
+import { GlobalContext, StateProps } from "../../context/Context";
+import { CategoryProps } from "../../types/category";
 import { flattenCategory } from "./_utils";
 
 interface CardCreateAddCategoryProps {

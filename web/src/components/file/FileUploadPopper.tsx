@@ -1,17 +1,13 @@
-import React, { useState } from "react";
+import { Checkbox, InputLabel } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import classNames from "classnames";
 import { Field, FieldProps, FormikProps } from "formik";
 import { get } from "lodash";
-
-import { DropboxChooser } from "../file/DropboxChooser";
-import { GoogleDrivePicker } from "../file/GoogleDrivePicker";
-import { Formik } from "../form/Formik";
-import { InputFile } from "../form/InputFile";
-import { InputText } from "../form/InputText";
-import { Loader } from "../loader/Loader";
-import { AutoClosingPopper } from "../portal/AutoClosingPopper";
-
+import React, { useState } from "react";
+import { FileType } from "../../enums";
+import { getFiles } from "../../modules/attachments/_utils";
+import { getCards } from "../../modules/cards/_utils";
+import { getRecords } from "../../modules/records/_utils";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import {
@@ -19,14 +15,16 @@ import {
   FileGoogleDriveActionProps,
   FileProps,
 } from "../../types/file";
-import { notEmpty } from "../../utils/form/validate";
-import { useStyles } from "./_fileStyles";
-import { FileType } from "../../enums";
+import { notEmpty, notLongerThan255 } from "../../utils/form/validate";
 import { AsyncSelect } from "../asyncSelect";
-import { getFiles } from "../../modules/attachments/_utils";
-import { getCards } from "../../modules/cards/_utils";
-import { getRecords } from "../../modules/records/_utils";
-import { Checkbox, InputLabel } from "@material-ui/core";
+import { DropboxChooser } from "../file/DropboxChooser";
+import { GoogleDrivePicker } from "../file/GoogleDrivePicker";
+import { Formik } from "../form/Formik";
+import { InputFile } from "../form/InputFile";
+import { InputText } from "../form/InputText";
+import { Loader } from "../loader/Loader";
+import { AutoClosingPopper } from "../portal/AutoClosingPopper";
+import { useStyles } from "./_fileStyles";
 
 interface FileUploadPopperInnerProps {
   open: boolean;
@@ -292,7 +290,9 @@ export const FileUploadPopper: React.FC<
                       <>
                         <Field
                           name="name"
-                          validate={notEmpty}
+                          validate={(value: any) =>
+                            notLongerThan255(value) || notEmpty(value)
+                          }
                           disabled={!formikBag.touched}
                           render={({ field, form }: FieldProps<FileProps>) => (
                             <InputText
@@ -309,7 +309,9 @@ export const FileUploadPopper: React.FC<
                         />
                         <Field
                           name="type"
-                          validate={notEmpty}
+                          validate={(value: any) =>
+                            notLongerThan255(value) || notEmpty(value)
+                          }
                           render={({ field, form }: FieldProps<FileProps>) => (
                             <InputText
                               field={field}

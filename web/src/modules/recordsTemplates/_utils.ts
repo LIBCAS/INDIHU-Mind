@@ -1,19 +1,18 @@
+import { find, get } from "lodash";
 import { v4 as uuid } from "uuid";
-import { get, find } from "lodash";
-
+import { MarcEntity } from "../../types/record";
+import { createCreatorRegex } from "../records/_utils";
 import {
-  STATUS_ERROR_TEXT_SET,
   STATUS_ERROR_COUNT_CHANGE,
+  STATUS_ERROR_TEXT_SET,
   STATUS_LOADING_COUNT_CHANGE,
 } from "./../../context/reducers/status";
 import {
-  RecordTemplateProps,
   FieldsEntity,
+  RecordTemplateProps,
 } from "./../../types/recordTemplate";
 import { api } from "./../../utils/api";
-import { MarcEntity } from "../../types/record";
-import { specialTags, punctuation, otherTags } from "./_enums";
-import { createCreatorRegex } from "../records/_utils";
+import { otherTags, punctuation, specialTags } from "./_enums";
 
 export const onSubmitRecordTemplate = (
   values: RecordTemplateProps,
@@ -198,7 +197,13 @@ export const parseTemplate = (
     [
       "customizations",
       ...(c.id === "AUTHOR"
-        ? ["firstNameFormat", "multipleAuthorsFormat", "orderFormat"]
+        ? [
+            "firstNameFormat",
+            "multipleAuthorsFormat",
+            "orderFormat",
+            "separator",
+            "andJoiner",
+          ]
         : []),
     ].forEach((path) => {
       initValuesParsed[c.id + c.count + path] = get(c, path);

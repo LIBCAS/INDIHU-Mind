@@ -1,31 +1,30 @@
-import React, { useContext } from "react";
-import { RouteComponentProps } from "react-router-dom";
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
 import { isEmpty } from "lodash";
-
-import { GlobalContext, StateProps } from "../../context/Context";
-import { categoryActiveSet } from "../../context/actions/category";
+import React, { useCallback, useContext, useEffect } from "react";
+import { RouteComponentProps } from "react-router-dom";
+import { CardTile } from "../../components/card/CardTile";
+import { Label } from "../../components/card/Label";
+import { FileFromTemplateGenerator } from "../../components/file/FileFromTemplateGenerator";
 import { Column, ColumnType, Table } from "../../components/table";
-import { CardsTableDetail } from "../cardsTableDetail/CardsTableDetail";
-
-import { CardCreateRoot } from "../cardCreate/CardCreateRoot";
+import { categoryActiveSet } from "../../context/actions/category";
+import { recordTemplateGet } from "../../context/actions/recordTemplate";
+import { GlobalContext, StateProps } from "../../context/Context";
 import { CardCreateAddCategory } from "../../modules/cardCreate/CardCreateAddCategory";
 import { CardCreateAddLabel } from "../../modules/cardCreate/CardCreateAddLabel";
 import { useStyles as useEffectStyles } from "../../theme/styles/effectStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles } from "./_cardsStyles";
-
-import { onDeleteCard } from "../../utils/card";
-import {
-  getPathToCategory,
-  flattenCardArrays,
-  concatCardArrays,
-} from "./_utils";
-import { Label } from "../../components/card/Label";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { api } from "../../utils/api";
-import { CardTile } from "../../components/card/CardTile";
+import { onDeleteCard } from "../../utils/card";
+import { CardCreateRoot } from "../cardCreate/CardCreateRoot";
+import { CardsTableDetail } from "../cardsTableDetail/CardsTableDetail";
+import { useStyles } from "./_cardsStyles";
+import {
+  concatCardArrays,
+  flattenCardArrays,
+  getPathToCategory,
+} from "./_utils";
 
 export const columns: Column[] = [
   {
@@ -52,7 +51,7 @@ export const columns: Column[] = [
   },
 ];
 
-export const Cards: React.FC<RouteComponentProps> = () => {
+export const Cards: React.FC<RouteComponentProps> = React.memo(() => {
   const classes = useStyles();
   const classesText = useTextStyles();
   const classesEffect = useEffectStyles();
@@ -66,6 +65,17 @@ export const Cards: React.FC<RouteComponentProps> = () => {
 
   const handleDelete = (id: string, refresh: Function) =>
     onDeleteCard(id, dispatch, refresh);
+
+  useEffect(() => {
+    recordTemplateGet(dispatch);
+  }, [dispatch]);
+
+  const Toolbar = useCallback(
+    (checkboxRows: any) => (
+      <FileFromTemplateGenerator variant="cards" checkboxRows={checkboxRows} />
+    ),
+    []
+  );
 
   return (
     <Table
@@ -121,10 +131,9 @@ export const Cards: React.FC<RouteComponentProps> = () => {
       FormModal={CardCreateRoot}
       onDelete={handleDelete}
       onGroupDelete={(checkboxRows) =>
-        api().post(`card/set-softdelete`, {
+        api().post(`card/status`, {
           json: {
             ids: checkboxRows.map((c) => c.id),
-            value: true,
           },
         })
       }
@@ -148,6 +157,8 @@ export const Cards: React.FC<RouteComponentProps> = () => {
       })}
       ComponentDetail={CardsTableDetail}
       TileComponent={({ item }) => <CardTile card={item} showLabels={true} />}
+      enableCardsExports={true}
+      Toolbar={({ checkboxRows }) => Toolbar(checkboxRows)}
     />
   );
-};
+});

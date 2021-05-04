@@ -1,14 +1,11 @@
-import React, { useState, useContext } from "react";
-import Grid from "@material-ui/core/Grid";
 import Fade from "@material-ui/core/Fade";
+import Grid from "@material-ui/core/Grid";
 import classNames from "classnames";
-
+import React, { useContext, useState } from "react";
 import { GlobalContext } from "../../context/Context";
-
-import { Navbar } from "../navbar//Navbar";
 import { LeftPanel } from "../leftPanel/LeftPanel";
+import { Navbar } from "../navbar//Navbar";
 import { TableSearchWatcher } from "./TableSearchWatcher";
-
 import { useStyles } from "./_appWrapperStyles";
 
 export const AppWrapper: React.FC = ({ children }) => {

@@ -81,6 +81,7 @@ interface TableComponentPropsBase {
   enableRowActions?: boolean;
   enableGroupEdit?: boolean;
   enableGroupDelete?: boolean;
+  enableCardsExports?: boolean;
   enablePrint?: boolean;
   enableSort?: boolean;
   enableOpenInNewTab?: boolean;

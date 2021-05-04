@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ public class CreateAttachmentDto {
     @ApiModelProperty(value = "Name of attached file", required = true, position = 3, example = "my_fabulous_file_name")
     private String name;
 
+    @NotNull
     @ApiModelProperty(value = "Provider of attachment", required = true, position = 4, example = "LOCAL")
     private AttachmentFileProviderType providerType;
 
@@ -40,14 +42,12 @@ public class CreateAttachmentDto {
     /**
      * for external files only
      */
-    @Size(max = 255, message = "Max allowed length (=255) exceeded.")
     @ApiModelProperty(value = "ID of file assigned by provider", position = 6, notes = "Use only for External files")
     private String providerId;
 
     /**
      * for external and url attachments only
      */
-    @Size(max = 255, message = "Max allowed length (=255) exceeded.")
     @ApiModelProperty(value = "URL link to external file", position = 7, notes = "Use for URL or External files")
     private String link;
 

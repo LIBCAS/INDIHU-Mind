@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.16.0.final using JasperReports Library version 6.16.0-48579d909b7943b64690c65c71e07e0b80981928  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CardExport" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="10" bottomMargin="10" uuid="7d0e3151-d1d8-47d0-afb7-11489aed34d8">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<property name="com.jaspersoft.studio.report.description" value=""/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="entity" class="cz.cas.lib.indihumind.card.Card"/>
+	<detail>
+		<band height="250" splitType="Stretch">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<rectangle>
+				<reportElement stretchType="ElementGroupBottom" x="0" y="0" width="556" height="180" uuid="03ec00e2-631d-416c-b884-c7fe44ee604c"/>
+			</rectangle>
+			<frame>
+				<reportElement x="0" y="0" width="556" height="49" uuid="a8ae5397-af5c-4ca4-bc08-12658e27a1e6"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textField textAdjust="StretchHeight">
+					<reportElement positionType="Float" x="0" y="0" width="555" height="48" uuid="fd719429-28bd-4896-8793-65b58242d3f7"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="TrueArial" size="14"/>
+					</textElement>
+					<textFieldExpression><![CDATA["#"+$F{entity}.getPid()+" "+$F{entity}.getName()]]></textFieldExpression>
+				</textField>
+			</frame>
+			<frame>
+				<reportElement x="0" y="49" width="555" height="40" uuid="2610fbad-3e7b-4061-887b-f9a837c5095f"/>
+				<textField textAdjust="StretchHeight">
+					<reportElement positionType="Float" x="11" y="0" width="534" height="40" uuid="6aab8445-84bb-4339-923b-458a38e761b7"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="TrueArial" size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Štítky: " + $F{entity}.reportLabelNames()]]></textFieldExpression>
+				</textField>
+			</frame>
+			<frame>
+				<reportElement x="0" y="90" width="555" height="40" uuid="bbcc8fae-114c-49a9-9437-a0054dfdc600"/>
+				<textField textAdjust="StretchHeight">
+					<reportElement positionType="Float" x="11" y="0" width="534" height="40" uuid="98794f3c-b8df-45ca-8e01-a8ca92b855fb"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="TrueArial" size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Kategorie: " + $F{entity}.reportCategoryNames()]]></textFieldExpression>
+				</textField>
+			</frame>
+			<frame>
+				<reportElement x="1" y="130" width="555" height="40" uuid="b21b3878-4009-4065-bd22-02ffc2dc7191"/>
+				<textField textAdjust="StretchHeight">
+					<reportElement positionType="Float" x="10" y="0" width="534" height="40" uuid="9d931d7a-1bbb-4de6-8f59-3e18f014ebbd"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="TrueArial" size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Poznámka: " + $F{entity}.getRawNote()]]></textFieldExpression>
+				</textField>
+			</frame>
+		</band>
+	</detail>
+</jasperReport>

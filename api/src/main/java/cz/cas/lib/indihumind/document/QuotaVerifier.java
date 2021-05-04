@@ -21,9 +21,9 @@ public class QuotaVerifier {
     private UserDelegate userDelegate;
 
     public void verify(long newAdditionalBytes) throws UserQuotaReachedException {
-        long localDocsSizeKb = localDocumentStore.localAttachmentsSizeForUser(userDelegate.getUser().getId()) / 1000;
-        long downloadedUrlDocsSizeKb = urlDocumentStore.urlAttachmentsSizeForUser(userDelegate.getUser().getId()) / 1000;
-        long cardNoteSize = cardStore.cardNoteSizeForUser(userDelegate.getUser().getId()) / 1000;
+        long localDocsSizeKb = localDocumentStore.localAttachmentsSizeForUser(userDelegate.getId()) / 1000;
+        long downloadedUrlDocsSizeKb = urlDocumentStore.urlAttachmentsSizeForUser(userDelegate.getId()) / 1000;
+        long cardNoteSize = cardStore.cardNotesSizeForUser(userDelegate.getId()) / 1000;
 
         long sizeUserAlreadyHasKb = localDocsSizeKb + downloadedUrlDocsSizeKb + cardNoteSize;
 

@@ -11,6 +11,7 @@ import cz.cas.lib.indihumind.citation.*;
 import cz.cas.lib.indihumind.citation.dto.CreateCitationDto;
 import cz.cas.lib.indihumind.citation.dto.UpdateCitationDto;
 import cz.cas.lib.indihumind.document.AttachmentFile;
+import cz.cas.lib.indihumind.document.AttachmentFileProviderType;
 import cz.cas.lib.indihumind.document.AttachmentFileStore;
 import cz.cas.lib.indihumind.document.UrlAttachmentFile;
 import cz.cas.lib.indihumind.init.builders.*;
@@ -19,7 +20,6 @@ import cz.cas.lib.indihumind.security.user.User;
 import cz.cas.lib.indihumind.security.user.UserService;
 import helper.ApiTest;
 import helper.TestUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,7 +34,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static core.util.Utils.asList;
@@ -61,11 +60,6 @@ public class CitationApiTest extends ApiTest {
 
     private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(true).build();
     private Card card1, card2, card3;
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedCitation.class);
-    }
 
     @Before
     public void before() {
@@ -174,7 +168,7 @@ public class CitationApiTest extends ApiTest {
 
         List<AttachmentFile> oldFilesFromDb = documentStore.findAllInList(TestUtils.extractIds(recordWithApiFromDto.getDocuments()));
         assertThat(oldFilesFromDb).hasSize(1);
-        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordWithApiFromDto));
+        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordWithApiFromDto.toReference()));
     }
 
     @Test
@@ -225,14 +219,14 @@ public class CitationApiTest extends ApiTest {
         Citation recordFromDb = citationStore.find(recordWithApiFromDto.getId());
         assertThat(recordFromDb).isNotNull();
         assertThat(recordFromDb.getOwner().getId()).isEqualTo(user.getId());
-        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1, card2, card3);
+        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1.toReference(), card2.toReference(), card3.toReference());
         assertThat(recordFromDb.getName()).isEqualTo("This is new original and unique name");
         assertThat(recordFromDb.getDataFields()).hasSize(TEST_DATAFIELDS.size() + 1);
         assertThat(recordFromDb.getDocuments()).extracting("id").containsExactlyInAnyOrderElementsOf(updateDto.getDocuments());
 
-        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb);
-        assertThat(cardStore.find(card2.getId()).getRecords()).contains(recordFromDb);
-        assertThat(cardStore.find(card3.getId()).getRecords()).contains(recordFromDb);
+        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb.toReference());
+        assertThat(cardStore.find(card2.getId()).getRecords()).contains(recordFromDb.toReference());
+        assertThat(cardStore.find(card3.getId()).getRecords()).contains(recordFromDb.toReference());
     }
 
     @Test
@@ -260,11 +254,11 @@ public class CitationApiTest extends ApiTest {
         assertThat(recordFromDb.getDataFields()).hasSize(TEST_DATAFIELDS.size() + 1);
         assertThat(recordFromDb.getDocuments()).extracting("id").containsExactlyInAnyOrderElementsOf(updateDto.getDocuments());
 
-        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1, card2, card3);
+        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1.toReference(), card2.toReference(), card3.toReference());
 
-        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb);
-        assertThat(cardStore.find(card2.getId()).getRecords()).contains(recordFromDb);
-        assertThat(cardStore.find(card3.getId()).getRecords()).contains(recordFromDb);
+        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb.toReference());
+        assertThat(cardStore.find(card2.getId()).getRecords()).contains(recordFromDb.toReference());
+        assertThat(cardStore.find(card3.getId()).getRecords()).contains(recordFromDb.toReference());
     }
 
     @Test
@@ -292,11 +286,11 @@ public class CitationApiTest extends ApiTest {
         assertThat(recordFromDb.getDataFields()).hasSize(TEST_DATAFIELDS.size() + 1);
         assertThat(recordFromDb.getDocuments()).extracting("id").containsExactlyInAnyOrderElementsOf(updateDto.getDocuments());
 
-        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1);
+        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1.toReference());
 
-        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb);
-        assertThat(cardStore.find(card2.getId()).getRecords()).doesNotContain(recordFromDb);
-        assertThat(cardStore.find(card3.getId()).getRecords()).doesNotContain(recordFromDb);
+        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb.toReference());
+        assertThat(cardStore.find(card2.getId()).getRecords()).doesNotContain(recordFromDb.toReference());
+        assertThat(cardStore.find(card3.getId()).getRecords()).doesNotContain(recordFromDb.toReference());
     }
 
     @Test
@@ -304,8 +298,8 @@ public class CitationApiTest extends ApiTest {
         CreateCitationDto recordDto = new CreateCitationDto();
         Citation recordWithApiFromDto = createRecordWithApiFromDto(recordDto, asList(card2));
 
-        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().owner(user).cards(card2, card3).name("new url file").contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
-        UrlAttachmentFile url2File = UrlAttachmentBuilder.builder().owner(user).cards().name("new url file2").contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
+        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().owner(user).cards(card2, card3).name("new url file").provider(AttachmentFileProviderType.URL).contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
+        UrlAttachmentFile url2File = UrlAttachmentBuilder.builder().owner(user).cards().name("new url file2").provider(AttachmentFileProviderType.URL).contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
         transactionTemplate.execute(s -> documentStore.save(asList(urlFile, url2File)));
 
         UpdateCitationDto updateDto = new UpdateCitationDto();
@@ -328,15 +322,15 @@ public class CitationApiTest extends ApiTest {
         assertThat(recordFromDb.getDataFields()).hasSize(TEST_DATAFIELDS.size() + 1);
 
         assertThat(recordFromDb.getDocuments()).extracting("id").containsExactlyInAnyOrderElementsOf(updateDto.getDocuments());
-        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1, card3);
+        assertThat(recordFromDb.getLinkedCards()).containsExactlyInAnyOrder(card1.toReference(), card3.toReference());
 
         List<AttachmentFile> oldFilesFromDb = documentStore.findAllInList(TestUtils.extractIds(recordWithApiFromDto.getDocuments()));
         assertThat(oldFilesFromDb).hasSize(1);
-        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordFromDb));
+        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordFromDb.toReference()));
 
-        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb);
-        assertThat(cardStore.find(card2.getId()).getRecords()).doesNotContain(recordFromDb);
-        assertThat(cardStore.find(card3.getId()).getRecords()).contains(recordFromDb);
+        assertThat(cardStore.find(card1.getId()).getRecords()).contains(recordFromDb.toReference());
+        assertThat(cardStore.find(card2.getId()).getRecords()).doesNotContain(recordFromDb.toReference());
+        assertThat(cardStore.find(card3.getId()).getRecords()).contains(recordFromDb.toReference());
     }
 
     @Test
@@ -367,9 +361,9 @@ public class CitationApiTest extends ApiTest {
 
         assertThat(recordFromDb.getLinkedCards()).isEmpty();
 
-        assertThat(cardStore.find(card1.getId()).getRecords()).doesNotContain(recordFromDb);
-        assertThat(cardStore.find(card2.getId()).getRecords()).doesNotContain(recordFromDb);
-        assertThat(cardStore.find(card3.getId()).getRecords()).doesNotContain(recordFromDb);
+        assertThat(cardStore.find(card1.getId()).getRecords()).doesNotContain(recordFromDb.toReference());
+        assertThat(cardStore.find(card2.getId()).getRecords()).doesNotContain(recordFromDb.toReference());
+        assertThat(cardStore.find(card3.getId()).getRecords()).doesNotContain(recordFromDb.toReference());
     }
 
     @Test
@@ -388,7 +382,7 @@ public class CitationApiTest extends ApiTest {
 
         List<AttachmentFile> oldFilesFromDb = documentStore.findAllInList(TestUtils.extractIds(recordWithApiFromDto.getDocuments()));
         assertThat(oldFilesFromDb).hasSize(1);
-        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordWithApiFromDto));
+        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordWithApiFromDto.toReference()));
     }
 
     @Test
@@ -403,13 +397,15 @@ public class CitationApiTest extends ApiTest {
 
         Citation deletedRecord = citationStore.find(recordWithApiFromDto.getId());
         assertThat(deletedRecord).isNull();
-        for (Card card : asList(card1, card2, card3)) {
-            assertThat(card.getRecords()).doesNotContain(recordWithApiFromDto);
+
+        List<Card> cardsFromDb = cardStore.findAllInList(List.of(card1.getId(), card2.getId(), card3.getId()));
+        for (Card card : cardsFromDb) {
+            assertThat(card.getRecords()).doesNotContain(recordWithApiFromDto.toReference());
         }
 
         List<AttachmentFile> oldFilesFromDb = documentStore.findAllInList(TestUtils.extractIds(recordWithApiFromDto.getDocuments()));
         assertThat(oldFilesFromDb).hasSize(1);
-        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordWithApiFromDto));
+        oldFilesFromDb.forEach(oldDoc -> assertThat(oldDoc.getRecords()).doesNotContain(recordWithApiFromDto.toReference()));
     }
 
     /**
@@ -467,7 +463,7 @@ public class CitationApiTest extends ApiTest {
         if (!withCards.isEmpty())
             dto.setLinkedCards(withCards.stream().map(Card::getId).collect(Collectors.toList()));
 
-        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().owner(user).cards(card1).name("this is elephant url file").contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
+        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().owner(user).cards(card1).provider(AttachmentFileProviderType.URL).name("this is elephant url file").contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
         transactionTemplate.execute(s -> documentStore.save(urlFile));
 
         dto.setDocuments(asList(urlFile.getId()));
@@ -492,8 +488,8 @@ public class CitationApiTest extends ApiTest {
 
 
         for (Card card : withCards) {
-            assertThat(recordFromDb.getLinkedCards()).contains(card);
-            assertThat(cardStore.find(card.getId()).getRecords()).contains(recordFromDb);
+            assertThat(recordFromDb.getLinkedCards()).contains(card.toReference());
+            assertThat(cardStore.find(card.getId()).getRecords()).contains(recordFromDb.toReference());
         }
 
         return savedRecord;

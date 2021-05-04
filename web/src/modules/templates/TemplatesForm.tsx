@@ -1,41 +1,37 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  useRef,
-  useCallback,
-} from "react";
-import { FormikProps, Form, Field, FieldProps } from "formik";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
-import classNames from "classnames";
+import Typography from "@material-ui/core/Typography";
 import Add from "@material-ui/icons/Add";
-
-import { notEmpty } from "../../utils/form/validate";
-import { templateGet } from "../../context/actions/template";
-import { GlobalContext } from "../../context/Context";
-import {
-  CardTemplateProps,
-  CardTemplateAttribute,
-} from "../../types/cardTemplate";
-import { Formik } from "../../components/form/Formik";
-import { Loader } from "../../components/loader/Loader";
-import { InputText } from "../../components/form/InputText";
+import classNames from "classnames";
+import { Field, FieldProps, Form, FormikProps } from "formik";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { ButtonGrey } from "../../components/control/ButtonGrey";
 import { Divider } from "../../components/divider/Divider";
+import { Formik } from "../../components/form/Formik";
+import { InputText } from "../../components/form/InputText";
+import { Loader } from "../../components/loader/Loader";
 import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
 import { Popover } from "../../components/portal/Popover";
-import { ButtonGrey } from "../../components/control/ButtonGrey";
-
-import { TemplatesAttribute } from "./TemplatesAttribute";
-import { TemplatesAddAttribute } from "./TemplatesAddAttribute";
-
-import { useStyles } from "./_templatesStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { templateGet } from "../../context/actions/template";
+import { GlobalContext } from "../../context/Context";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-
-import { onSubmitTemplate } from "./_utils";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { theme } from "../../theme/theme";
+import {
+  CardTemplateAttribute,
+  CardTemplateProps,
+} from "../../types/cardTemplate";
+import { notEmpty, notLongerThan255 } from "../../utils/form/validate";
+import { TemplatesAddAttribute } from "./TemplatesAddAttribute";
+import { TemplatesAttribute } from "./TemplatesAttribute";
+import { useStyles } from "./_templatesStyles";
+import { onSubmitTemplate } from "./_utils";
 
 export interface TemplatesFormValues {
   id: string;
@@ -129,7 +125,9 @@ export const TemplatesForm: React.FC<TemplatesFormProps> = ({
               >
                 <Field
                   name="name"
-                  validate={notEmpty}
+                  validate={(value: any) =>
+                    notLongerThan255(value) || notEmpty(value)
+                  }
                   render={({
                     field,
                     form,

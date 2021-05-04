@@ -21,5 +21,6 @@ public class CardBasicDto {
     private String id;
     private String name;
     private String rawNote;
+    private Card.CardStatus status;
     private long pid;
 }

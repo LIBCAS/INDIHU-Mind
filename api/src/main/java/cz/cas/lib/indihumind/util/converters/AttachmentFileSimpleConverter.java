@@ -1,8 +1,12 @@
 package cz.cas.lib.indihumind.util.converters;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
+import cz.cas.lib.indihumind.card.view.CardRef;
+import cz.cas.lib.indihumind.citation.view.CitationRef;
 import cz.cas.lib.indihumind.document.AttachmentFile;
 import cz.cas.lib.indihumind.document.dto.AttachmentFileSimpleDto;
+
+import java.util.stream.Collectors;
 
 public class AttachmentFileSimpleConverter extends StdConverter<AttachmentFile, AttachmentFileSimpleDto> {
 
@@ -16,8 +20,8 @@ public class AttachmentFileSimpleConverter extends StdConverter<AttachmentFile, 
         dto.setName(value.getName());
         dto.setProviderType(value.getProviderType());
         dto.setType(value.getType());
-        dto.setLinkedCards(value.getLinkedCards());
-        dto.setRecords(value.getRecords());
+        dto.setLinkedCards(value.getLinkedCards().stream().map(CardRef::toEntity).collect(Collectors.toSet()));
+        dto.setRecords(value.getRecords().stream().map(CitationRef::toEntity).collect(Collectors.toSet()));
 
         return dto;
     }

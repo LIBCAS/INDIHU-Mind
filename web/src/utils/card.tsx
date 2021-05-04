@@ -1,16 +1,15 @@
-import React from "react";
 import LaunchIcon from "@material-ui/icons/Launch";
-
+import React from "react";
+import { formatDate, formatDateTime, openInNewTab } from ".";
+import { GPSPicker } from "../components/gpsPicker";
 import {
-  STATUS_LOADING_COUNT_CHANGE,
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_ERROR_TEXT_SET,
+  STATUS_LOADING_COUNT_CHANGE,
 } from "../context/reducers/status";
-import { api } from "../utils/api";
-import { formatDate, formatDateTime, openInNewTab } from ".";
-import { AttributeProps } from "../types/attribute";
 import { AttributeType } from "../enums";
-import { GPSPicker } from "../components/gpsPicker";
+import { AttributeProps } from "../types/attribute";
+import { api } from "../utils/api";
 
 export const parseAttribute = (
   attribute: AttributeProps,
@@ -101,10 +100,9 @@ export const onDeleteCard = (
 ) => {
   dispatch({ type: STATUS_LOADING_COUNT_CHANGE, payload: 1 });
   api()
-    .post(`card/set-softdelete`, {
+    .post(`card/status`, {
       json: {
         ids: [id],
-        value: true,
       },
     })
     .then(() => {

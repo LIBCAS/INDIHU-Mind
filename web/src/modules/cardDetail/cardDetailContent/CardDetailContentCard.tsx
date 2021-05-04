@@ -9,21 +9,24 @@ import { Formik } from "../../../components/form/Formik";
 import { Popover } from "../../../components/portal/Popover";
 import { useStyles as useLayoutStyles } from "../../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
-import { CardContentProps } from "../../../types/card";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { CardsLink } from "../../cards/CardsLink";
 import { useStyles } from "./_cardStyles";
 import { onEditCard } from "./_utils";
 
 interface CardCreateAddCardProps {
-  card: CardContentProps;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
+  disabled?: boolean;
 }
 
 const CardDetailContentCardView: React.FC<
   CardCreateAddCardProps & RouteComponentProps
-> = ({ card, setCardContent }) => {
+> = ({ card, setCard, currentCardContent, setCardContents, disabled }) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
   const classesLayout = useLayoutStyles();
@@ -37,6 +40,7 @@ const CardDetailContentCardView: React.FC<
         onClick={() => setPopoverOpen(true)}
         bold
         big
+        disabled={disabled}
         Icon={<Add fontSize="small" />}
       />
       <Popover
@@ -46,12 +50,19 @@ const CardDetailContentCardView: React.FC<
         cancelButton
         content={
           <Formik
-            initialValues={{ linkedCards: card.card.linkedCards }}
+            initialValues={{ linkedCards: card.linkedCards }}
             onSubmit={(values) => {
-              const newLinkedCards = card.card.linkedCards.concat(
+              const newLinkedCards = card.linkedCards.concat(
                 values.linkedCards
               );
-              onEditCard("linkedCards", newLinkedCards, card, setCardContent);
+              onEditCard(
+                "linkedCards",
+                newLinkedCards,
+                card,
+                setCard,
+                currentCardContent,
+                setCardContents
+              );
               setPopoverOpen(false);
             }}
             render={(formikBag) => (
@@ -68,8 +79,8 @@ const CardDetailContentCardView: React.FC<
                     formikBag.setFieldValue("linkedCards", linkedCards);
                   }}
                   excludedCards={[
-                    card.card.id,
-                    ...card.card.linkedCards.map(({ id }) => id),
+                    card.id,
+                    ...card.linkedCards.map(({ id }) => id),
                   ]}
                 />
                 <Button

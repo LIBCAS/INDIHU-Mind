@@ -6,6 +6,9 @@ import cz.cas.lib.indihumind.security.user.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
 import javax.validation.Valid;
@@ -28,6 +31,8 @@ public class CardTemplate extends DatedObject {
     @Size(max = 255, message = "Max allowed length (=255) exceeded.")
     private String name;
 
+    @BatchSize(size = 100)
+    @Fetch(FetchMode.SELECT)
     @OneToMany(mappedBy = "cardTemplate", fetch = FetchType.EAGER)
     @OrderBy("ordinalNumber")
     private Set<@Valid AttributeTemplate> attributeTemplates = new HashSet<>();

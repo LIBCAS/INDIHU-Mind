@@ -1,8 +1,8 @@
-import { RecordProps } from "./record";
-import { LabelProps } from "./label";
-import { CategoryProps } from "./category";
 import { AttributeProps } from "./attribute";
+import { CategoryProps } from "./category";
 import { FileProps } from "./file";
+import { LabelProps } from "./label";
+import { RecordProps } from "./record";
 
 export interface LinkedCardProps {
   id: string;
@@ -18,16 +18,20 @@ export interface CardComment {
   updated?: string;
 }
 
-export interface CardProps {
+interface MinimalCardProps {
+  created: string;
+  deleted: string;
   id: string;
-  pid: number;
   name: string;
+  pid: number;
   rawNote: string | null;
+  status: "AVAILABLE" | "TRASHED";
+  updated: string;
+}
+
+export interface CardProps extends MinimalCardProps {
   structuredNote: any | null;
   note: string;
-  created: string;
-  updated: string;
-  deleted: string;
   labels: LabelProps[];
   categories: CategoryProps[];
   attributes: AttributeProps[];
@@ -51,7 +55,7 @@ export interface CardProps {
 
 export interface CardContentProps {
   id: string;
-  card: CardProps;
+  card: MinimalCardProps;
   created: string;
   updated: string;
   deleted: string;
@@ -61,7 +65,7 @@ export interface CardContentProps {
   // documents: FileProps[];
   lastVersion: boolean;
   [key: string]:
-    | CardProps
+    | MinimalCardProps
     | null
     | string
     | LabelProps[]

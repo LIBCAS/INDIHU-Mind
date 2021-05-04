@@ -1,23 +1,27 @@
 package cz.cas.lib.indihumind.document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import core.domain.DatedObject;
 import cz.cas.lib.indihumind.card.Card;
+import cz.cas.lib.indihumind.card.view.CardRef;
 import cz.cas.lib.indihumind.citation.Citation;
+import cz.cas.lib.indihumind.citation.view.CitationRef;
+import cz.cas.lib.indihumind.document.view.DocumentRef;
 import cz.cas.lib.indihumind.security.user.User;
-import cz.cas.lib.indihumind.util.converters.CardSimpleConverter;
-import cz.cas.lib.indihumind.util.converters.CitationSimpleConverter;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -48,34 +52,39 @@ public abstract class AttachmentFile extends DatedObject {
 
     private String type;
 
-    @ManyToMany(mappedBy = "documents", fetch = FetchType.EAGER)
-    @JsonSerialize(contentConverter = CardSimpleConverter.class)
-    private Set<Card> linkedCards = new HashSet<>();
+    @BatchSize(size = 100)
+    @Fetch(FetchMode.SELECT)
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "vzb_card_attachment",
+            joinColumns =        {@JoinColumn(name = "attachment_id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "card_id",       nullable = false, updatable = false)})
+    private Set<CardRef> linkedCards = new HashSet<>();
 
-    @ManyToMany(mappedBy = "documents", fetch = FetchType.EAGER)
-    @JsonSerialize(contentConverter = CitationSimpleConverter.class)
-    private Set<Citation> records = new HashSet<>();
+    @BatchSize(size = 100)
+    @Fetch(FetchMode.SELECT)
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "vzb_citation_document",
+            joinColumns =        {@JoinColumn(name = "document_id", nullable = false, updatable = false)},
+            inverseJoinColumns = {@JoinColumn(name = "citation_id", nullable = false, updatable = false)})
+    private Set<CitationRef> records = new HashSet<>();
 
+    @NotNull
+    @Enumerated(value = EnumType.STRING)
+    private AttachmentFileProviderType providerType;
 
-    /**
-     * Prompt developers to create field {@code  providerType}
-     * that is defined in {@code @JsonTypeInfo} of this abstract class and used in JSON deserialization.
-     */
-    @JsonProperty
-    public abstract AttachmentFileProviderType getProviderType();
+    public abstract DocumentRef toReference();
 
-    public void addCard(@NonNull Card card) {
-        linkedCards.add(card);
-        card.getDocuments().add(this);
+    // TODO zmazat ked prejdu entity na referencie ak sa bude dat
+    public void setRecords(Collection<Citation> citations) {
+        this.records = citations.stream()
+                .map(Citation::toReference)
+                .collect(Collectors.toSet());
     }
 
-    public void removeCard(@NonNull Card card) {
-        linkedCards.remove(card);
-        card.getDocuments().remove(this);
-    }
-
-    public void addCitation(Citation citation) {
-        records.add(citation);
-        citation.getDocuments().add(this);
+    // TODO zmazat ked prejdu entity na referencie ak sa bude dat
+    public void setLinkedCards(Collection<Card> cards) {
+        this.linkedCards = cards.stream()
+                .map(Card::toReference)
+                .collect(Collectors.toSet());
     }
 }

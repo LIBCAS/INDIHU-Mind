@@ -105,12 +105,12 @@ public class TestDataFiller {
         refTemplateProvider.recordNameWithAuthors(testUser);
         refTemplateProvider.allFieldsTemplate(testUser);
 
-        card1.setRecords(asSet(recordHumanAuthor));
-        card4.setRecords(asSet(recordHumanAuthor, recordCompanyAuthor));
-        card2.setRecords(asSet(recordCompanyAuthor));
-        card1.setDocuments(asSet(extFile1));
-        card4.setDocuments(asSet(urlFile, extFile1, extFile2));
-        card5.setDocuments(asSet(extFile2, locFile));
+        card1.setRecords(asSet(recordHumanAuthor.toReference()));
+        card4.setRecords(asSet(recordHumanAuthor.toReference(), recordCompanyAuthor.toReference()));
+        card2.setRecords(asSet(recordCompanyAuthor.toReference()));
+        card1.setDocuments(asSet(extFile1.toReference()));
+        card4.setDocuments(asSet(urlFile.toReference(), extFile1.toReference(), extFile2.toReference()));
+        card5.setDocuments(asSet(extFile2.toReference(), locFile.toReference()));
         cardProvider.getCardStore().save(asSet(card1, card2, card3, card4, card5));
     }
 
@@ -135,9 +135,6 @@ public class TestDataFiller {
 
         Collection<Citation> records = citationProvider.getRecordStore().findByUser(userId);
         for (Citation entity : records) {
-            List<Card> cardsOfCitation = cardProvider.getCardStore().findCardsOfCitation(entity);
-            cardsOfCitation.forEach(c -> c.removeCitation(entity));
-            cardProvider.getCardStore().save(cardsOfCitation);
             citationProvider.getRecordStore().hardDelete(entity);
             citationProvider.getRecordStore().removeIndex(entity);
         }

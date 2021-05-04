@@ -68,6 +68,7 @@ public class ReferenceTemplateApi {
      *   "fields": [
      *     { "type": "AUTHOR", "customizations": [ "ITALIC" ]
      *       "firstNameFormat": "FULL", "multipleAuthorsFormat": "FULL", "orderFormat": "LASTNAME_FIRST",
+     *       "separator": "COMMA", "andJoiner": "CZECH_AND"
      *     },
      *     { "type":"COLON" },
      *     { "type":"SPACE" },
@@ -128,16 +129,28 @@ public class ReferenceTemplateApi {
      * }
      * </pre>
      */
-    @ApiOperation(value = "Generates formatted citation PDF and sends it to user's browser for download")
+    @ApiOperation(value = "Generates formatted citation PDF and sends it to user's browser for download [CITATIONS version]")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully generated PDF"),
             @ApiResponse(code = 400, message = "Validation of incoming DTO has failed."),
             @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
             @ApiResponse(code = 404, message = "Entity not found for given ID")
     })
-    @PostMapping(value = "/generate-pdf", produces = MediaType.APPLICATION_PDF_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<InputStreamResource> generatePdf(@ApiParam(value = "DTO with template ID and records IDs", required = true) @Valid @RequestBody GeneratePdfDto dto) {
-        return service.generatePdf(dto);
+    @PostMapping(value = "/generate-pdf/with-citations", produces = MediaType.APPLICATION_PDF_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<InputStreamResource> generatePdfWithCitations(@ApiParam(value = "DTO with template ID and records IDs", required = true) @Valid @RequestBody GeneratePdfDto dto) {
+        return service.generateWithCitations(dto);
+    }
+
+    @ApiOperation(value = "Generates formatted citation PDF and sends it to user's browser for download [CARDS version]")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully generated PDF"),
+            @ApiResponse(code = 400, message = "Validation of incoming DTO has failed."),
+            @ApiResponse(code = 403, message = "Entity not owned by logged in user"),
+            @ApiResponse(code = 404, message = "Entity not found for given ID")
+    })
+    @PostMapping(value = "/generate-pdf/with-cards", produces = MediaType.APPLICATION_PDF_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<InputStreamResource> generatePdfWithCards(@ApiParam(value = "DTO with template ID and cards IDs", required = true) @Valid @RequestBody GeneratePdfDto dto) {
+        return service.generateWithCards(dto);
     }
 
     // --- PREVIEW ---- Not needed on FE right now ----

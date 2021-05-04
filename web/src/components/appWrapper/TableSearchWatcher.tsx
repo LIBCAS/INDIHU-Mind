@@ -78,8 +78,8 @@ export const TableSearchWatcher: React.FC<TableSearchWatcherProps> = ({
           name: labelActive.name,
           query: [
             {
-              field: "labels",
-              value: labelActive.name,
+              field: "label_ids",
+              value: labelActive.id,
               operation: "CONTAINS",
             },
           ],

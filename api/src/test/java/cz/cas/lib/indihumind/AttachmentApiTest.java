@@ -1,14 +1,13 @@
 package cz.cas.lib.indihumind;
 
-import core.util.Utils;
 import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.CardStore;
-import cz.cas.lib.indihumind.card.IndexedCard;
 import cz.cas.lib.indihumind.citation.Citation;
 import cz.cas.lib.indihumind.citation.CitationStore;
 import cz.cas.lib.indihumind.document.*;
 import cz.cas.lib.indihumind.document.dto.CreateAttachmentDto;
 import cz.cas.lib.indihumind.document.dto.UpdateAttachmentDto;
+import cz.cas.lib.indihumind.document.view.DocumentRef;
 import cz.cas.lib.indihumind.init.builders.*;
 import cz.cas.lib.indihumind.security.user.Roles;
 import cz.cas.lib.indihumind.security.user.User;
@@ -60,11 +59,6 @@ public class AttachmentApiTest extends ApiTest {
     @Inject private UserService userService;
 
     private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(false).build();
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return asSet(IndexedAttachmentFile.class, IndexedCard.class);
-    }
 
     @Before
     public void before() {
@@ -133,18 +127,18 @@ public class AttachmentApiTest extends ApiTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        Set<AttachmentFile> cardFiles = cardStore.find(card.getId()).getDocuments();
+        Set<DocumentRef> cardFiles = cardStore.find(card.getId()).getDocuments();
         assertThat(cardFiles).hasSize(1);
-        Optional<AttachmentFile> optional = cardFiles.stream().findFirst();
+        Optional<DocumentRef> optional = cardFiles.stream().findFirst();
         assertThat(optional).isPresent();
-        AttachmentFile fromDb = optional.get();
+        AttachmentFile fromDb = fileStore.find(optional.get().getId());
         assertThat(fromDb.getProviderType()).isEqualTo(AttachmentFileProviderType.LOCAL);
-        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card, card2);
-        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record);
+        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card.toReference(), card2.toReference());
+        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record.toReference());
 
         Citation recordFromDb = citationStore.find(record.getId());
         assertThat(recordFromDb.getDocuments()).isNotNull();
-        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
     }
 
     @Test
@@ -175,22 +169,22 @@ public class AttachmentApiTest extends ApiTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        Set<AttachmentFile> cardFiles = cardStore.find(card.getId()).getDocuments();
+        Set<DocumentRef> cardFiles = cardStore.find(card.getId()).getDocuments();
         assertThat(cardFiles).hasSize(1);
-        Optional<AttachmentFile> optional = cardFiles.stream().findFirst();
+        Optional<DocumentRef> optional = cardFiles.stream().findFirst();
         assertThat(optional).isPresent();
-        AttachmentFile fromDb = cardFiles.stream().findFirst().get();
+        AttachmentFile fromDb = fileStore.find(optional.get().getId());
         assertThat(fromDb.getProviderType()).isEqualTo(AttachmentFileProviderType.DROPBOX);
-        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card);
-        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record, record2);
+        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card.toReference());
+        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record.toReference(), record2.toReference());
 
         Citation recordFromDb = citationStore.find(record.getId());
         assertThat(recordFromDb.getDocuments()).isNotNull();
-        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
 
         Citation record2FromDb = citationStore.find(record2.getId());
         assertThat(record2FromDb.getDocuments()).isNotNull();
-        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
     }
 
     @Test
@@ -222,22 +216,22 @@ public class AttachmentApiTest extends ApiTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        Set<AttachmentFile> cardFiles = cardStore.find(card.getId()).getDocuments();
+        Set<DocumentRef> cardFiles = cardStore.find(card.getId()).getDocuments();
         assertThat(cardFiles).hasSize(1);
-        Optional<AttachmentFile> optional = cardFiles.stream().findFirst();
+        Optional<DocumentRef> optional = cardFiles.stream().findFirst();
         assertThat(optional).isPresent();
-        AttachmentFile fromDb = cardFiles.stream().findFirst().get();
+        AttachmentFile fromDb = fileStore.find(optional.get().getId());
         assertThat(fromDb.getProviderType()).isEqualTo(AttachmentFileProviderType.URL);
-        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card, card2);
-        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record, record2);
+        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card.toReference(), card2.toReference());
+        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record.toReference(), record2.toReference());
 
         Citation recordFromDb = citationStore.find(record.getId());
         assertThat(recordFromDb.getDocuments()).isNotNull();
-        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
 
         Citation record2FromDb = citationStore.find(record2.getId());
         assertThat(record2FromDb.getDocuments()).isNotNull();
-        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
 
         Path downloadedFile = TEST_FILES_DIRECTORY.resolve(fromDb.getId());
         assertThat(downloadedFile).doesNotExist();
@@ -272,22 +266,22 @@ public class AttachmentApiTest extends ApiTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        Set<AttachmentFile> cardFiles = cardStore.find(card.getId()).getDocuments();
+        Set<DocumentRef> cardFiles = cardStore.find(card.getId()).getDocuments();
         assertThat(cardFiles).hasSize(1);
-        Optional<AttachmentFile> docuemntFromDb = cardFiles.stream().findFirst();
-        assertThat(docuemntFromDb).isPresent();
-        AttachmentFile fromDb = docuemntFromDb.get();
+        Optional<DocumentRef> optional = cardFiles.stream().findFirst();
+        assertThat(optional).isPresent();
+        AttachmentFile fromDb = fileStore.find(optional.get().getId());
         assertThat(fromDb.getProviderType()).isEqualTo(AttachmentFileProviderType.URL);
-        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card, card2);
-        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record, record2);
+        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card.toReference(), card2.toReference());
+        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(record.toReference(), record2.toReference());
 
         Citation recordFromDb = citationStore.find(record.getId());
         assertThat(recordFromDb.getDocuments()).isNotNull();
-        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
 
         Citation record2FromDb = citationStore.find(record2.getId());
         assertThat(record2FromDb.getDocuments()).isNotNull();
-        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
 
         Path downloadedFile = TEST_FILES_DIRECTORY.resolve(fromDb.getId());
         assertThat(downloadedFile).exists();
@@ -300,10 +294,10 @@ public class AttachmentApiTest extends ApiTest {
         transactionTemplate.execute(t -> cardStore.save(card));
 
         final String uuid = UUID.randomUUID().toString();
-        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card).owner(user).provider(AttachmentFileProviderType.LOCAL).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         transactionTemplate.execute(t -> {
             fileStore.save(file);
-            card.setDocuments(asSet(file));
+            card.setDocuments(Set.of(file.toReference()));
             cardStore.save(card);
             return null;
         });
@@ -340,10 +334,10 @@ public class AttachmentApiTest extends ApiTest {
         transactionTemplate.execute(t -> cardStore.save(asList(cardForCreate, cardForUpdate1, cardForUpdate2)));
 
         final String uuid = UUID.randomUUID().toString();
-        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(cardForCreate).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(cardForCreate).owner(user).provider(AttachmentFileProviderType.LOCAL).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         transactionTemplate.execute(t -> {
             fileStore.save(file);
-            cardForCreate.setDocuments(asSet(file));
+            cardForCreate.setDocuments(Set.of(file.toReference()));
             cardStore.save(cardForCreate);
             return null;
         });
@@ -393,10 +387,10 @@ public class AttachmentApiTest extends ApiTest {
         transactionTemplate.execute(t -> cardStore.save(asList(cardExisting, cardAfterUpdate1, cardAfterUpdate2)));
 
         final String uuid = UUID.randomUUID().toString();
-        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(cardExisting).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(cardExisting).owner(user).provider(AttachmentFileProviderType.LOCAL).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         transactionTemplate.execute(t -> {
             fileStore.save(file);
-            cardExisting.setDocuments(asSet(file));
+            cardExisting.setDocuments(Set.of(file.toReference()));
             cardStore.save(cardExisting);
             return null;
         });
@@ -449,10 +443,10 @@ public class AttachmentApiTest extends ApiTest {
         transactionTemplate.execute(t -> citationStore.save(asList(recordAfterUpdate, recordAfterUpdate2)));
 
         final String uuid = UUID.randomUUID().toString();
-        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card).owner(user).provider(AttachmentFileProviderType.LOCAL).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         transactionTemplate.execute(t -> {
             fileStore.save(file);
-            card.setDocuments(asSet(file));
+            card.setDocuments(Set.of(file.toReference()));
             cardStore.save(card);
             return null;
         });
@@ -474,20 +468,20 @@ public class AttachmentApiTest extends ApiTest {
 
         assertThat(fromDb).isNotNull();
         assertThat(fromDb.getName()).isEqualTo(updateDto.getName());
-        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card);
-        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(recordAfterUpdate, recordAfterUpdate2);
+        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card.toReference());
+        assertThat(fromDb.getRecords()).containsExactlyInAnyOrder(recordAfterUpdate.toReference(), recordAfterUpdate2.toReference());
 
         Card fromDbCard1 = cardStore.find(card.getId());
         assertThat(fromDbCard1).isNotNull();
-        assertThat(fromDbCard1.getDocuments()).containsExactly(file);
+        assertThat(fromDbCard1.getDocuments()).containsExactly(file.toReference());
 
         Citation recordFromDb = citationStore.find(recordAfterUpdate.getId());
         assertThat(recordFromDb.getDocuments()).isNotNull();
-        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(recordFromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
 
         Citation record2FromDb = citationStore.find(recordAfterUpdate2.getId());
         assertThat(record2FromDb.getDocuments()).isNotNull();
-        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb);
+        assertThat(record2FromDb.getDocuments()).containsExactlyInAnyOrder(fromDb.toReference());
     }
 
     @Test
@@ -499,10 +493,10 @@ public class AttachmentApiTest extends ApiTest {
         transactionTemplate.execute(t -> citationStore.save(asList(record, record2)));
 
         final String uuid = UUID.randomUUID().toString();
-        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card).records(record, record2).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card).records(record, record2).provider(AttachmentFileProviderType.LOCAL).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         transactionTemplate.execute(t -> {
             fileStore.save(file);
-            card.setDocuments(asSet(file));
+            card.setDocuments(Set.of(file.toReference()));
             cardStore.save(card);
             record.setDocuments(asSet(file));
             record2.setDocuments(asSet(file));
@@ -527,12 +521,12 @@ public class AttachmentApiTest extends ApiTest {
 
         assertThat(fromDb).isNotNull();
         assertThat(fromDb.getName()).isEqualTo(updateDto.getName());
-        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card);
+        assertThat(fromDb.getLinkedCards()).containsExactlyInAnyOrder(card.toReference());
         assertThat(fromDb.getRecords()).isEmpty();
 
         Card fromDbCard1 = cardStore.find(card.getId());
         assertThat(fromDbCard1).isNotNull();
-        assertThat(fromDbCard1.getDocuments()).containsExactly(file);
+        assertThat(fromDbCard1.getDocuments()).containsExactly(file.toReference());
 
         Citation recordFromDb = citationStore.find(record.getId());
         assertThat(recordFromDb.getDocuments()).isEmpty();
@@ -547,7 +541,7 @@ public class AttachmentApiTest extends ApiTest {
         transactionTemplate.execute(t -> cardStore.save(card));
 
         final String uuid = UUID.randomUUID().toString();
-        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).owner(user).cards(card).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).owner(user).cards(card).provider(AttachmentFileProviderType.LOCAL).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         transactionTemplate.execute(t -> fileStore.save(file));
 
         Path fileInStorage = Files.createFile(TEST_FILES_DIRECTORY.resolve(uuid));
@@ -574,10 +568,10 @@ public class AttachmentApiTest extends ApiTest {
         transactionTemplate.execute(t -> citationStore.save(asList(record, record2)));
 
         final String uuid = UUID.randomUUID().toString();
-        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card1, card2).records(record, record2).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile file = LocalAttachmentBuilder.builder().id(uuid).cards(card1, card2).records(record, record2).provider(AttachmentFileProviderType.LOCAL).owner(user).name("filename").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         transactionTemplate.execute(t -> {
             fileStore.save(file);
-            card1.setDocuments(asSet(file));
+            card1.setDocuments(Set.of(file.toReference()));
             cardStore.save(card1);
             record.setDocuments(asSet(file));
             record2.setDocuments(asSet(file));
@@ -617,9 +611,9 @@ public class AttachmentApiTest extends ApiTest {
         Card card2 = CardBuilder.builder().pid(2).name("card2").owner(user).build();
         transactionTemplate.execute(t -> cardStore.save(asList(card1, card2)));
 
-        LocalAttachmentFile localFile = LocalAttachmentBuilder.builder().owner(user).cards(card1).name("file").size(1024L).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
+        LocalAttachmentFile localFile = LocalAttachmentBuilder.builder().owner(user).cards(card1).name("file").size(1024L).provider(AttachmentFileProviderType.LOCAL).contentType(MediaType.APPLICATION_PDF_VALUE).type("pdf").build();
         ExternalAttachmentFile extFile = ExternalAttachmentBuilder.builder().owner(user).cards(card2).name("strong Elephant").type("jpeg").providerId(UUID.randomUUID().toString()).provider(AttachmentFileProviderType.DROPBOX).link("https://upload.wikimedia.org/wikipedia/commons/a/a9/African_Bush_Elephants.jpg").build();
-        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().owner(user).cards(card1).name("this is elephant url file").contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
+        UrlAttachmentFile urlFile = UrlAttachmentBuilder.builder().owner(user).cards(card1).name("this is elephant url file").provider(AttachmentFileProviderType.URL).contentType(MediaType.IMAGE_JPEG_VALUE).link("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf").size(42L).type("pdf").build();
         transactionTemplate.execute(t -> fileStore.save(asList(localFile, extFile, urlFile)));
 
         securedMvc().perform(

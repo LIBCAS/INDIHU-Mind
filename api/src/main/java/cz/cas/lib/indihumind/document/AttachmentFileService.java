@@ -6,10 +6,13 @@ import core.index.dto.*;
 import core.store.Transactional;
 import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.CardStore;
+import cz.cas.lib.indihumind.card.view.CardRef;
 import cz.cas.lib.indihumind.citation.Citation;
 import cz.cas.lib.indihumind.citation.CitationStore;
 import cz.cas.lib.indihumind.document.dto.CreateAttachmentDto;
 import cz.cas.lib.indihumind.document.dto.UpdateAttachmentDto;
+import cz.cas.lib.indihumind.document.view.DocumentListDto;
+import cz.cas.lib.indihumind.document.view.DocumentListDtoStore;
 import cz.cas.lib.indihumind.exception.ForbiddenFileException;
 import cz.cas.lib.indihumind.exception.UserQuotaReachedException;
 import cz.cas.lib.indihumind.security.delegate.UserDelegate;
@@ -22,7 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,6 +56,7 @@ import static core.util.Utils.*;
 public class AttachmentFileService {
 
     private AttachmentFileStore store;
+    private DocumentListDtoStore documentListDtoStore;
     private LocalAttachmentFileStore localAttachmentStore;
     private UrlAttachmentFileStore urlAttachmentStore;
     private CardStore cardStore;
@@ -116,9 +119,9 @@ public class AttachmentFileService {
         return attachmentFile;
     }
 
-    public Result<AttachmentFile> findAll(Params params) {
+    public Result<DocumentListDto> findAll(Params params) {
         addPrefilter(params, new Filter(IndexedAttachmentFile.USER_ID, FilterOperation.EQ, userDelegate.getId(), null));
-        return store.findAll(params);
+        return documentListDtoStore.findAll(params);
     }
 
     public Map<String, String> getAttachmentConfiguration() {
@@ -151,17 +154,12 @@ public class AttachmentFileService {
     public void deleteAttachmentFile(String id) {
         AttachmentFile attachmentFile = find(id);
 
-        log.debug(String.format("Deleting attachment file '%s' from DB and reindexing cards '%s'", attachmentFile.getId(), Arrays.toString(attachmentFile.getLinkedCards().toArray())));
+        log.debug("Deleting attachment file '{}' from DB", attachmentFile.getId());
 
-        Set<Card> linkedCards = attachmentFile.getLinkedCards();
-        linkedCards.forEach(card -> card.getDocuments().remove(attachmentFile));
-        cardStore.save(linkedCards);
-
-        Set<Citation> records = attachmentFile.getRecords();
-        records.forEach(citation -> citation.getDocuments().remove(attachmentFile));
-        recordStore.save(records);
-
+        Set<CardRef> linkedCards = attachmentFile.getLinkedCards();
         store.hardDelete(attachmentFile);
+
+        cardStore.asynchronousReindex(linkedCards); // remove document's name from cards' index
     }
 
 
@@ -182,44 +180,36 @@ public class AttachmentFileService {
         validateFileExtensionAndSize(dto, file);
         establishAttachmentFolder();
 
-        AttachmentFile attachmentFile;
+        AttachmentFile document;
         switch (dto.getProviderType()) {
             case DROPBOX:
             case GOOGLE_DRIVE:
-                attachmentFile = processExternalFile(dto);
+                document = processExternalFile(dto);
                 break;
             case LOCAL:
-                attachmentFile = processLocalFile(file);
+                document = processLocalFile(file);
                 break;
             case URL:
-                attachmentFile = processUrlFile(dto);
+                document = processUrlFile(dto);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + dto.getProviderType());
         }
 
-        attachmentFile.setOwner(userDelegate.getUser());
-        attachmentFile.setName(dto.getName());
-        attachmentFile.setType(dto.getType());
-
-        // because Card and MarcRecord are owners of the relation, an Attachment must exist in DB before the relation is established
-        AttachmentFile savedAttachment = store.save(attachmentFile);
+        document.setOwner(userDelegate.getUser());
+        document.setName(dto.getName());
+        document.setType(dto.getType());
 
         List<Card> linkedCards = cardStore.findAllInList(dto.getLinkedCards());
-        for (Card card : linkedCards) {
-            eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, card.getId()));
-            card.getDocuments().add(savedAttachment); // establish relation between cards and attachments
-            savedAttachment.getLinkedCards().add(card);
-        }
-        cardStore.save(linkedCards); // save relation in the owning side's store
+        linkedCards.forEach(card -> eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, card.getId())));
+        document.setLinkedCards(linkedCards);
 
         List<Citation> linkedRecords = recordStore.findAllInList(dto.getRecords());
-        for (Citation record : linkedRecords) {
-            eq(record.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Citation.class, record.getId()));
-            record.getDocuments().add(savedAttachment);
-            savedAttachment.getRecords().add(record);
-        }
-        recordStore.save(linkedRecords);
+        linkedRecords.forEach(record -> eq(record.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Citation.class, record.getId())));
+        document.setRecords(linkedRecords);
+
+        AttachmentFile savedAttachment = store.save(document);
+        cardStore.asynchronousReindex(document.getLinkedCards()); // put document's name into cards' index
 
         return savedAttachment;
     }
@@ -233,122 +223,28 @@ public class AttachmentFileService {
      */
     @Transactional
     public AttachmentFile updateAttachmentFile(String id, UpdateAttachmentDto dto) {
-        AttachmentFile file = store.find(id);
-        notNull(file, () -> new MissingObject(ENTITY_IS_NULL, AttachmentFile.class, id));
-        eq(file.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, AttachmentFile.class, id));
+        AttachmentFile document = store.find(id);
+        notNull(document, () -> new MissingObject(ENTITY_IS_NULL, AttachmentFile.class, id));
+        eq(document.getOwner(), userDelegate.getUser(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, AttachmentFile.class, id));
 
-        file.setName(dto.getName());
+        document.setName(dto.getName());
 
-        if (IndihuMindUtils.isCollectionModified(file.getLinkedCards(), dto.getLinkedCards())) {
-            Set<Card> oldCards = file.getLinkedCards();
-            oldCards.forEach(card -> card.getDocuments().remove(file));
-            cardStore.save(oldCards);
+        Set<CardRef> cardsForReindex = new HashSet<>(document.getLinkedCards());
 
-            List<Card> newCards = cardStore.findAllInList(dto.getLinkedCards());
-            newCards.forEach(card -> card.getDocuments().add(file));
-            cardStore.save(newCards);
-            file.setLinkedCards(asSet(newCards));
-        }
+        List<Card> newCards = cardStore.findAllInList(dto.getLinkedCards());
+        newCards.forEach(card -> eq(card.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Card.class, card.getId())));
+        document.setLinkedCards(newCards);
 
-        if (IndihuMindUtils.isCollectionModified(file.getRecords(), dto.getRecords())) {
-            Set<Citation> oldRecords = file.getRecords();
-            oldRecords.forEach(record -> record.getDocuments().remove(file));
-            recordStore.save(oldRecords);
+        List<Citation> citations = recordStore.findAllInList(dto.getRecords());
+        citations.forEach(citation -> eq(citation.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Citation.class, citation.getId())));
+        document.setRecords(citations);
 
-            List<Citation> newRecords = recordStore.findAllInList(dto.getRecords());
-            newRecords.forEach(record -> record.getDocuments().add(file));
-            recordStore.save(newRecords);
-            file.setRecords(asSet(newRecords));
-        }
+        AttachmentFile save = store.save(document);
 
-        return store.save(file);
+        cardsForReindex.addAll(document.getLinkedCards());
+        cardStore.asynchronousReindex(cardsForReindex); // remove document's name from old cards and add into new cards
+        return save;
     }
-
-    // ---------------------------- TEMPORARY UTILITY ----------------------------------
-
-    /**
-     * Temporary utility to find and afterwards remove LOCAl and URL file entities.
-     * They are downloaded to docker's storage and with next deploy, the files are removed but entities persist in DB.
-     * Therefore there is a need to remove these entities before a docker fix is in place.
-     *
-     * @see #deleteAllLocalAndUrlAttachmentsOfAllUsers()
-     */
-    public Map<String, List<String>> findAllLocalAndUrlAttachmentsOfAllUsers() {
-        Params params = new Params();
-        params.setPageSize(1000);
-        params.setFilter(asList(
-                new Filter(IndexedAttachmentFile.PROVIDER_TYPE, FilterOperation.EQ, AttachmentFileProviderType.URL.name(), null),
-                new Filter(IndexedAttachmentFile.PROVIDER_TYPE, FilterOperation.EQ, AttachmentFileProviderType.LOCAL.name(), null)));
-        params.setOperation(RootFilterOperation.OR);
-
-        return retrieveFiles(params);
-    }
-
-    public Map<String, List<String>> findAllLocalAttachmentsOfAllUsers() {
-        Params params = createParamsForFile(AttachmentFileProviderType.LOCAL);
-
-        return retrieveFiles(params);
-    }
-
-    public Map<String, List<String>> findAllUrlAttachmentsOfAllUsers() {
-        Params params = createParamsForFile(AttachmentFileProviderType.URL);
-
-        return retrieveFiles(params);
-    }
-
-    @NonNull
-    private Params createParamsForFile(AttachmentFileProviderType type) {
-        Params params = new Params();
-        params.setPageSize(1000);
-        params.setFilter(asList(
-                new Filter(IndexedAttachmentFile.PROVIDER_TYPE, FilterOperation.EQ, type.name(), null)));
-        return params;
-    }
-
-    private Map<String, List<String>> retrieveFiles(Params params) {
-        Result<AttachmentFile> all = store.findAll(params);
-
-        return all.getItems().stream().collect(Collectors.toMap(
-                AttachmentFile::getId, (file -> asList(file.getName(), file.getOwner().getEmail(),
-                        "Cards: " + file.getLinkedCards().size(), "Citations: " + file.getRecords().size(),
-                        file.getProviderType().name()))));
-    }
-
-    /**
-     * @see #findAllLocalAndUrlAttachmentsOfAllUsers()
-     */
-    public void deleteAllLocalAndUrlAttachmentsOfAllUsers() {
-        Map<String, List<String>> localAndUrlFiles = findAllLocalAndUrlAttachmentsOfAllUsers();
-        removeFilesWithoutAuthorization(localAndUrlFiles.keySet());
-    }
-
-    public void deleteAllUrlAttachmentsOfAllUsers() {
-        Map<String, List<String>> urlFiles = findAllUrlAttachmentsOfAllUsers();
-        removeFilesWithoutAuthorization(urlFiles.keySet());
-    }
-
-    public void deleteAllLocalAttachmentsOfAllUsers() {
-        Map<String, List<String>> localFiles = findAllLocalAttachmentsOfAllUsers();
-        removeFilesWithoutAuthorization(localFiles.keySet());
-    }
-
-    private void removeFilesWithoutAuthorization(Set<String> fileIds) {
-        for (String id : fileIds) {
-            AttachmentFile attachmentFile = store.find(id);
-            notNull(attachmentFile, () -> new MissingObject(ENTITY_IS_NULL, AttachmentFile.class, id));
-
-            Set<Card> linkedCards = attachmentFile.getLinkedCards();
-            linkedCards.forEach(card -> card.getDocuments().remove(attachmentFile));
-            cardStore.save(linkedCards);
-
-            Set<Citation> records = attachmentFile.getRecords();
-            records.forEach(citation -> citation.getDocuments().remove(attachmentFile));
-            recordStore.save(records);
-
-            store.hardDelete(attachmentFile);
-        }
-    }
-    // ---------------------------- ---------------------------- ----------------------------------
 
 
     private void validateFileExtensionAndSize(CreateAttachmentDto dto, MultipartFile file) throws ForbiddenFileException, UserQuotaReachedException {
@@ -384,6 +280,7 @@ public class AttachmentFileService {
      */
     private AttachmentFile processUrlFile(CreateAttachmentDto dto) {
         UrlAttachmentFile attachmentFile = new UrlAttachmentFile();
+        attachmentFile.setProviderType(AttachmentFileProviderType.URL);
 
         checked(() -> {
             Path filePath = Paths.get(attachmentsDirectory, attachmentFile.getId());
@@ -420,6 +317,7 @@ public class AttachmentFileService {
      */
     private AttachmentFile processLocalFile(MultipartFile fileContent) {
         LocalAttachmentFile attachmentFile = new LocalAttachmentFile();
+        attachmentFile.setProviderType(AttachmentFileProviderType.LOCAL);
 
         try (InputStream stream = fileContent.getInputStream()) {
             notNull(stream, () -> new BadArgument(ARGUMENT_IS_NULL, "File stream malfunctioned."));
@@ -551,6 +449,11 @@ public class AttachmentFileService {
     }
 
     @Inject
+    public void setDocumentListDtoStore(DocumentListDtoStore documentListDtoStore) {
+        this.documentListDtoStore = documentListDtoStore;
+    }
+
+    @Inject
     public void setUserDelegate(UserDelegate userDelegate) {
         this.userDelegate = userDelegate;
     }
@@ -604,4 +507,5 @@ public class AttachmentFileService {
     public void setTikaService(Tika tikaService) {
         this.tikaService = tikaService;
     }
+
 }

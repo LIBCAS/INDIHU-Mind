@@ -1,31 +1,39 @@
-import React, { useContext } from "react";
-import { withRouter, RouteComponentProps } from "react-router-dom";
+import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiTypography from "@material-ui/core/Typography";
 import MuiClearIcon from "@material-ui/icons/Clear";
-import MuiTooltip from "@material-ui/core/Tooltip";
-
-import { onEditCard } from "./_utils";
-import { formatCategoryName } from "../../../utils/category";
-
+import React, { useContext } from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Popconfirm } from "../../../components/portal/Popconfirm";
-import { CardContentProps } from "../../../types/card";
-import { GlobalContext } from "../../../context/Context";
 import { categoryActiveSet } from "../../../context/actions/category";
+import { GlobalContext } from "../../../context/Context";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { CategoryProps } from "../../../types/category";
+import { formatCategoryName } from "../../../utils/category";
 import { useStyles } from "./_cardStyles";
+import { onEditCard } from "./_utils";
 
 interface CardDetailContentCategoryViewProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   category: CategoryProps;
+  disabled?: boolean;
 }
 
 const CardDetailContentCategoryView: React.FC<
   CardDetailContentCategoryViewProps & RouteComponentProps
-> = ({ card, setCardContent, category, history }) => {
+> = ({
+  card,
+  setCard,
+  currentCardContent,
+  setCardContents,
+  category,
+  history,
+  disabled,
+}) => {
   const context: any = useContext(GlobalContext);
 
   const dispatch: Function = context.dispatch;
@@ -39,11 +47,16 @@ const CardDetailContentCategoryView: React.FC<
   };
 
   const handleDelete = () => {
-    const categories = card.card.categories.filter(
-      (cat) => cat.id !== category.id
-    );
+    const categories = card.categories.filter((cat) => cat.id !== category.id);
 
-    onEditCard("categories", categories, card, setCardContent);
+    onEditCard(
+      "categories",
+      categories,
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents
+    );
   };
 
   return (
@@ -56,7 +69,7 @@ const CardDetailContentCategoryView: React.FC<
       <MuiTooltip title="Kliknutím přejdete na detail kategorie.">
         <div onClick={handleCategoryClick}>{formatCategoryName(category)}</div>
       </MuiTooltip>
-      {card.lastVersion && (
+      {!disabled && currentCardContent.lastVersion && (
         <Popconfirm
           confirmText="Odebrat kategorii?"
           onConfirmClick={handleDelete}

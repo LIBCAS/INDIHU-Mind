@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-
-import { CardProps } from "../../types/card";
-
-import { api } from "../../utils/api";
 import { Loader } from "../../components/loader/Loader";
-
+import { CardProps } from "../../types/card";
+import { api } from "../../utils/api";
 import { CardsTableDetailContent } from "./CardsTableDetailContent";
 
 interface CardsTableDetailProps {
@@ -16,15 +13,21 @@ export const CardsTableDetail: React.FC<CardsTableDetailProps> = ({ item }) => {
   const [cardContent, setCardContent] = useState<CardProps | undefined>(
     undefined
   );
+
   useEffect(() => {
     setLoading(true);
     api()
-      .get(`card/${item.id}/content`)
+      .get(`card/${item.id}/contents`)
       .json()
       .then((res: any) => {
-        setLoading(false);
         if (res.length > 0 && res[0].card) {
-          setCardContent({ ...res[0].card, attributes: res[0].attributes });
+          api()
+            .get(`card/${item.id}`)
+            .json<CardProps>()
+            .then((card: CardProps) => {
+              setCardContent({ ...card, attributes: res[0].attributes });
+              setLoading(false);
+            });
         }
         return;
       })

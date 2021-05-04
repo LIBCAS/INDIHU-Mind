@@ -95,7 +95,7 @@ public class CitationGenerationTest {
             dto.setIds(allCitations);
 
             // generate pdf
-            ResponseEntity<InputStreamResource> result = service.generatePdf(dto);
+            ResponseEntity<InputStreamResource> result = service.generateWithCitations(dto);
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
             assertThat(result.getHeaders().getContentDisposition().getFilename()).isNotBlank();

@@ -2,6 +2,9 @@ package cz.cas.lib.indihumind.document;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import cz.cas.lib.indihumind.document.view.DocumentRef;
+import cz.cas.lib.indihumind.document.view.DocumentRefLocal;
+import cz.cas.lib.indihumind.document.view.DocumentRefUrl;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,9 +21,6 @@ import java.io.InputStream;
 @DiscriminatorValue("URL")
 @Entity
 public class UrlAttachmentFile extends AttachmentFile implements DownloadableAttachment {
-
-    @Transient
-    private final AttachmentFileProviderType providerType = AttachmentFileProviderType.URL;
 
     /** URL link from which file can be downloaded **/
     @NotNull
@@ -48,7 +48,7 @@ public class UrlAttachmentFile extends AttachmentFile implements DownloadableAtt
      * Defines choice of user whether to store URL file or only keep a link to the document.
      */
     @Enumerated(value = EnumType.STRING)
-    UrlDocumentLocation location = UrlDocumentLocation.WEB;
+    private UrlDocumentLocation location = UrlDocumentLocation.WEB;
 
 
     @Override
@@ -61,5 +61,12 @@ public class UrlAttachmentFile extends AttachmentFile implements DownloadableAtt
         SERVER,
         /** URL file is only referenced by link and not stored in server's storage; FE only opens a link in browser */
         WEB
+    }
+
+    @Override
+    public DocumentRef toReference() {
+        DocumentRefUrl ref = new DocumentRefUrl();
+        ref.setId(id);
+        return ref;
     }
 }

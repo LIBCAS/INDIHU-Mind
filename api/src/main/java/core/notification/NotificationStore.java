@@ -2,6 +2,7 @@ package core.notification;
 
 import core.index.IndexedDatedStore;
 import core.index.IndexedStore;
+import cz.cas.lib.indihumind.util.Reindexable;
 import lombok.Getter;
 import org.springframework.stereotype.Repository;
 
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
  * Implementation of {@link IndexedStore} for storing {@link Notification} and indexing {@link IndexedNotification}.
  */
 @Repository
-public class NotificationStore extends IndexedDatedStore<Notification, QNotification, IndexedNotification> {
+public class NotificationStore extends IndexedDatedStore<Notification, QNotification, IndexedNotification> implements Reindexable {
 
     public NotificationStore() {
         super(Notification.class, QNotification.class, IndexedNotification.class);
@@ -34,5 +35,15 @@ public class NotificationStore extends IndexedDatedStore<Notification, QNotifica
         indexed.setEmailing(o.getEmailing());
 
         return indexed;
+    }
+
+    @Override
+    public void reindexEverything() {
+        dropReindex();
+    }
+
+    @Override
+    public void removeAllDataFromIndex() {
+        removeAllIndexes();
     }
 }

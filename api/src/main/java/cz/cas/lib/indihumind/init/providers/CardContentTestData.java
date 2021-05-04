@@ -1,8 +1,8 @@
 package cz.cas.lib.indihumind.init.providers;
 
 import cz.cas.lib.indihumind.card.Card;
-import cz.cas.lib.indihumind.card.CardContent;
-import cz.cas.lib.indihumind.card.CardContentStore;
+import cz.cas.lib.indihumind.cardcontent.CardContent;
+import cz.cas.lib.indihumind.cardcontent.CardContentStore;
 import cz.cas.lib.indihumind.cardattribute.Attribute;
 import cz.cas.lib.indihumind.cardattribute.AttributeStore;
 import cz.cas.lib.indihumind.cardattribute.AttributeType;

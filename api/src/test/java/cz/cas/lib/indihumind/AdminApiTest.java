@@ -5,7 +5,10 @@ import core.index.dto.Order;
 import core.index.dto.Params;
 import core.index.dto.SortSpecification;
 import cz.cas.lib.indihumind.init.builders.UserBuilder;
-import cz.cas.lib.indihumind.security.user.*;
+import cz.cas.lib.indihumind.security.user.Roles;
+import cz.cas.lib.indihumind.security.user.User;
+import cz.cas.lib.indihumind.security.user.UserService;
+import cz.cas.lib.indihumind.security.user.UserStore;
 import cz.cas.lib.indihumind.util.BulkFlagSetDto;
 import helper.ApiTest;
 import org.junit.Before;
@@ -16,8 +19,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.inject.Inject;
-import java.util.Collections;
-import java.util.Set;
 
 import static core.util.Utils.asList;
 import static core.util.Utils.asSet;
@@ -38,12 +39,6 @@ public class AdminApiTest extends ApiTest {
     @Inject private UserService userService;
     @Inject private UserStore userStore;
     @Inject protected ObjectMapper objectMapper;
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedUser.class);
-    }
-
 
     private final User admin = UserBuilder.builder().password("password").email("mail").allowed(true).build();
 

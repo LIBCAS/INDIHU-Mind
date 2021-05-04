@@ -1,33 +1,37 @@
-import React, { useState, useContext } from "react";
-import { FormikProps } from "formik";
-import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiIconButton from "@material-ui/core/IconButton";
+import MuiTooltip from "@material-ui/core/Tooltip";
 import MuiAddCircleIcon from "@material-ui/icons/AddCircle";
-
+import { FormikProps } from "formik";
+import React, { useContext, useState } from "react";
+import { FileUploadPicker } from "../../../components/file/FileUploadPicker";
 import { GlobalContext } from "../../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_ERROR_TEXT_SET,
 } from "../../../context/reducers/status";
+import { CardContentProps, CardProps } from "../../../types/card";
 import { FileProps } from "../../../types/file";
-import { CardContentProps } from "../../../types/card";
-import { updateCardContent, onEditCard } from "./_utils";
-import { fileUpload, createErrorMessage } from "../../attachments/_utils";
-import { FileUploadPicker } from "../../../components/file/FileUploadPicker";
+import { createErrorMessage, fileUpload } from "../../attachments/_utils";
+import { onEditCard, updateCardContent } from "./_utils";
 
 interface CardDetailContentAddFileProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   refreshCard: () => void;
+  disabled?: boolean;
 }
 
 export const CardDetailContentAddFile: React.FC<CardDetailContentAddFileProps> = ({
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   refreshCard,
+  disabled,
 }) => {
   const context: any = useContext(GlobalContext);
 
@@ -43,7 +47,7 @@ export const CardDetailContentAddFile: React.FC<CardDetailContentAddFileProps> =
     try {
       setLoading(true);
 
-      const orderedDocuments = card.card.documents.map((f, i) => ({
+      const orderedDocuments = card.documents.map((f, i) => ({
         ...f,
         ordinalNumber: i + 1,
       }));
@@ -52,10 +56,18 @@ export const CardDetailContentAddFile: React.FC<CardDetailContentAddFileProps> =
 
       const value = [...orderedDocuments, values];
 
-      const cardId = card.card.id;
+      const cardId = currentCardContent.card.id;
 
       if (values.id) {
-        onEditCard("files", value, card, setCardContent, refreshCard);
+        onEditCard(
+          "files",
+          value,
+          card,
+          setCard,
+          currentCardContent,
+          setCardContents,
+          refreshCard
+        );
       } else {
         const ok = await fileUpload({
           ...values,
@@ -72,7 +84,13 @@ export const CardDetailContentAddFile: React.FC<CardDetailContentAddFileProps> =
 
           dispatch({ type: STATUS_ERROR_COUNT_CHANGE, payload: 1 });
 
-          updateCardContent("documents", value, card, setCardContent);
+          updateCardContent(
+            "documents",
+            value,
+            setCard,
+            currentCardContent,
+            setCardContents
+          );
 
           close();
         } else {
@@ -118,6 +136,7 @@ export const CardDetailContentAddFile: React.FC<CardDetailContentAddFileProps> =
             aria-label="add-attachment"
             component="span"
             onClick={onClick}
+            disabled={disabled}
           >
             <MuiAddCircleIcon fontSize="default" />
           </MuiIconButton>

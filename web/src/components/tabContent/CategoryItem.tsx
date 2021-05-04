@@ -63,22 +63,24 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({
           color="inherit"
         >
           {c.name}
-          {isExpanded ? (
-            <IconButton
-              size="small"
-              color="inherit"
-              className={classNames(classesSpacing.mlAuto)}
-            >
-              <ExpandLess />
-            </IconButton>
-          ) : hasSubCategories ? (
-            <IconButton
-              size="small"
-              color="inherit"
-              className={classNames(classesSpacing.mlAuto)}
-            >
-              <ExpandMore />
-            </IconButton>
+          {hasSubCategories ? (
+            isExpanded ? (
+              <IconButton
+                size="small"
+                color="inherit"
+                className={classNames(classesSpacing.mlAuto)}
+              >
+                <ExpandLess />
+              </IconButton>
+            ) : (
+              <IconButton
+                size="small"
+                color="inherit"
+                className={classNames(classesSpacing.mlAuto)}
+              >
+                <ExpandMore />
+              </IconButton>
+            )
           ) : null}
         </Typography>
       </Slide>

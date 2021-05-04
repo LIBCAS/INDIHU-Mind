@@ -13,7 +13,7 @@ import java.util.List;
  * @param <T> Type of instances to hold.
  */
 @NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(staticName = "with")
 @Getter
 @Setter
 public class Result<T> {
@@ -26,4 +26,8 @@ public class Result<T> {
      * Total count of instances in store (possibly satisfying the specified {@link Params} filters.
      */
     protected Long count;
+
+    public static <U> Result<U> with(List<U> items, int count) {
+        return Result.with(items, (long) count);
+    }
 }

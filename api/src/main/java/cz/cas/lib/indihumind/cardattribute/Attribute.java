@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import core.domain.DomainObject;
 import core.util.ApplicationContextUtils;
-import cz.cas.lib.indihumind.card.CardContent;
+import cz.cas.lib.indihumind.cardcontent.CardContent;
 import cz.cas.lib.indihumind.util.converters.AttributeValueDeserializer;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +28,7 @@ public class Attribute extends DomainObject {
     @JsonIgnore
     private CardContent cardContent;
 
+    /** Used for ordering on FE */
     private int ordinalNumber;
 
     @NotBlank

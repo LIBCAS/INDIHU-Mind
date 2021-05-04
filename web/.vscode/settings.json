@@ -1,0 +1,10 @@
+{
+    "explorer.compactFolders": false,
+    "explorer.confirmDelete": false,
+    "editor.tabSize": 2,
+    "prettier.useTabs": false,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "typescript.updateImportsOnFileMove.enabled": "always",
+}

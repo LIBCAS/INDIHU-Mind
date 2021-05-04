@@ -23,4 +23,8 @@ public class User extends DatedObject {
 
     private boolean allowed;
 
+    public String assembleCardPidSequenceId() {
+        return getId() + "#" + "pid";
+    }
+
 }

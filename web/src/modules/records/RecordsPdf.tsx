@@ -1,23 +1,22 @@
-import React, { useContext, useState, useEffect } from "react";
-import classNames from "classnames";
-import { Field, FieldProps, Formik, Form, FormikProps } from "formik";
 import { Button, Typography } from "@material-ui/core";
-
-import { GlobalContext, StateProps } from "../../context/Context";
-import { OptionType } from "../../components/select/_types";
-import { parseLabel } from "../cardCreate/_utils";
+import classNames from "classnames";
+import { Field, FieldProps, Form, Formik, FormikProps } from "formik";
+import React, { useContext, useEffect, useState } from "react";
 import { Select } from "../../components/form/Select";
 import { Loader } from "../../components/loader/Loader";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
-import { recordTemplateGet } from "../../context/actions/recordTemplate";
 import { Popover } from "../../components/portal/Popover";
-import { notEmpty } from "../../utils/form/validate";
+import { OptionType } from "../../components/select/_types";
+import { recordTemplateGet } from "../../context/actions/recordTemplate";
+import { GlobalContext, StateProps } from "../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { api } from "../../utils/api";
+import { notEmpty } from "../../utils/form/validate";
+import { parseLabel } from "../cardCreate/_utils";
 
 interface RecordsPdfProps {
   open: boolean;

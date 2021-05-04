@@ -64,7 +64,7 @@ public class AdvancedSearchServiceImpl implements AdvancedSearchService {
         String collectionName = AdvancedSearchLocator.getCollectionNameFor(indexedClass);
         ScoredPage<U> cardsPage = template.queryForPage(collectionName, query, indexedClassStore.getTypeClassForSearch());
 
-        return new Result<>(cardsPage.getContent(), cardsPage.getTotalElements());
+        return Result.with(cardsPage.getContent(), cardsPage.getTotalElements());
     }
 
     // ------------------------- CRUD FOR QUERY ENTITY ----------------------------------

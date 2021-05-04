@@ -1,9 +1,13 @@
 package cz.cas.lib.indihumind.document;
 
+import cz.cas.lib.indihumind.document.view.DocumentRef;
+import cz.cas.lib.indihumind.document.view.DocumentRefExternal;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
 @Getter
@@ -12,10 +16,6 @@ import javax.validation.constraints.NotNull;
 @DiscriminatorValue("EXTERNAL")
 @Entity
 public class ExternalAttachmentFile extends AttachmentFile {
-
-    @NotNull
-    @Enumerated(value = EnumType.STRING)
-    private AttachmentFileProviderType providerType;
 
     /**
      * id of the file assigned by the provider
@@ -26,4 +26,10 @@ public class ExternalAttachmentFile extends AttachmentFile {
     @NotNull
     private String link;
 
+    @Override
+    public DocumentRef toReference() {
+        DocumentRefExternal ref = new DocumentRefExternal();
+        ref.setId(id);
+        return ref;
+    }
 }

@@ -35,9 +35,4 @@ public class IndexedReferenceTemplate extends IndexedDatedObject implements Adva
         return USER_ID;
     }
 
-    @Override
-    public String getDeletedField() {
-        return null;
-    }
-
 }

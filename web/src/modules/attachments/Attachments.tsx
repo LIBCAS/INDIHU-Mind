@@ -1,14 +1,13 @@
-import React from "react";
 import { get } from "lodash";
-
-import { AttachmentsAdd } from "./AttachmentsAdd";
-import { AttachmentCard } from "./AttachmentCard";
+import React from "react";
 import { Column, ColumnType, Table } from "../../components/table";
-import { baseUrl, getFiles } from "./_utils";
 import { FileTypeText } from "../../enums";
-import { Attachment } from "./_types";
 import { formatBytes } from "../../utils";
+import { AttachmentCard } from "./AttachmentCard";
 import { AttachmentCardMenu } from "./AttachmentCardMenu";
+import { AttachmentsAdd } from "./AttachmentsAdd";
+import { Attachment } from "./_types";
+import { baseUrl, getFiles } from "./_utils";
 
 const columns: Column[] = [
   {

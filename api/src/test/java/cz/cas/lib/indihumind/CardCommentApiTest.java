@@ -2,7 +2,6 @@ package cz.cas.lib.indihumind;
 
 import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.CardStore;
-import cz.cas.lib.indihumind.card.IndexedCard;
 import cz.cas.lib.indihumind.cardcommnet.*;
 import cz.cas.lib.indihumind.init.builders.CardBuilder;
 import cz.cas.lib.indihumind.init.builders.UserBuilder;
@@ -20,9 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
@@ -43,12 +40,6 @@ public class CardCommentApiTest extends ApiTest {
     @Inject private CardStore cardStore;
     @Inject private UserService userService;
 
-    // TODO rework from service to api or inject into user delegate
-
-    @Override
-    public Set<Class<?>> getIndexedClassesForSolrAnnotationModification() {
-        return Collections.singleton(IndexedCard.class);
-    }
 
     private final User user = UserBuilder.builder().id("user").password("password").email("mail").allowed(false).build();
     private final Card card = CardBuilder.builder().pid(1).name("Karta číslo 1").owner(user).build();

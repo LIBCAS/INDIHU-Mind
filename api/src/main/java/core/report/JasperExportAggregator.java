@@ -60,6 +60,7 @@ public class JasperExportAggregator {
         configuration.setFieldDelimiter(csvDelimiter);
 
         JRCsvExporter exporter = new JRCsvExporter();
+        exporter.setConfiguration(configuration);
         exporter.setExporterInput(new SimpleExporterInput(print));
         exporter.setExporterOutput(new SimpleWriterExporterOutput(outputStream));
         exporter.exportReport();

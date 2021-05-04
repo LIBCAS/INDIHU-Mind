@@ -40,17 +40,14 @@ public class VzbUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserById(String id) {
         User user = userStore.find(id);
-        Set<String> authorityNames = new HashSet<>();
-        if (user != null)
-            authorityNames.addAll(assignedRoleService.getAssignedRoles(id));
+        if (user == null) return null;
+
+        Set<String> authorityNames = new HashSet<>(assignedRoleService.getAssignedRoles(id));
         Set<GrantedAuthority> authorities = authorityNames.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toSet());
 
-        if (user != null) {
-            return new UserDelegate(user, authorities);
-        }
-        return null;
+        return new UserDelegate(user, authorities);
     }
 
     @Inject

@@ -2,21 +2,22 @@ package cz.cas.lib.indihumind.security.user;
 
 import core.index.IndexedDatedStore;
 import core.security.authorization.assign.AssignedRoleStore;
+import cz.cas.lib.indihumind.util.Reindexable;
 import org.springframework.stereotype.Repository;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 
 @Repository
-public class UserStore extends IndexedDatedStore<User, QUser, IndexedUser> {
+public class UserStore extends IndexedDatedStore<User, QUser, IndexedUser> implements Reindexable {
 
     private AssignedRoleStore assignedRoleStore;
 
-    private final String indexType = "user";
+    public static final String INDEX_TYPE = "user";
 
     @Override
     public String getIndexType() {
-        return indexType;
+        return INDEX_TYPE;
     }
 
     public UserStore() {
@@ -42,5 +43,15 @@ public class UserStore extends IndexedDatedStore<User, QUser, IndexedUser> {
     @Inject
     public void setAssignedRoleStore(AssignedRoleStore assignedRoleStore) {
         this.assignedRoleStore = assignedRoleStore;
+    }
+
+    @Override
+    public void reindexEverything() {
+        dropReindex();
+    }
+
+    @Override
+    public void removeAllDataFromIndex() {
+        removeAllIndexes();
     }
 }

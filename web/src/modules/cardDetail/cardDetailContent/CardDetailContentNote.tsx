@@ -1,30 +1,31 @@
-import React, { useState } from "react";
-import MuiTooltip from "@material-ui/core/Tooltip";
-import { FormikProps, Field, Form } from "formik";
-import * as Yup from "yup";
-import ClickAwayListener from "@material-ui/core/ClickAwayListener";
 import Button from "@material-ui/core/Button";
+import ClickAwayListener from "@material-ui/core/ClickAwayListener";
+import MuiTooltip from "@material-ui/core/Tooltip";
 import Add from "@material-ui/icons/Add";
-
+import { Field, Form, FormikProps } from "formik";
+import React, { useState } from "react";
+import * as Yup from "yup";
 import { ButtonGrey } from "../../../components/control/ButtonGrey";
-import { Formik } from "../../../components/form/Formik";
-import { CardContentProps } from "../../../types/card";
-
-import { onEditCard, isNoteTextEmpty, onNoteUploadError } from "./_utils";
-import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
-import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
-import { useTooltipStyles } from "./_cardStyles";
 import { Editor } from "../../../components/editor";
-import { MessageSnackbar } from "../../../components/messages/MessageSnackbar";
+import { Formik } from "../../../components/form/Formik";
 import { Loader } from "../../../components/loader/Loader";
+import { MessageSnackbar } from "../../../components/messages/MessageSnackbar";
+import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
+import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { useTooltipStyles } from "./_cardStyles";
+import { isNoteTextEmpty, onEditCard, onNoteUploadError } from "./_utils";
+
 interface CardDetailContentNoteProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   note: string | null;
   setStructuredNote: (any: any) => any;
+  disabled?: boolean;
 }
 
 interface FormValues {
@@ -37,9 +38,12 @@ const validationSchema = Yup.object().shape({
 
 export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   note,
   setStructuredNote,
+  disabled,
 }) => {
   const [edit, setEdit] = useState<boolean>(false);
   const [error, setError] = useState({ isError: false, message: "" });
@@ -59,7 +63,9 @@ export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
           "note",
           "",
           card,
-          setCardContent,
+          setCard,
+          currentCardContent,
+          setCardContents,
           onSuccess,
           onNoteUploadError(setError, () => setLoading(false))
         )
@@ -67,7 +73,9 @@ export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
           "note",
           values.note,
           card,
-          setCardContent,
+          setCard,
+          currentCardContent,
+          setCardContents,
           onSuccess,
           onNoteUploadError(setError, () => setLoading(false))
         );
@@ -144,16 +152,21 @@ export const CardDetailContentNote: React.FC<CardDetailContentNoteProps> = ({
         >
           <div
             className={classesText.cursor}
-            onClick={() => (card.lastVersion ? setEdit(true) : undefined)}
+            onClick={() =>
+              !disabled && currentCardContent.lastVersion
+                ? setEdit(true)
+                : undefined
+            }
           >
             <Editor value={note} readOnly />
           </div>
         </MuiTooltip>
-      ) : card.lastVersion ? (
+      ) : currentCardContent.lastVersion ? (
         <div className={classesSpacing.mt1}>
           <ButtonGrey
             text="Přidat popis"
-            onClick={() => setEdit(true)}
+            disabled={disabled}
+            onClick={() => !disabled && setEdit(true)}
             bold
             inline
             Icon={<Add fontSize="small" />}

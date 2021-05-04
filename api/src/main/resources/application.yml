@@ -2,13 +2,13 @@ env: deploy # deploy / staging (for test data initialization)
 
 spring:
   application:
-    name: vzb
+    name: Indihu Mind
   freemarker:
     checkTemplateLocation: false
   datasource:
     url: jdbc:postgresql://localhost:5432/vzb
-    username: INSERT_VALUE_HERE
-    password: INSERT_VALUE_HERE
+    username: uas
+    password: vuji61oilo
     driver-class-name: org.postgresql.Driver
     name: mainPool
   jpa:
@@ -32,7 +32,7 @@ spring:
       write-dates-as-timestamps: false
   mail: # data for connecting to SMTP server
     host: INSERT_VALUE_HERE
-    port: INSERT_VALUE_HERE
+    port: 0 # INSERT_VALUE_HERE
     username: INSERT_VALUE_HERE
     password: INSERT_VALUE_HERE
     protocol: INSERT_VALUE_HERE
@@ -48,6 +48,13 @@ spring:
     password: INSERT_VALUE_HERE
 
 server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+      force-request: true
+      force-response: true
   tomcat:
     max-http-form-post-size: -1
     max-swallow-size: -1
@@ -98,3 +105,6 @@ vzb:
     local:
       file:
         path: local-attachment-files
+  report:
+    card: 6764540c-826c-4c24-a850-e7827d28bd60
+    cards-csv: eba436f6-93cb-44f8-aa08-b6452799be8f

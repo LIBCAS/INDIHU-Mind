@@ -3,7 +3,6 @@ package helper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import core.rest.config.RestExceptionDispatcher;
-import cz.cas.lib.indihumind.card.IndexedCard;
 import cz.cas.lib.indihumind.security.delegate.UserDelegate;
 import cz.cas.lib.indihumind.security.user.User;
 import lombok.Getter;
@@ -11,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.solr.client.solrj.SolrClient;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -24,10 +24,12 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.inject.Inject;
 import javax.servlet.Filter;
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -37,6 +39,8 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @Component
 public abstract class ApiTest implements AlterSolrCollection {
 
+    private static final Properties props = new Properties();
+
     @Inject private Filter springSecurityFilterChain;
     @Inject private WebApplicationContext webApplicationContext;
     @Inject private DataSource dataSource;
@@ -44,15 +48,20 @@ public abstract class ApiTest implements AlterSolrCollection {
     @Inject protected ObjectMapper objectMapper;
     @Inject protected TransactionTemplate transactionTemplate;
 
-    /** Name of test collection for {@link IndexedCard} */
-    @Getter
-    @Value("${vzb.index.cardCollectionName}")
-    private String cardTestCollectionName;
+    @BeforeClass
+    public static void beforeClass() throws IOException {
+        props.load(ClassLoader.getSystemResourceAsStream("application.properties"));
+    }
 
-    /** Name of test collection for entities extending {@link core.index.IndexedDomainObject} */
-    @Getter
-    @Value("${vzb.index.uasTestCollectionName}")
-    private String uasTestCollectionName;
+    @Override
+    public String getCardTestCollectionName() {
+        return props.getProperty("vzb.index.cardCollectionName");
+    }
+
+    @Override
+    public String getUasTestCollectionName() {
+        return props.getProperty("vzb.index.uasTestCollectionName");
+    }
 
 
     @Before
@@ -101,13 +110,13 @@ public abstract class ApiTest implements AlterSolrCollection {
             c.close();
         }
         if (solrClient != null) {
-            log.info("Deleting indices from collection: " + cardTestCollectionName);
-            solrClient.deleteByQuery(cardTestCollectionName, "*:*");
-            solrClient.commit(cardTestCollectionName);
+            log.info("Deleting indices from collection: " + getCardTestCollectionName());
+            solrClient.deleteByQuery(getCardTestCollectionName(), "*:*");
+            solrClient.commit(getCardTestCollectionName());
 
-            log.info("Deleting indices from collection: " + uasTestCollectionName);
-            solrClient.deleteByQuery(uasTestCollectionName, "*:*");
-            solrClient.commit(uasTestCollectionName);
+            log.info("Deleting indices from collection: " + getUasTestCollectionName());
+            solrClient.deleteByQuery(getUasTestCollectionName(), "*:*");
+            solrClient.commit(getUasTestCollectionName());
         }
     }
 }

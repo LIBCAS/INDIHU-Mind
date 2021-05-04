@@ -1,4 +1,4 @@
-import { StateProps, ActionProps } from "../Context";
+import { ActionProps, StateProps } from "../Context";
 
 export const CATEGORY_GET = "CATEGORY_GET";
 export const CATEGORY_ACTIVE_SET = "CATEGORY_ACTIVE_SET";

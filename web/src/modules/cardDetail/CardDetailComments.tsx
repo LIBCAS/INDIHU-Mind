@@ -1,21 +1,20 @@
-import React, { useState } from "react";
+import { Button, Divider, TextField } from "@material-ui/core";
+import Tooltip from "@material-ui/core/Tooltip";
+import Delete from "@material-ui/icons/Delete";
+import Edit from "@material-ui/icons/Edit";
 import classNames from "classnames";
 import { compact } from "lodash";
-import { Divider, TextField, Button } from "@material-ui/core";
-import Edit from "@material-ui/icons/Edit";
-import Delete from "@material-ui/icons/Delete";
-import Tooltip from "@material-ui/core/Tooltip";
-
-import { Timeline } from "../../components/timeline";
-import { CardContentProps } from "../../types/card";
-import { formatDateTime, formatMultiline } from "../../utils";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+import React, { useState } from "react";
 import { useStyles as useFormStyles } from "../../components/form/_styles";
-import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
 import { Loader } from "../../components/loader/Loader";
+import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
+import { Timeline } from "../../components/timeline";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { CardContentProps, CardProps } from "../../types/card";
+import { formatDateTime, formatMultiline } from "../../utils";
 import { useStyles } from "./_cardDetailStyles";
-import { createComment, updateComment, deleteComment } from "./_utils";
+import { createComment, deleteComment, updateComment } from "./_utils";
 
 interface CommentEditProps {
   value?: string;
@@ -25,7 +24,9 @@ interface CommentEditProps {
 }
 
 interface CardDetailCommentsProps {
-  card: CardContentProps;
+  card: CardProps;
+  currentCardContent: CardContentProps;
+  disabled?: boolean;
 }
 
 const clearDateTime = (dateTime: string) => dateTime.replace(/\..*$/, "");
@@ -58,6 +59,7 @@ const CommentEdit: React.FC<CommentEditProps> = ({
         inputProps={{
           className: classNames(classesForm.default, classesForm.textArea),
         }}
+        disabled={disabled}
       />
       <div className={classNames(classesLayout.flex, classesLayout.justifyEnd)}>
         {compact([
@@ -80,12 +82,14 @@ const CommentEdit: React.FC<CommentEditProps> = ({
 
 export const CardDetailComments: React.FC<CardDetailCommentsProps> = ({
   card,
+  currentCardContent,
+  disabled,
 }) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
 
   const [active, setActive] = useState<number | null>(null);
-  const [comments, setComments] = useState(card.card.comments || []);
+  const [comments, setComments] = useState(card.comments || []);
   const [message, setMessage] = useState<boolean | string>(false);
   const [loading, setLoading] = useState(false);
 
@@ -96,7 +100,7 @@ export const CardDetailComments: React.FC<CardDetailCommentsProps> = ({
     const isEdit = index < comments.length;
     const result = await (isEdit
       ? updateComment({ ...comments[index], text })
-      : createComment(card.card.id, text));
+      : createComment(currentCardContent.card.id, text));
 
     if (result) {
       setComments(
@@ -145,6 +149,7 @@ export const CardDetailComments: React.FC<CardDetailCommentsProps> = ({
                       value: item.text,
                       onClose,
                       onSubmit: (value) => onSubmit(value, index),
+                      disabled,
                     }}
                   />
                 ) : (
@@ -157,12 +162,13 @@ export const CardDetailComments: React.FC<CardDetailCommentsProps> = ({
                           {
                             title: "Editovat",
                             Component: Edit,
-                            onClick: () => setActive(index),
+                            onClick: () => !disabled && setActive(index),
                           },
                           {
                             title: "Smazat",
                             Component: Delete,
-                            onClick: () => onDeleteComment(item.id),
+                            onClick: () =>
+                              !disabled && onDeleteComment(item.id),
                           },
                         ].map(({ title, Component, onClick }) => (
                           <Tooltip key={title} title={title}>
@@ -190,7 +196,7 @@ export const CardDetailComments: React.FC<CardDetailCommentsProps> = ({
                   {...{
                     key,
                     onSubmit: (value) => onSubmit(value, index),
-                    disabled: loading,
+                    disabled: disabled || loading,
                   }}
                 />
               );

@@ -1,31 +1,29 @@
-import React, { useState, useEffect, useContext } from "react";
-import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
+import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-
-import { Form, Field, FieldProps, FormikProps } from "formik";
+import { Field, FieldProps, Form, FormikProps } from "formik";
+import React, { useContext, useEffect, useState } from "react";
 import { Formik } from "../../../components/form/Formik";
-import { GlobalContext, StateProps } from "../../../context/Context";
-import { categoryGet } from "../../../context/actions/category";
-import { CreateCategory } from "../../../components/tabContent/CreateCategory";
 import { Select } from "../../../components/form/Select";
-
-import { CategoryProps } from "../../../types/category";
-import { OptionType } from "../../../components/select/_types";
-import { flattenCategory, getFlatCategories } from "../../cardCreate/_utils";
-import { CardContentProps } from "../../../types/card";
 import { Modal } from "../../../components/portal/Modal";
 import { Popover } from "../../../components/portal/Popover";
-import { onEditCard } from "./_utils";
-
+import { OptionType } from "../../../components/select/_types";
+import { CreateCategory } from "../../../components/tabContent/CreateCategory";
+import { categoryGet } from "../../../context/actions/category";
+import { GlobalContext, StateProps } from "../../../context/Context";
 import { useStyles as useSpacingStyles } from "../../../theme/styles/spacingStyles";
 import { useStyles as useTextStyles } from "../../../theme/styles/textStyles";
+import { CardContentProps, CardProps } from "../../../types/card";
+import { CategoryProps } from "../../../types/category";
+import { flattenCategory, getFlatCategories } from "../../cardCreate/_utils";
 import { useStyles } from "./_cardStyles";
+import { onEditCard } from "./_utils";
 
 interface CardDetailContentAddCategoryFormProps {
-  card: CardContentProps;
-  cardContent: CardContentProps[] | undefined;
-  setCardContent: React.Dispatch<
+  card: CardProps;
+  setCard: React.Dispatch<React.SetStateAction<CardProps | undefined>>;
+  currentCardContent: CardContentProps;
+  setCardContents: React.Dispatch<
     React.SetStateAction<CardContentProps[] | undefined>
   >;
   openForm: any;
@@ -40,7 +38,9 @@ interface FormValues {
 
 export const CardDetailContentAddCategoryForm: React.FC<CardDetailContentAddCategoryFormProps> = ({
   card,
-  setCardContent,
+  setCard,
+  currentCardContent,
+  setCardContents,
   openForm,
   setOpenForm,
   anchorEl,
@@ -78,10 +78,10 @@ export const CardDetailContentAddCategoryForm: React.FC<CardDetailContentAddCate
   useEffect(() => {
     if (initialValues.categories.length === 0) {
       // to get whole category path (subcategory > subsubcategory)
-      setInitialValues({ categories: card.card.categories.map((c) => c.id) });
+      setInitialValues({ categories: card.categories.map((c) => c.id) });
     }
   }, [
-    card.card.categories,
+    card.categories,
     state.category.categories,
     initialValues.categories.length,
   ]);
@@ -97,7 +97,15 @@ export const CardDetailContentAddCategoryForm: React.FC<CardDetailContentAddCate
     const resultFlatten = allFlatten.filter((o) =>
       values.categories.some((id) => id === o.id)
     );
-    onEditCard("categories", resultFlatten, card, setCardContent, refreshCard);
+    onEditCard(
+      "categories",
+      resultFlatten,
+      card,
+      setCard,
+      currentCardContent,
+      setCardContents,
+      refreshCard
+    );
     setOpenForm(false);
   };
   return (
@@ -125,7 +133,7 @@ export const CardDetailContentAddCategoryForm: React.FC<CardDetailContentAddCate
                       )}
                       variant="h5"
                     >
-                      Kategorie karty {card.card.name}
+                      Kategorie karty {currentCardContent.card.name}
                     </Typography>
                     <Field
                       name="categories"

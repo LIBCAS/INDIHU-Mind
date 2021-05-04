@@ -33,9 +33,6 @@ public interface AdvancedSearchStore<T extends AdvancedSearchClass> {
         if (instance.getUserIdField() != null) // filterOwner
             fq.addCriteria(Criteria.where(instance.getUserIdField()).is(userDelegate.getId()));
 
-        if (instance.getDeletedField() != null) // filterNotDeleted
-            fq.addCriteria(Criteria.where(instance.getDeletedField()).isNull());
-
         return fq;
     }
 
