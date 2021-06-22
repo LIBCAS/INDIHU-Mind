@@ -16,7 +16,7 @@
     "jwt-decode": "^2.2.0",
     "ky": "^0.24.0",
     "load-script": "^1.0.0",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "react": "^16.14.0",
     "react-color": "^2.18.1",
     "react-copy-to-clipboard": "^5.0.2",
