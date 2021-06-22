@@ -522,9 +522,11 @@ const RecordsFormView: React.FC<RecordsFormProps & RouteComponentProps> = ({
                                   <div className={classesSpacing.mr1}>
                                     {m.czech}
                                   </div>
-                                  <Tooltip title={createMarcLabel(m)}>
-                                    <InfoIcon />
-                                  </Tooltip>
+                                  {!m.__hidden__ && (
+                                    <Tooltip title={createMarcLabel(m)}>
+                                      <InfoIcon />
+                                    </Tooltip>
+                                  )}
                                 </div>
                               }
                               field={field}

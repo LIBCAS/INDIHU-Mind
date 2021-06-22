@@ -1,47 +1,56 @@
-import React, { useRef, useState, useContext } from "react";
-import MenuList from "@material-ui/core/MenuList";
-import MenuItem from "@material-ui/core/MenuItem";
+import Button from "@material-ui/core/Button";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
-import Button from "@material-ui/core/Button";
-import MoreVert from "@material-ui/icons/MoreVert";
-import Edit from "@material-ui/icons/Edit";
-import Delete from "@material-ui/icons/Delete";
+import MenuItem from "@material-ui/core/MenuItem";
+import MenuList from "@material-ui/core/MenuList";
+import { ArrowLeft, ArrowRight } from "@material-ui/icons";
 import Add from "@material-ui/icons/Add";
 import ArrowForward from "@material-ui/icons/ArrowForward";
+import Delete from "@material-ui/icons/Delete";
+import Edit from "@material-ui/icons/Edit";
+import MoreVert from "@material-ui/icons/MoreVert";
 import OpenWith from "@material-ui/icons/OpenWith";
 import classNames from "classnames";
-
-import { GlobalContext } from "../../context/Context";
+import React, { useContext, useRef, useState } from "react";
+import { RouteComponentProps, withRouter } from "react-router-dom";
+import { Loader } from "../../components/loader/Loader";
+import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
+import { Popover } from "../../components/portal/Popover";
+import { CreateCategory } from "../../components/tabContent/CreateCategory";
 import { categoryActiveSet } from "../../context/actions/category";
+import { GlobalContext } from "../../context/Context";
 import {
   STATUS_ERROR_COUNT_CHANGE,
   STATUS_ERROR_TEXT_SET,
 } from "../../context/reducers/status";
-import { api } from "../../utils/api";
-import { Loader } from "../../components/loader/Loader";
-import { MessageSnackbar } from "../../components/messages/MessageSnackbar";
-
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-import { Popover } from "../../components/portal/Popover";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { CategoryProps } from "../../types/category";
-
-import { CategoriesRename } from "./CategoriesRename";
-import { RouteComponentProps, withRouter } from "react-router-dom";
-import { CreateCategory } from "../../components/tabContent/CreateCategory";
+import { api } from "../../utils/api";
 import { CategoriesMove } from "./CategoriesMove";
+import { CategoriesRename } from "./CategoriesRename";
+
 interface CategoriesPopoverProps {
   category: CategoryProps;
   loadCategories: Function;
   iconBgChange?: boolean;
   parentCategory?: CategoryProps;
+  moveForward?: () => void;
+  moveBackward?: () => void;
 }
 
 const CategoriesPopoverView: React.FC<
   CategoriesPopoverProps & RouteComponentProps
-> = ({ category, loadCategories, history, iconBgChange, parentCategory }) => {
+> = ({
+  category,
+  loadCategories,
+  history,
+  iconBgChange,
+  parentCategory,
+  moveBackward,
+  moveForward,
+}) => {
   const context: any = useContext(GlobalContext);
   const dispatch: Function = context.dispatch;
   const [open, setOpen] = useState(false);
@@ -146,6 +155,22 @@ const CategoriesPopoverView: React.FC<
                   </ListItemIcon>
                   <ListItemText primary="Odstranit" />
                 </MenuItem>
+                {moveForward && (
+                  <MenuItem onClick={moveForward}>
+                    <ListItemIcon>
+                      <ArrowRight />
+                    </ListItemIcon>
+                    <ListItemText primary="Posunout dopředu" />
+                  </MenuItem>
+                )}
+                {moveBackward && (
+                  <MenuItem onClick={moveBackward}>
+                    <ListItemIcon>
+                      <ArrowLeft />
+                    </ListItemIcon>
+                    <ListItemText primary="Posunout dozadu" />
+                  </MenuItem>
+                )}
               </MenuList>
             )}
             {content === "addSubcategory" && (

@@ -1,19 +1,23 @@
-import React, { useEffect, useContext, useState, useCallback } from "react";
-import { RouteComponentProps } from "react-router-dom";
 import Button from "@material-ui/core/Button";
-import Typography from "@material-ui/core/Typography";
-import classNames from "classnames";
 import Fade from "@material-ui/core/Fade";
-
+import IconButton from "@material-ui/core/IconButton";
+import Tooltip from "@material-ui/core/Tooltip";
+import Typography from "@material-ui/core/Typography";
+import ViewHeadline from "@material-ui/icons/ViewHeadline";
+import ViewModule from "@material-ui/icons/ViewModule";
+import classNames from "classnames";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { RouteComponentProps } from "react-router-dom";
+import OrderedItems from "../../components/orderedItems/OrderedItems";
 import { Modal } from "../../components/portal/Modal";
 import { CreateCategory } from "../../components/tabContent/CreateCategory";
 import { categoryGet } from "../../context/actions/category";
 import { GlobalContext, StateProps } from "../../context/Context";
-import { useStyles } from "./_categoriesStyles";
 import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
 import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-
+import { theme } from "../../theme/theme";
 import { CategoriesItem } from "./CategoriesItem";
+import { useStyles } from "./_categoriesStyles";
 
 export const Categories: React.FC<RouteComponentProps> = () => {
   const classes = useStyles();
@@ -27,6 +31,10 @@ export const Categories: React.FC<RouteComponentProps> = () => {
   const loadCategories = useCallback(() => {
     categoryGet(dispatch);
   }, [dispatch]);
+
+  const [viewCards, setViewCards] = useState<boolean>(true);
+
+  const Icon = viewCards ? ViewHeadline : ViewModule;
 
   useEffect(() => {
     loadCategories();
@@ -47,6 +55,18 @@ export const Categories: React.FC<RouteComponentProps> = () => {
             )}
           >
             <Typography variant="h5">Přehled kategorií</Typography>
+
+            <Tooltip
+              className={classes.toggleViewButton}
+              title={viewCards ? "Řádky" : "Dlaždice"}
+            >
+              <IconButton
+                style={{ color: theme.blackIconColor }}
+                onClick={() => setViewCards((prev) => !prev)}
+              >
+                <Icon fontSize="large" color="inherit" />
+              </IconButton>
+            </Tooltip>
             <Button
               className={classes.createButton}
               variant="contained"
@@ -59,15 +79,23 @@ export const Categories: React.FC<RouteComponentProps> = () => {
           {state.category.categories.length === 0 &&
             state.status.loadingCount === 0 && <div>Žádné kategorie</div>}
           <div className={classes.categoriesContainer}>
-            {state.category.categories.map((cat) => (
-              <CategoriesItem
-                openedCategory={openedCategory}
-                setOpenedCategory={setOpenedCategory}
-                key={cat.id}
-                category={cat}
-                loadCategories={loadCategories}
-              />
-            ))}
+            <OrderedItems
+              initialItems={state.category.categories}
+              label="Kategorie"
+              endpoint="category"
+              itemComponent={({ item: cat, moveForward, moveBackward }) => (
+                <CategoriesItem
+                  openedCategory={openedCategory}
+                  setOpenedCategory={setOpenedCategory}
+                  key={cat.id}
+                  category={cat}
+                  loadCategories={loadCategories}
+                  moveForward={moveForward}
+                  moveBackward={moveBackward}
+                  displayFullWidth={!viewCards}
+                />
+              )}
+            />
           </div>
         </div>
       </Fade>

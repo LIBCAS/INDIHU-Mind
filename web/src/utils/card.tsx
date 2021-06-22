@@ -33,7 +33,10 @@ export const parseAttribute = (
           <span onClick={() => onClick()}>{value}</span>
           <LaunchIcon
             style={{ marginLeft: 8, marginBottom: -4 }}
-            onClick={() => openInNewTab(`${value}`)}
+            onClick={(event: React.MouseEvent<SVGSVGElement>) => {
+              openInNewTab(`${value}`);
+              event.stopPropagation();
+            }}
           />
         </span>
       );

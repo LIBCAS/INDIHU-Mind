@@ -6,7 +6,6 @@ import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.QCard;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,7 +19,7 @@ public class CategoryStore extends DomainStore<Category, QCategory> {
     }
 
     @Override
-    public Collection<Category> findByUser(String userId) {
+    public List<Category> findByUser(String userId) {
         List<Category> fetch = query()
                 .select(qObject())
                 .where(qObject().owner.id.eq(userId))
@@ -66,6 +65,29 @@ public class CategoryStore extends DomainStore<Category, QCategory> {
         Set<Card> orphanedCardsSet = new HashSet<>(orphanedCards);
         orphanedCardsSet.forEach(c -> c.getCategories().removeAll(allCatsToBeDeleted));
         return orphanedCardsSet;
+    }
+
+    /**
+     * Get assignable ordinal number for a new category
+     *
+     * @param parent nullable, ordinal number is +1 more than the biggest number from parent's subcategories
+     * @param userId logged in user
+     * @return 0 if parent has no subcategories (created category is the first subcategory)
+     *         otherwise highest ordinal number of parent's subcategories + 1
+     */
+    public int retrieveNextOrdinalOfSubcategory(Category parent, String userId) {
+        BooleanExpression hasParent = parent == null
+                ? qObject().parent.isNull()
+                : qObject().parent.eq(parent);
+
+        Category category = query()
+                .select(qObject())
+                .where(hasParent)
+                .where(qObject().owner.id.eq(userId))
+                .orderBy(qObject().ordinalNumber.desc())
+                .fetchFirst();
+
+        return category == null ? 0 : category.getOrdinalNumber() + 1;
     }
 
     /**

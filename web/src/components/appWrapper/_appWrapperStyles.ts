@@ -4,9 +4,13 @@ import { Theme } from "@material-ui/core/styles/createMuiTheme";
 export const useStyles = makeStyles((theme: Theme) => {
   return {
     base: {
-      margin: "56px auto auto auto",
+      margin: "0 auto auto auto",
+    },
+    appTopMargin: {
+      width: "100%",
+      height: 56,
       [theme.breakpoints.up("sm")]: {
-        marginTop: "64px",
+        height: 64,
       },
     },
     gridRight: {
@@ -27,7 +31,12 @@ export const useStyles = makeStyles((theme: Theme) => {
       padding: theme.spacing(1),
     },
     gridRightCompact: {
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
+        width: "calc(100% - 250px)",
+      },
+    },
+    gridRightCompactAdmin: {
+      [theme.breakpoints.up("xxl" as any)]: {
         width: "calc(100% - 250px)",
       },
     },

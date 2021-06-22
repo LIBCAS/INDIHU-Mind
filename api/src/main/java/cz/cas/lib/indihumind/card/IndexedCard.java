@@ -1,18 +1,23 @@
 package cz.cas.lib.indihumind.card;
 
-import core.index.IndexField;
-import core.index.IndexFieldType;
-import core.index.IndexedDatedObject;
+import core.index.*;
 import cz.cas.lib.indihumind.advancedsearch.query.QueryType;
 import cz.cas.lib.indihumind.advancedsearch.searchable.AdvancedSearch;
+import cz.cas.lib.indihumind.advancedsearch.searchable.AdvancedSearchClass;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.apache.solr.client.solrj.beans.Field;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.solr.core.mapping.Indexed;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
 import java.util.Date;
 import java.util.List;
+
+import core.index.IndexField;
+import core.index.IndexFieldType;
 
 @Getter
 @Setter

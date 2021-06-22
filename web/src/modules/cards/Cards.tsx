@@ -1,6 +1,6 @@
 import Typography from "@material-ui/core/Typography";
 import classNames from "classnames";
-import { isEmpty } from "lodash";
+import { isEmpty, sortBy } from "lodash";
 import React, { useCallback, useContext, useEffect } from "react";
 import { RouteComponentProps } from "react-router-dom";
 import { CardTile } from "../../components/card/CardTile";
@@ -47,7 +47,9 @@ export const columns: Column[] = [
     name: "Štítky",
     unsortable: true,
     format: (row: any) =>
-      row.labels.map((label: any) => <Label label={label} key={label.id} />),
+      sortBy(row.labels, "ordinalNumber").map((label: any) => (
+        <Label label={label} key={label.id} />
+      )),
   },
 ];
 

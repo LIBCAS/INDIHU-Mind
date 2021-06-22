@@ -15,6 +15,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import java.util.Collection;
+import java.util.List;
 
 import static cz.cas.lib.indihumind.util.ResponseContainer.*;
 
@@ -48,7 +49,7 @@ public class CategoryApi {
     @ApiOperation(value = "Retrieve all entities of user [sorted by ordinal number].")
     @ApiResponses(value = {@ApiResponse(code = 200, message = "OK", response = CategoryDto.class, responseContainer = LIST)})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public Collection<CategoryDto> findAllOfUser() {
+    public List<CategoryDto> findAllOfUser() {
         return service.findAllOfUser(userDelegate.getId());
     }
 

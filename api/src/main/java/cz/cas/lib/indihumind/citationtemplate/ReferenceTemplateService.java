@@ -47,7 +47,7 @@ import static cz.cas.lib.indihumind.exception.NameAlreadyExistsException.ErrorCo
 @Slf4j
 public class ReferenceTemplateService {
 
-//    @Value("${vzb.marc.template.missing-data}")
+    //    @Value("${vzb.marc.template.missing-data}")
 //    private String MISSING_DATA_ERROR_TEXT;
     private String PDF_FILE_NAME;
 

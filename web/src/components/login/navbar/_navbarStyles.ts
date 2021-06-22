@@ -20,7 +20,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       borderRadius: "0",
       justifyContent: "flex-start",
       flex: "1",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         display: "none",
       },
     },
@@ -31,7 +31,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       display: "flex",
       alignItems: "center",
       flexBasis: "auto",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         flexBasis: 250,
       },
     },
@@ -49,7 +49,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       alignItems: "center",
       flex: "1",
       justifyContent: "end",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         marginLeft: "auto",
         flex: "0",
       },
@@ -66,7 +66,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       },
       marginLeft: "0",
       width: "100%",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         marginLeft: theme.spacing(1),
         width: "auto",
       },
@@ -81,7 +81,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       justifyContent: "flex-end",
       cursor: "pointer",
       flex: "1",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         display: "none",
         marginRight: theme.spacing(2),
       },
@@ -96,12 +96,12 @@ export const useStyles = makeStyles((theme: Theme) => {
       paddingBottom: theme.spacing(1.5),
       paddingLeft: theme.spacing(3),
       width: "100%",
-      [theme.breakpoints.up("md")]: {
+      [theme.breakpoints.up("lg")]: {
         paddingRight: theme.spacing(3),
         transition: theme.transitions.create("width"),
         width: 120,
       },
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
         "&:focus": {
           width: 200,
         },
@@ -114,14 +114,14 @@ export const useStyles = makeStyles((theme: Theme) => {
       opacity: 0,
     },
     desktopMenu: {
-      [theme.breakpoints.down("xs")]: {
+      [theme.breakpoints.down("sm")]: {
         display: "none",
       },
     },
     mobileMenuToogle: {
       marginLeft: "auto",
       display: "none",
-      [theme.breakpoints.down("xs")]: {
+      [theme.breakpoints.down("sm")]: {
         display: "block",
       },
     },

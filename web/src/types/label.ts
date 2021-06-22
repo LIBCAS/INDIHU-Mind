@@ -3,4 +3,5 @@ export interface LabelProps {
   color: string;
   name: string;
   owner: any;
+  ordinalNumber: number;
 }

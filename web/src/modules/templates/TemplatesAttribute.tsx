@@ -1,29 +1,51 @@
-import React, { useRef, useState } from "react";
-import { Field } from "formik";
+import IconButton from "@material-ui/core/IconButton";
 import Typography from "@material-ui/core/Typography";
-
-import { CardTemplateAttribute } from "../../types/cardTemplate";
+import ArrowLeft from "@material-ui/icons/ArrowLeft";
+import ArrowRight from "@material-ui/icons/ArrowRight";
+import { Field, FormikProps } from "formik";
+import React, { useRef, useState } from "react";
 import { Popover } from "../../components/portal/Popover";
+import { CardTemplateAttribute } from "../../types/cardTemplate";
 import { getAttributeTypeLabel } from "../../utils/attribute";
-
-import { useStyles } from "./_templatesStyles";
 import { TemplatesAddAttribute } from "./TemplatesAddAttribute";
 import { TemplatesAttributeLabel } from "./TemplatesAttributeLabel";
+import { TemplatesFormValues } from "./TemplatesForm";
+import { useStyles } from "./_templatesStyles";
 
 interface TemplatesAttributeProps {
   attribute: CardTemplateAttribute;
-  formikBag: any;
+  formikBag: FormikProps<TemplatesFormValues>;
+  index: number;
 }
 
 export const TemplatesAttribute: React.FC<TemplatesAttributeProps> = ({
   attribute,
   formikBag,
+  index,
 }) => {
   const classes = useStyles();
   const anchorRef = useRef(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   const { id, type } = attribute;
+
+  const moveAttribute = (offset: number) => {
+    const currentOrdinalNumber = attribute.ordinalNumber;
+    const modifiedAttribute = {
+      ...attribute,
+      ordinalNumber: currentOrdinalNumber + offset,
+    };
+    const neighbor = {
+      ...formikBag.values.attributeTemplates[index + offset],
+      ordinalNumber: currentOrdinalNumber,
+    };
+
+    const newAttributeTemplates = formikBag.values.attributeTemplates;
+    newAttributeTemplates[index] = neighbor;
+    newAttributeTemplates[index + offset] = modifiedAttribute;
+
+    formikBag.setFieldValue("attributeTemplates", newAttributeTemplates);
+  };
 
   return (
     <>
@@ -38,7 +60,27 @@ export const TemplatesAttribute: React.FC<TemplatesAttributeProps> = ({
                   attribute={attribute}
                   formikBag={formikBag}
                 />
-                <Typography>Typ: {getAttributeTypeLabel(type)}</Typography>
+                <div className={classes.attributeLowerHalfWrapper}>
+                  <Typography>Typ: {getAttributeTypeLabel(type)}</Typography>
+                  <div>
+                    <IconButton
+                      size="small"
+                      onClick={() => moveAttribute(-1)}
+                      disabled={index === 0}
+                    >
+                      <ArrowLeft />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => moveAttribute(1)}
+                      disabled={
+                        index === formikBag.values.attributeTemplates.length - 1
+                      }
+                    >
+                      <ArrowRight />
+                    </IconButton>
+                  </div>
+                </div>
               </>
             );
           }}

@@ -39,4 +39,5 @@ export interface MarcEntity {
   code?: string;
   indicator1?: string;
   indicator2?: string;
+  __hidden__?: boolean;
 }

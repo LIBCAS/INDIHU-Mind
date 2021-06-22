@@ -31,21 +31,21 @@ spring:
     serialization:
       write-dates-as-timestamps: false
   mail: # data for connecting to SMTP server
-    host: INSERT_VALUE_HERE
-    port: 0 # INSERT_VALUE_HERE
-    username: INSERT_VALUE_HERE
-    password: INSERT_VALUE_HERE
-    protocol: INSERT_VALUE_HERE
+    host: smtp.gmail.com
+    port: 465
+    username: noreply@inqool.cz
+    password: DER8wJQWB44ppa2V
+    protocol: smtp
     properties.mail.smtp:
       auth: true
       starttls.enable: false
-      ssl.trust: INSERT_VALUE_HERE
+      ssl.trust: smtp.gmail.com
       ssl.enable: true
   liquibase:
     changeLog: classpath:/dbchangelog.vzb.xml
     url: jdbc:postgresql://localhost:5432/vzb
-    user: INSERT_VALUE_HERE
-    password: INSERT_VALUE_HERE
+    user: uas
+    password: vuji61oilo
 
 server:
   servlet:
@@ -73,7 +73,7 @@ security:
   basic:
     authQuery: "/api/login"
   jwt:
-    secret: INSERT_VALUE_HERE # Secret encoded in Base64 format
+    secret: YXVyYTI0Z3JvZ3M= # Secret encoded in Base64 format
     expiration: 300000 # Seconds
     refresh: 30 # Seconds
   password:

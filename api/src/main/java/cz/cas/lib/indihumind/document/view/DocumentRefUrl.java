@@ -3,6 +3,7 @@ package cz.cas.lib.indihumind.document.view;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import cz.cas.lib.indihumind.document.UrlAttachmentFile;
 import lombok.Getter;
+import org.hibernate.annotations.Immutable;
 
 import javax.persistence.*;
 
