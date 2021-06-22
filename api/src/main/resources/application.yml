@@ -7,8 +7,8 @@ spring:
     checkTemplateLocation: false
   datasource:
     url: jdbc:postgresql://localhost:5432/vzb
-    username: uas
-    password: vuji61oilo
+    username: INSERT_VALUE_HERE
+    password: INSERT_VALUE_HERE
     driver-class-name: org.postgresql.Driver
     name: mainPool
   jpa:

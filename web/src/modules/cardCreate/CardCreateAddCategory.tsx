@@ -1,5 +1,5 @@
 import { Field, FieldProps } from "formik";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Select } from "../../components/form/Select";
 import { Modal } from "../../components/portal/Modal";
 import { OptionType } from "../../components/select/_types";
@@ -43,19 +43,17 @@ export const CardCreateAddCategory: React.FC<CardCreateAddCategoryProps> = ({
     setOpen(true);
   };
 
-  const formikBagSetFieldCallback = useCallback(
-    (fieldName: string, value: any) =>
-      formikBag.setFieldValue(fieldName, value),
-    [formikBag]
-  );
   useEffect(() => {
     if (state.category.categoryActive !== undefined) {
-      formikBagSetFieldCallback("categories", [
-        ...formikBag.values.categories,
-        state.category.categoryActive && state.category.categoryActive.id,
-      ]);
+      setTimeout(() =>
+        formikBag.setFieldValue("categories", [
+          ...formikBag.values.categories,
+          state.category.categoryActive && state.category.categoryActive.id,
+        ])
+      );
     }
-  }, [state.category.categoryActive, formikBag, formikBagSetFieldCallback]);
+    // eslint-disable-next-line
+  }, [state.category.categoryActive]);
 
   useEffect(() => {
     const flatten = state.category.categoryActive

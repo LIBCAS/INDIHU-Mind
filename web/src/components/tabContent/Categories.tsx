@@ -5,6 +5,7 @@ import { GlobalContext, StateProps } from "../../context/Context";
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
 import { CategoryProps } from "../../types/category";
 import { TabProps } from "../leftPanel/LeftPanelContent";
+import OrderedItems from "../orderedItems/OrderedItems";
 import { Modal } from "../portal/Modal";
 import { CategoryItem } from "./CategoryItem";
 import { CreateCategory } from "./CreateCategory";
@@ -134,17 +135,24 @@ export const Categories: React.FC<CategoriesProps> = ({
             : `calc(100% - 32px)`,
         }}
       >
-        {categories.map((c) => (
-          <CategoryItem
-            key={c.id}
-            c={c}
-            categoryActiveSetHandler={categoryActiveSetHandler}
-            findCategoryById={findCategoryById}
-            categoryActive={categoryActive}
-            categoriesExpanded={categoriesExpanded}
-            setCategoriesExpanded={setCategoriesExpanded}
-          />
-        ))}
+        <OrderedItems
+          initialItems={categories}
+          label="Kategorie"
+          endpoint="category"
+          itemComponent={({ item: c, moveBackward, moveForward }) => (
+            <CategoryItem
+              key={c.id}
+              c={c}
+              categoryActiveSetHandler={categoryActiveSetHandler}
+              findCategoryById={findCategoryById}
+              categoryActive={categoryActive}
+              categoriesExpanded={categoriesExpanded}
+              setCategoriesExpanded={setCategoriesExpanded}
+              moveForward={moveForward}
+              moveBackward={moveBackward}
+            />
+          )}
+        />
       </div>
     </React.Fragment>
   );

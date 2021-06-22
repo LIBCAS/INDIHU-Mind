@@ -1,5 +1,6 @@
 package cz.cas.lib.indihumind.card.dto;
 
+import cz.cas.lib.indihumind.card.Card;
 import cz.cas.lib.indihumind.card.view.CardRef;
 import cz.cas.lib.indihumind.cardattribute.Attribute;
 import cz.cas.lib.indihumind.cardattribute.AttributeHighlightDto;

@@ -10,6 +10,7 @@ import { isAdmin } from "../../utils/token";
 
 interface LinksProps {
   setLeftPanelOpen?: any;
+  setOpenModalInfo: any;
 }
 
 const CustomNavLink = React.forwardRef((
@@ -17,7 +18,10 @@ const CustomNavLink = React.forwardRef((
   ref // eslint-disable-line @typescript-eslint/no-unused-vars
 ) => <NavLink {...props} />);
 
-export const Links: React.FC<LinksProps> = ({ setLeftPanelOpen }) => {
+export const Links: React.FC<LinksProps> = ({
+  setOpenModalInfo,
+  setLeftPanelOpen,
+}) => {
   const classes = useStyles();
   const token = useUserToken();
 
@@ -38,6 +42,11 @@ export const Links: React.FC<LinksProps> = ({ setLeftPanelOpen }) => {
     <div className={classes.wrapper}>
       {routesTabs.map(mapRoutes)}
       {isAdmin(token) && adminRoutes.map(mapRoutes)}
+      {setOpenModalInfo && (
+        <Link onClick={() => setOpenModalInfo(true)} className={classes.link}>
+          O aplikaci
+        </Link>
+      )}
     </div>
   );
 };

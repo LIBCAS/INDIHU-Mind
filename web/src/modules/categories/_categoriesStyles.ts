@@ -1,5 +1,5 @@
-import { makeStyles } from "@material-ui/styles";
 import { Theme } from "@material-ui/core/styles/createMuiTheme";
+import { makeStyles } from "@material-ui/styles";
 
 export const useStyles = makeStyles((theme: Theme) => {
   return {
@@ -36,19 +36,20 @@ export const useStyles = makeStyles((theme: Theme) => {
       padding: theme.spacing(1),
       alignSelf: "flex-start",
       flexGrow: 1,
+      position: "relative",
       [theme.breakpoints.up("sm")]: {
         flexDirection: "row",
-        width: "calc(100% - 20px)",
+        width: "calc(100% - 44px)",
         height: "70px",
       },
-      margin: "0 20px",
+      margin: "0 20px 0 44px",
       [theme.breakpoints.down(360)]: {
         padding: 0,
         paddingBottom: theme.spacing(1),
       },
     },
     subCategoryItem: {
-      margin: "20px 20px 0 20px",
+      margin: "20px 20px 0 36px",
     },
     counter: {
       marginBottom: theme.spacing(1),
@@ -90,7 +91,7 @@ export const useStyles = makeStyles((theme: Theme) => {
     },
     subCategoryLine: {
       borderLeft: `1px solid ${theme.greyText}`,
-      marginLeft: "20px",
+      marginLeft: "44px",
     },
     subCategoriesCollapse: {
       width: "100%",
@@ -146,6 +147,22 @@ export const useStyles = makeStyles((theme: Theme) => {
         background: theme.blueLightHover,
       },
       background: theme.blueLight,
+    },
+    arrowsWrapper: {
+      display: "flex",
+      width: 16,
+      flexDirection: "column",
+      justifyContent: "space-around",
+      position: "absolute",
+      left: -30,
+      height: 32,
+      "& button": {
+        height: 16,
+        width: 16,
+      },
+    },
+    toggleViewButton: {
+      marginLeft: "auto",
     },
   };
 });

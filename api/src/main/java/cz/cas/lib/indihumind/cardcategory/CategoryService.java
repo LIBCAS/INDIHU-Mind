@@ -44,25 +44,30 @@ public class CategoryService {
     }
 
     @Transactional
-    public Category save(String id, Category newCat) {
-        eq(id, newCat.getId(), () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "id != dto.id"));
-        Category catFromDb = store.find(newCat.getId());
-        if (catFromDb != null)
-            eq(catFromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Category.class, newCat.getId()));
+    public Category save(String id, Category newCategory) {
+        eq(id, newCategory.getId(), () -> new BadArgument(ARGUMENT_FAILED_COMPARISON, "id != dto.id"));
+        Category catFromDb = store.find(newCategory.getId());
+        if (catFromDb == null) { // create -> set next ordinal number
+            int categoryOrdinalNumber = store.retrieveNextOrdinalOfSubcategory(newCategory.getParent(), userDelegate.getId());
+            newCategory.setOrdinalNumber(categoryOrdinalNumber);
+        } else { // update
+            eq(catFromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Category.class, newCategory.getId()));
+        }
 
         // enforce addUniqueConstraint `vzb_category_of_user_uniqueness` of columnNames="name,parent_id,owner_id"
-        newCat.setOwner(userDelegate.getUser());
-        Category nameExists = store.findEqualNameDifferentIdInParent(newCat);
+        newCategory.setOwner(userDelegate.getUser());
+        Category nameExists = store.findEqualNameDifferentIdInParent(newCategory);
         isNull(nameExists, () -> new NameAlreadyExistsException(NAME_ALREADY_EXISTS, nameExists.getName(), Category.class, nameExists.getId(), nameExists.getOwner()));
 
-        store.save(newCat);
+        store.save(newCategory);
 
-        if (catFromDb != null && !StringUtils.equals(catFromDb.getName(), newCat.getName())) {
-            List<Card> cardsOfCategory = cardStore.findCardsOfCategory(newCat);
-            log.debug("Updating category " + newCat.getName() + " of user " + newCat.getOwner() + ", asynchronously reindexing " + cardsOfCategory.size() + " cards");
+        if (catFromDb != null && !StringUtils.equals(catFromDb.getName(), newCategory.getName())) {
+            List<Card> cardsOfCategory = cardStore.findCardsOfCategory(newCategory);
+            log.debug("Updating category " + newCategory.getName() + " of user " + newCategory.getOwner() + ", asynchronously reindexing " + cardsOfCategory.size() + " cards");
             CompletableFuture.runAsync(() -> cardStore.index(cardsOfCategory), taskExecutor);
         }
-        return newCat;
+
+        return newCategory;
     }
 
     public Category find(String id) {
@@ -82,7 +87,7 @@ public class CategoryService {
      *
      * @return list of the highest parents in hierarchy, other subcategories are accessible through the parents.
      */
-    public Collection<CategoryDto> findAllOfUser(String ownerId) {
+    public List<CategoryDto> findAllOfUser(String ownerId) {
         Collection<Category> unstructuredCategoriesFromDb = store.findByUser(ownerId);
 
         // for counting cards of subcategories

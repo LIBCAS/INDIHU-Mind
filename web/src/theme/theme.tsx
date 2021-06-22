@@ -46,6 +46,16 @@ export const theme: Theme = createMuiTheme({
       main: "#ff0000",
     },
   },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 960,
+      lg: 1280,
+      xl: 1460,
+      xxl: 1680,
+    } as any,
+  },
   greyText: "#B0B0B0",
   greyLight,
   greyLightUltra,

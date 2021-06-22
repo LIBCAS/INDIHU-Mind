@@ -41,6 +41,7 @@ public class VzbJwtHandler implements JwtHandler {
         return claims;
     }
 
+
     @Inject
     public void setUserDetailsService(UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;

@@ -8,7 +8,8 @@ import { isAdmin } from "../../utils/token";
 import { useStyles } from "./_navbarStyles";
 
 interface NavbarItemsProps {
-  matchesLg: boolean;
+  visible: boolean;
+  setOpenModalInfo?: any;
 }
 
 const CustomNavLink = React.forwardRef((
@@ -16,7 +17,10 @@ const CustomNavLink = React.forwardRef((
   ref // eslint-disable-line @typescript-eslint/no-unused-vars
 ) => <NavLink {...props} />);
 
-export const NavbarItems: React.FC<NavbarItemsProps> = ({ matchesLg }) => {
+export const NavbarItems: React.FC<NavbarItemsProps> = ({
+  visible,
+  setOpenModalInfo,
+}) => {
   const classesText = useTextStyles();
   const classes = useStyles();
   const token = useUserToken();
@@ -36,10 +40,18 @@ export const NavbarItems: React.FC<NavbarItemsProps> = ({ matchesLg }) => {
 
   return (
     <>
-      {matchesLg && (
+      {visible && (
         <div className={classes.navItems}>
           {routesTabs.map(renderItems)}
           {isAdmin(token) && adminRoutes.map(renderItems)}
+          {setOpenModalInfo && (
+            <Link
+              onClick={() => setOpenModalInfo(true)}
+              className={classesText.textLink}
+            >
+              O aplikaci
+            </Link>
+          )}
         </div>
       )}
     </>

@@ -37,7 +37,7 @@ export const InputFile: React.FC<InputFileProps> = ({
       setFieldValue("providerType", FileType.LOCAL);
       setFieldValue("type", extension);
       setFieldValue("content", f);
-      setFormStage("file-selected");
+      setTimeout(() => setFormStage("file-selected"));
     }
   };
 

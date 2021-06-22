@@ -16,7 +16,15 @@ export const useStyles = makeStyles((theme: Theme) => {
       borderRadius: "0",
       justifyContent: "flex-start",
       flex: "1",
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
+        display: "none",
+      },
+    },
+    menuIconWrapperAdmin: {
+      borderRadius: "0",
+      justifyContent: "flex-start",
+      flex: "1",
+      [theme.breakpoints.up("xxl" as any)]: {
         display: "none",
       },
     },
@@ -27,7 +35,15 @@ export const useStyles = makeStyles((theme: Theme) => {
       display: "flex",
       alignItems: "center",
       flexBasis: "auto",
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
+        flexBasis: 250,
+      },
+    },
+    titleWrapperAdmin: {
+      display: "flex",
+      alignItems: "center",
+      flexBasis: "auto",
+      [theme.breakpoints.up("xxl" as any)]: {
         flexBasis: 250,
       },
     },
@@ -45,7 +61,17 @@ export const useStyles = makeStyles((theme: Theme) => {
       alignItems: "center",
       flex: "1",
       justifyContent: "end",
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
+        marginLeft: "auto",
+        flex: "0",
+      },
+    },
+    searchWrapperAdmin: {
+      display: "flex",
+      alignItems: "center",
+      flex: "1",
+      justifyContent: "end",
+      [theme.breakpoints.up("xxl" as any)]: {
         marginLeft: "auto",
         flex: "0",
       },
@@ -62,7 +88,20 @@ export const useStyles = makeStyles((theme: Theme) => {
       },
       marginLeft: "0",
       width: "100%",
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
+        marginLeft: theme.spacing(1),
+        width: "auto",
+      },
+    },
+    searchAdmin: {
+      borderRadius: "350px",
+      backgroundColor: theme.palette.common.white,
+      "&:hover": {
+        backgroundColor: theme.palette.common.white,
+      },
+      marginLeft: "0",
+      width: "100%",
+      [theme.breakpoints.up("xxl" as any)]: {
         marginLeft: theme.spacing(1),
         width: "auto",
       },
@@ -77,7 +116,22 @@ export const useStyles = makeStyles((theme: Theme) => {
       justifyContent: "flex-end",
       cursor: "pointer",
       flex: "1",
-      [theme.breakpoints.up("lg")]: {
+      [theme.breakpoints.up("xl")]: {
+        display: "none",
+        marginRight: theme.spacing(2),
+      },
+    },
+    searchIconWrapperAdmin: {
+      position: "absolute",
+      right: "0",
+      width: "45px",
+      height: "100%",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      cursor: "pointer",
+      flex: "1",
+      [theme.breakpoints.up("xxl" as any)]: {
         display: "none",
         marginRight: theme.spacing(2),
       },
@@ -98,6 +152,23 @@ export const useStyles = makeStyles((theme: Theme) => {
         width: 120,
       },
       [theme.breakpoints.up("xl")]: {
+        "&:focus": {
+          width: 200,
+        },
+      },
+    },
+    inputInputAdmin: {
+      paddingTop: theme.spacing(1.5),
+      paddingRight: theme.spacing(5),
+      paddingBottom: theme.spacing(1.5),
+      paddingLeft: theme.spacing(3),
+      width: "100%",
+      [theme.breakpoints.up("lg")]: {
+        paddingRight: theme.spacing(3),
+        transition: theme.transitions.create("width"),
+        width: 120,
+      },
+      [theme.breakpoints.up("xxl" as any)]: {
         "&:focus": {
           width: 200,
         },

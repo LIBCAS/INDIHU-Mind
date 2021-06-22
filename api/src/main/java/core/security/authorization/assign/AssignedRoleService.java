@@ -32,7 +32,6 @@ public class AssignedRoleService {
 
     private UserDetails userDetails;
 
-    @Transactional
     public Set<String> getAssignedRoles(String userId) {
         return store.findAssignedRoles(userId);
     }

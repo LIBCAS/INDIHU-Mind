@@ -32,6 +32,7 @@ export const useStyles = makeStyles((theme: Theme) => {
       },
     },
     category: {
+      width: "100%",
       display: "flex",
       alignItems: "center",
       cursor: "pointer",
@@ -97,6 +98,31 @@ export const useStyles = makeStyles((theme: Theme) => {
       textOverflow: "ellipsis",
       cursor: "pointer",
       marginTop: theme.spacing(1),
+    },
+    item: {
+      display: "flex",
+      width: "100%",
+    },
+    itemArrows: {
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-around",
+      padding: "4px 0",
+      "& > *": {
+        maxWidth: "16px",
+        maxHeight: "16px",
+        cursor: "pointer",
+        "&:hover": {
+          background: theme.palette.primary.main,
+        },
+      },
+    },
+    arrowDisabled: {
+      cursor: "not-allowed",
+      color: theme.palette.grey[500],
+      "&: hover": {
+        background: "transparent",
+      },
     },
   };
 });

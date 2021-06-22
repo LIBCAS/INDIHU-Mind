@@ -51,8 +51,12 @@ public class LabelService {
     @Transactional
     public Label save(Label newLabel) {
         Label fromDb = store.find(newLabel.getId());
-        if (fromDb != null)
+        if (fromDb == null) { // create -> assign ordinal number
+            int labelOrdinalNumber = store.retrieveNextOrdinalOfLabel(userDelegate.getId());
+            newLabel.setOrdinalNumber(labelOrdinalNumber);
+        } else { // update
             eq(fromDb.getOwner().getId(), userDelegate.getId(), () -> new ForbiddenObject(NOT_OWNED_BY_USER, Label.class, newLabel.getId()));
+        }
 
         // enforce addUniqueConstraint `vzb_label_of_user_uniqueness` of columnNames="name,owner_id"
         newLabel.setOwner(userDelegate.getUser());

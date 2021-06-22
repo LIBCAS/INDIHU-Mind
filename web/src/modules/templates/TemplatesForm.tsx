@@ -157,12 +157,13 @@ export const TemplatesForm: React.FC<TemplatesFormProps> = ({
                   )}
                 >
                   {formikBag.values.attributeTemplates.map(
-                    (att: CardTemplateAttribute) => {
+                    (att: CardTemplateAttribute, index: number) => {
                       return (
                         <TemplatesAttribute
                           key={att.id}
                           attribute={att}
                           formikBag={formikBag}
+                          index={index}
                         />
                       );
                     }

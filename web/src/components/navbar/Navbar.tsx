@@ -13,7 +13,9 @@ import { useTheme } from "@material-ui/styles";
 import classNames from "classnames";
 import React, { useEffect, useRef, useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+import { useUserToken } from "../../hooks/authHooks";
 import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
+import { isAdmin } from "../../utils/token";
 import { DeleteCards } from "../deleteCards/DeleteCards";
 import { Logo } from "../icons/Logo";
 import { NavbarItems } from "./NavbarItems";
@@ -22,18 +24,27 @@ import { useStyles } from "./_navbarStyles";
 
 interface NavbarProps {
   setLeftPanelOpen: any;
+  setOpenModalInfo?: any;
 }
 
 const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
   setLeftPanelOpen,
+  setOpenModalInfo,
   history,
 }) => {
   const classes = useStyles();
   const classesText = useTextStyles();
   const theme: Theme = useTheme();
+
+  const token = useUserToken();
+
+  const admin = isAdmin(token);
+
   const matchesSmall = useMediaQuery("(max-width:400px)");
   const matchesMd = useMediaQuery(theme.breakpoints.up("md"));
-  const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
+  const matchesBigScreen = useMediaQuery(
+    theme.breakpoints.up(admin ? ("xxl" as any) : "xl")
+  );
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
@@ -54,7 +65,9 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
     <AppBar className={classes.root} position="fixed">
       <Toolbar className={classes.toolbar}>
         <div
-          className={classNames(classes.menuIconWrapper, {
+          className={classNames({
+            [classes.menuIconWrapper]: !admin,
+            [classes.menuIconWrapperAdmin]: admin,
             [classes.menuIconWrapperMobile]: matchesSmall,
           })}
           onClick={() => setLeftPanelOpen((prev: boolean) => !prev)}
@@ -63,7 +76,12 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
             <MenuIcon />
           </IconButton>
         </div>
-        <div className={classes.titleWrapper}>
+        <div
+          className={classNames({
+            [classes.titleWrapper]: !admin,
+            [classes.titleWrapperAdmin]: admin,
+          })}
+        >
           <div
             className={classes.titleWrapperChild}
             onClick={() => {
@@ -88,15 +106,22 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
             </Typography>
           </div>
         </div>
-        <NavbarItems matchesLg={matchesLg} />
+        <NavbarItems
+          visible={matchesBigScreen}
+          setOpenModalInfo={setOpenModalInfo}
+        />
         <div
           className={classNames({
-            [classes.searchWrapper]: true,
-            [classes.searchWrapperFullWidth]: showSearch && !matchesLg,
+            [classes.searchWrapper]: !admin,
+            [classes.searchWrapperAdmin]: admin,
+            [classes.searchWrapperFullWidth]: showSearch && !matchesBigScreen,
           })}
         >
           <div
-            className={classes.searchIconWrapper}
+            className={classNames({
+              [classes.searchIconWrapper]: !admin,
+              [classes.searchIconWrapperAdmin]: admin,
+            })}
             style={
               showSearch ? { marginRight: 0, right: "0" } : { right: "80px" }
             }
@@ -122,8 +147,14 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               />
             )}
           </div>
-          <Fade in={showSearch || matchesLg} mountOnEnter unmountOnExit>
-            <div className={classNames(classes.search, classesText.textGrey)}>
+          <Fade in={showSearch || matchesBigScreen} mountOnEnter unmountOnExit>
+            <div
+              className={classNames({
+                [classes.search]: !admin,
+                [classes.searchAdmin]: admin,
+                [classesText.textGrey]: true,
+              })}
+            >
               <form style={{ position: "relative" }} onSubmit={onSubmit}>
                 <InputBase
                   className={classes.searchInput}
@@ -135,10 +166,10 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
                   placeholder="Vyhledat karty"
                   classes={{
                     root: classes.inputRoot,
-                    input: classes.inputInput,
+                    input: admin ? classes.inputInputAdmin : classes.inputInput,
                   }}
                 />
-                {matchesLg && (
+                {matchesBigScreen && (
                   <SearchIcon
                     color="inherit"
                     className={classNames({
@@ -158,8 +189,10 @@ const NavbarView: React.FC<NavbarProps & RouteComponentProps> = ({
               </form>
             </div>
           </Fade>
-          {!(showSearch && !matchesLg) && <NavbarUser matchesMd={matchesLg} />}
-          {matchesLg && <DeleteCards />}
+          {!(showSearch && !matchesBigScreen) && (
+            <NavbarUser matchesMd={matchesBigScreen} />
+          )}
+          {matchesBigScreen && <DeleteCards />}
         </div>
       </Toolbar>
     </AppBar>

@@ -1,13 +1,10 @@
-import React, { useRef, useState, useEffect } from "react";
 import { Field } from "formik";
-
-import { AttributeProps } from "../../types/attribute";
+import React, { useEffect, useRef, useState } from "react";
 import { Popover } from "../../components/portal/Popover";
-
+import { AttributeType } from "../../enums";
+import { AttributeProps } from "../../types/attribute";
 import { CardCreateAddAttribute } from "./CardCreateAddAttribute";
 import { CardCreateAttributeInput } from "./CardCreateAttributeInput";
-import { AttributeType } from "../../enums";
-import { validateAttributeType } from "../../utils/attribute";
 
 interface CardCreateAttributeProps {
   attribute: AttributeProps;
@@ -41,9 +38,6 @@ export const CardCreateAttribute: React.FC<CardCreateAttributeProps> = ({
             case AttributeType.BOOLEAN:
               att.value = Boolean(checked);
               break;
-            case AttributeType.DOUBLE:
-              att.value = Number(value);
-              break;
             default:
               att.value = value;
           }
@@ -60,14 +54,16 @@ export const CardCreateAttribute: React.FC<CardCreateAttributeProps> = ({
         <Field
           name={id}
           value={formValue}
-          validate={!formValue && validateAttributeType(type)}
+          // validate={!formValue && validateAttributeType(type)}
           render={({ field, form }: any) => {
             const transformedField = {
               ...field,
               onChange: (e: any) =>
-                type === AttributeType.DATE || type === AttributeType.DATETIME
-                  ? onChange({ target: { value: e.toDate() } }, field)
-                  : type === AttributeType.GEOLOCATION
+                [
+                  AttributeType.DATE,
+                  AttributeType.DATETIME,
+                  AttributeType.GEOLOCATION,
+                ].includes(type)
                   ? onChange({ target: { value: e } }, field)
                   : onChange(e, field),
               value: formValue,

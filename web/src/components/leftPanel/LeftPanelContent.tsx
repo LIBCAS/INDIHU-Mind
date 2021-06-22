@@ -10,30 +10,45 @@ import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles"
 import { useStyles } from "./_leftPanelStyles";
 import { Links } from "./Links";
 import { TabContent } from "../tabContent/TabContent";
+import { useUserToken } from "../../hooks/authHooks";
+import { isAdmin } from "../../utils/token";
 
 interface LeftPanelContentProps {
   setLeftPanelOpen?: any;
   enableCards?: boolean;
+  setOpenModalInfo: any;
 }
 
 export type TabProps = "category" | "label" | undefined;
 
 export const LeftPanelContent: React.FC<LeftPanelContentProps> = ({
   setLeftPanelOpen,
+  setOpenModalInfo,
   enableCards = true,
 }) => {
   const classes = useStyles();
   const classesSpacing = useSpacingStyles();
   const [activeTab, setActiveTab] = useState<TabProps>("category");
   const theme: Theme = useTheme();
-  const matchesLg = useMediaQuery(theme.breakpoints.up("lg"));
+
+  const token = useUserToken();
+
+  const admin = isAdmin(token);
+
+  const matchesBigScreen = useMediaQuery(
+    theme.breakpoints.up(admin ? ("xxl" as any) : "xl")
+  );
+
   return (
     <div className={classes.leftPanelContent}>
-      {matchesLg ? (
+      {matchesBigScreen ? (
         <div className={classesSpacing.mt3} />
       ) : (
         <div className={classes.buttonWrapper}>
-          <Links setLeftPanelOpen={setLeftPanelOpen} />
+          <Links
+            setOpenModalInfo={setOpenModalInfo}
+            setLeftPanelOpen={setLeftPanelOpen}
+          />
           <DeleteCards setLeftPanelOpen={setLeftPanelOpen} />
         </div>
       )}

@@ -35,12 +35,25 @@ public class PostInitializer implements ApplicationListener<ContextRefreshedEven
 
         try {
             log.info(String.format("Starting application in mode: [%s]", env)); // staging / deploy / test
+
             if ("staging".equals(env)) {
                 storeReindexer.removeIndexes();
                 testDataFiller.clearDatabase();
                 testDataFiller.createUsersAndData();
+//                globalReindexer.reindex();
+//                cardStore.dropReindex();
             }
+
             createReportTemplates();
+
+//            ReportService.ReportDto reportDto = new ReportService.ReportDto();
+//            reportDto.setIds(cardStore.findAll().stream().map(Card::getId).collect(Collectors.toList()));
+//
+//            reportDto.setType(ReportTemplateType.JSXML_TO_PDF);
+//            reportService.createCardReport(reportDto);
+//
+//            reportDto.setType(ReportTemplateType.JSXML_TO_CSV);
+//            reportService.createCardReport(reportDto);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

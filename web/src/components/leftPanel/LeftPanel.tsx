@@ -7,24 +7,36 @@ import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 import { useStyles } from "./_leftPanelStyles";
 import { LeftPanelContent } from "./LeftPanelContent";
+import { useUserToken } from "../../hooks/authHooks";
+import { isAdmin } from "../../utils/token";
 
 interface LeftPanelProps {
   leftPanelOpen: boolean;
   setLeftPanelOpen: any;
   enableCards: boolean;
+  setOpenModalInfo: any;
 }
 
 export const LeftPanel: React.FC<LeftPanelProps> = ({
   leftPanelOpen,
   setLeftPanelOpen,
   enableCards,
+  setOpenModalInfo,
 }) => {
   const classes = useStyles();
   const theme: Theme = useTheme();
-  const matchesMd = useMediaQuery(theme.breakpoints.up("lg"));
+
+  const token = useUserToken();
+
+  const admin = isAdmin(token);
+
+  const matchesBigScreen = useMediaQuery(
+    theme.breakpoints.up(admin ? ("xxl" as any) : "xl")
+  );
+
   return (
     <>
-      {matchesMd && enableCards ? (
+      {matchesBigScreen && enableCards ? (
         <>
           <div className={classes.drawerPlaceholder} />
           <Drawer
@@ -34,7 +46,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
             PaperProps={{ className: classes.paper }}
             classes={{ root: classes.drawerRoot }}
           >
-            <LeftPanelContent />
+            <LeftPanelContent setOpenModalInfo={setOpenModalInfo} />
           </Drawer>
         </>
       ) : (
@@ -49,6 +61,7 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({
           // classes={{root: classes.drawerRoot}}
         >
           <LeftPanelContent
+            setOpenModalInfo={setOpenModalInfo}
             setLeftPanelOpen={setLeftPanelOpen}
             enableCards={enableCards}
           />

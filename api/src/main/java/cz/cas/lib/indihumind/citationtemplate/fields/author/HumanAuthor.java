@@ -28,6 +28,7 @@ public class HumanAuthor implements Author {
         this.lastName = split[0];
         this.firstName = split[1];
         applyNameFormat(format);
+
     }
 
     public void applyNameFormat(FirstNameFormat format) {

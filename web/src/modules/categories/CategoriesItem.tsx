@@ -1,28 +1,33 @@
-import React, { useState, useEffect, useRef } from "react";
-import classNames from "classnames";
-import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
-import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
-import KeyboardArrowUp from "@material-ui/icons/KeyboardArrowUp";
 import Collapse from "@material-ui/core/Collapse";
-
-import { CategoryProps } from "../../types/category";
-import { useStyles } from "./_categoriesStyles";
-import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
-import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
-import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
-
-import { CategoriesPopover } from "./CategoriesPopover";
+import IconButton from "@material-ui/core/IconButton";
 import Paper from "@material-ui/core/Paper";
-import { theme } from "../../theme/theme";
+import Tooltip from "@material-ui/core/Tooltip";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
+import { ArrowDownward, ArrowUpward } from "@material-ui/icons";
+import KeyboardArrowDown from "@material-ui/icons/KeyboardArrowDown";
+import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
+import KeyboardArrowUp from "@material-ui/icons/KeyboardArrowUp";
+import classNames from "classnames";
+import React, { useEffect, useRef, useState } from "react";
+import OrderedItems from "../../components/orderedItems/OrderedItems";
+import { useStyles as useLayoutStyles } from "../../theme/styles/layoutStyles";
+import { useStyles as useSpacingStyles } from "../../theme/styles/spacingStyles";
+import { useStyles as useTextStyles } from "../../theme/styles/textStyles";
+import { theme } from "../../theme/theme";
+import { CategoryProps } from "../../types/category";
+import { CategoriesPopover } from "./CategoriesPopover";
+import { useStyles } from "./_categoriesStyles";
 
 interface CategoriesItemProps {
   category: CategoryProps;
   loadCategories: Function;
+  displayFullWidth: boolean;
   isSubCategory?: boolean;
   parentCategory?: CategoryProps;
   openedCategory?: string;
   setOpenedCategory?: Function;
+  moveForward?: () => void;
+  moveBackward?: () => void;
 }
 
 export const CategoriesItem: React.FC<CategoriesItemProps> = ({
@@ -32,6 +37,9 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
   parentCategory,
   openedCategory,
   setOpenedCategory,
+  moveForward,
+  moveBackward,
+  displayFullWidth,
 }) => {
   const { name, subCategories } = category;
   const [open, setOpen] = useState(false);
@@ -76,52 +84,80 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
       setOpenedCategory && setOpenedCategory(category.id);
     }
   };
+
+  const isFullWidth = displayFullWidth || open || isSubCategory;
+
+  const handleEventWithoutPropagation = (
+    callback: (() => void) | undefined
+  ) => (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (callback) {
+      callback();
+    }
+  };
   return (
     <>
       <Paper
         className={classNames(classes.categoryItem, {
           [classesText.cursor]: hasSubCategories,
           [classes.subCategoryItem]: isSubCategory,
-          [classes.categoryItemFullWidth]: open || isSubCategory,
-          [classes.categoryItemOpened]: open || isSubCategory,
+          [classes.categoryItemFullWidth]: isFullWidth,
+          [classes.categoryItemOpened]: open,
         })}
         onClick={handleOpen}
         ref={categoryRef}
       >
-        {" "}
-        {(open || isSubCategory) &&
-          matchesSm &&
-          subCategories &&
-          subCategories.length > 0 && (
-            <div
-              className={classNames(
-                classesSpacing.ml1,
-                classesText.icon,
-                classesText.iconBig,
-                {
-                  [classesText.iconChangedBg]: open || isSubCategory,
-                }
-              )}
-            >
-              {!open ? (
-                <KeyboardArrowRight fontSize="inherit" />
-              ) : (
-                <KeyboardArrowDown fontSize="inherit" />
-              )}
-            </div>
-          )}
+        {isFullWidth && (
+          <div className={classes.arrowsWrapper}>
+            <Tooltip title="Posunout nahoru">
+              <IconButton
+                disabled={!moveBackward}
+                onClick={handleEventWithoutPropagation(moveBackward)}
+              >
+                <ArrowUpward />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Posunout dolů">
+              <IconButton
+                disabled={!moveForward}
+                onClick={handleEventWithoutPropagation(moveForward)}
+              >
+                <ArrowDownward />
+              </IconButton>
+            </Tooltip>
+          </div>
+        )}{" "}
+        {isFullWidth && matchesSm && subCategories && subCategories.length > 0 && (
+          <div
+            className={classNames(
+              classesSpacing.ml1,
+              classesText.icon,
+              classesText.iconBig,
+              {
+                [classesText.iconChangedBg]: open,
+              }
+            )}
+          >
+            {!open ? (
+              <KeyboardArrowRight fontSize="inherit" />
+            ) : (
+              <KeyboardArrowDown fontSize="inherit" />
+            )}
+          </div>
+        )}
         <div
           className={classNames(classes.categoryName, {
-            [classes.categoryNameClosed]:
-              (!open && !isSubCategory) || !matchesSm,
+            [classes.categoryNameClosed]: !isFullWidth || !matchesSm,
           })}
         >
           {name}
-          {(!open && !isSubCategory) || !matchesSm ? (
+          {!isFullWidth || !matchesSm ? (
             <CategoriesPopover
               iconBgChange={open}
               category={category}
               loadCategories={loadCategories}
+              moveForward={moveForward}
+              moveBackward={moveBackward}
             />
           ) : null}
         </div>
@@ -144,7 +180,7 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
             >
               <div
                 className={classNames(classesText.textGrey, {
-                  [classesText.textGreyDark]: open || isSubCategory,
+                  [classesText.textGreyDark]: isFullWidth,
                 })}
               >
                 POČET SUBKATEGORIÍ
@@ -161,12 +197,12 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
                 classesLayout.directionColumn,
                 classesLayout.alignCenter,
                 classes.counter,
-                { [classes.counterFullWidth]: true || open || isSubCategory }
+                classes.counterFullWidth
               )}
             >
               <div
                 className={classNames(classesText.textGrey, {
-                  [classesText.textGreyDark]: open || isSubCategory,
+                  [classesText.textGreyDark]: isFullWidth,
                 })}
               >
                 POČET KARET
@@ -186,15 +222,17 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
             classes.iconsWrapper
           )}
         >
-          {(open || isSubCategory) && matchesSm ? (
+          {isFullWidth && matchesSm ? (
             <CategoriesPopover
-              iconBgChange={open || isSubCategory}
+              iconBgChange={open}
               category={category}
               loadCategories={loadCategories}
               parentCategory={parentCategory}
+              moveForward={moveForward}
+              moveBackward={moveBackward}
             />
           ) : null}
-          {(!matchesSm || !(open || isSubCategory)) &&
+          {(!matchesSm || !isFullWidth) &&
             subCategories &&
             subCategories.length > 0 && (
               <div
@@ -229,15 +267,23 @@ export const CategoriesItem: React.FC<CategoriesItemProps> = ({
               [classes.subCategoryLine]: subCategories.length > 0,
             })}
           >
-            {subCategories.map((cat) => (
-              <CategoriesItem
-                key={cat.id}
-                category={cat}
-                loadCategories={loadCategories}
-                isSubCategory={true}
-                parentCategory={category}
-              />
-            ))}
+            <OrderedItems
+              initialItems={subCategories}
+              label="Kategorie"
+              endpoint="category"
+              itemComponent={({ item: cat, moveBackward, moveForward }) => (
+                <CategoriesItem
+                  key={cat.id}
+                  category={cat}
+                  loadCategories={loadCategories}
+                  isSubCategory={true}
+                  parentCategory={category}
+                  moveForward={moveForward}
+                  moveBackward={moveBackward}
+                  displayFullWidth={displayFullWidth}
+                />
+              )}
+            />
           </div>
         </Collapse>
       )}
